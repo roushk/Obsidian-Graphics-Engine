@@ -4,8 +4,7 @@
 //*****************************************************//
 
 
-#ifndef PCH_H
-#define PCH_H
+#pragma once
 
 // Windows includes
 #define ENGINE_WINDOWS
@@ -14,6 +13,7 @@
 #include <Windows.h>
 #undef near
 #undef far
+
 
 // SDL2 library
 #define ENGINE_SDL
@@ -60,10 +60,6 @@
 #include <MetaStuff/Meta.h>
 namespace json = nlohmann;
 
-// SOL2 
-#define ENGINE_SOL
-#include <sol/sol.hpp>
-namespace lua = sol;
 
 // FMOD
 #define ENGINE_FMOD
@@ -84,14 +80,8 @@ namespace lua = sol;
 #include <rttr/type.h>
 
 #define ENGINE_FREETYPE
-#include <ft2build.h>
+#include "ft2build.h"
 #include FT_FREETYPE_H
-
-#define ENGINE_BULLET
-#pragma warning(push, 0)
-#include <bullet3/btBulletDynamicsCommon.h>
-#include <bullet3/BulletCollision/NarrowPhaseCollision/btRaycastCallback.h>
-#pragma warning(pop)
 
 // C headers
 #define ENGINE_C
@@ -126,4 +116,3 @@ namespace lua = sol;
 namespace filesystem = std::experimental::filesystem::v1;
 using namespace std::chrono_literals;
 
-#endif //PCH_H
