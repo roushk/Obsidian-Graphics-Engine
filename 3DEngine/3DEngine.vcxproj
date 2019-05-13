@@ -20,19 +20,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\3DEngine.cpp" />
-    <ClCompile Include="source\AxisAlignedBoundingBox.cpp" />
-    <ClCompile Include="source\BoundingEllipsoidPCA.cpp" />
-    <ClCompile Include="source\BoundingSphereCentroid.cpp" />
-    <ClCompile Include="source\BoundingSphereLarsson.cpp" />
-    <ClCompile Include="source\BoundingSpherePCA.cpp" />
-    <ClCompile Include="source\BoundingSphereRitter.cpp" />
-    <ClCompile Include="source\BoundingVolume.cpp" />
-    <ClCompile Include="source\BSPTree.cpp" />
-    <ClCompile Include="source\BVHAABB.cpp" />
-    <ClCompile Include="source\BVHBS.cpp" />
     <ClCompile Include="source\Camera.cpp" />
     <ClCompile Include="source\engine.cpp" />
-    <ClCompile Include="source\GJK.cpp" />
     <ClCompile Include="source\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -90,8 +79,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\Object.cpp" />
-    <ClCompile Include="source\Octree.cpp" />
-    <ClCompile Include="source\OrientedBoundingBoxPCA.cpp" />
     <ClCompile Include="source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -365,17 +352,6 @@
     <ClInclude Include="source\assimp\version.h" />
     <ClInclude Include="source\assimp\Vertex.h" />
     <ClInclude Include="source\assimp\XMLTools.h" />
-    <ClInclude Include="source\AxisAlignedBoundingBox.h" />
-    <ClInclude Include="source\BoundingEllipsoidPCA.h" />
-    <ClInclude Include="source\BoundingSphereCentroid.h" />
-    <ClInclude Include="source\BoundingSphereLarsson.h" />
-    <ClInclude Include="source\BoundingSpherePCA.h" />
-    <ClInclude Include="source\BoundingSphereRitter.h" />
-    <ClInclude Include="source\BoundingVolume.h" />
-    <ClInclude Include="source\BSPTree.h" />
-    <ClInclude Include="source\BVH.h" />
-    <ClInclude Include="source\BVHAABB.h" />
-    <ClInclude Include="source\BVHBS.h" />
     <ClInclude Include="source\Camera.h" />
     <ClInclude Include="source\FMOD\fmod.h" />
     <ClInclude Include="source\FMOD\fmod.hpp" />
@@ -476,7 +452,6 @@
     <ClInclude Include="source\freetype\ttnameid.h" />
     <ClInclude Include="source\freetype\tttables.h" />
     <ClInclude Include="source\freetype\tttags.h" />
-    <ClInclude Include="source\GJK.h" />
     <ClInclude Include="source\glm\common.hpp" />
     <ClInclude Include="source\glm\detail\compute_vector_relational.hpp" />
     <ClInclude Include="source\glm\detail\qualifier.hpp" />
@@ -645,10 +620,7 @@
     <ClInclude Include="source\MetaStuff\Member.h" />
     <ClInclude Include="source\MetaStuff\Meta.h" />
     <ClInclude Include="source\MetaStuff\StringCast.h" />
-    <ClInclude Include="source\NodeTypes.h" />
     <ClInclude Include="source\Object.h" />
-    <ClInclude Include="source\Octree.h" />
-    <ClInclude Include="source\OrientedBoundingBoxPCA.h" />
     <ClInclude Include="source\pch.h" />
     <ClInclude Include="source\Projection.h" />
     <ClInclude Include="source\random.h" />

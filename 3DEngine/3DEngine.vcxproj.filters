@@ -188,12 +188,6 @@
     <ClCompile Include="source\Object.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
-    <ClCompile Include="source\Octree.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\OrientedBoundingBoxPCA.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
     <ClCompile Include="source\Projection.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
@@ -206,40 +200,7 @@
     <ClCompile Include="source\Wireframe.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
-    <ClCompile Include="source\AxisAlignedBoundingBox.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingEllipsoidPCA.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingSphereCentroid.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingSphereLarsson.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingSpherePCA.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingSphereRitter.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BoundingVolume.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BSPTree.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BVHAABB.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\BVHBS.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
     <ClCompile Include="source\Camera.cpp">
-      <Filter>Source Files\Render</Filter>
-    </ClCompile>
-    <ClCompile Include="source\GJK.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
     <ClCompile Include="source\GUI.cpp">
@@ -2098,16 +2059,7 @@
     <ClInclude Include="source\Material.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="source\NodeTypes.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
     <ClInclude Include="source\Object.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\Octree.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\OrientedBoundingBoxPCA.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="source\Projection.h">
@@ -2122,43 +2074,7 @@
     <ClInclude Include="source\Wireframe.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="source\AxisAlignedBoundingBox.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingEllipsoidPCA.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingSphereCentroid.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingSphereLarsson.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingSpherePCA.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingSphereRitter.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BoundingVolume.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BSPTree.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BVH.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BVHAABB.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\BVHBS.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
     <ClInclude Include="source\Camera.h">
-      <Filter>Source Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="source\GJK.h">
       <Filter>Source Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="source\GUI.h">
