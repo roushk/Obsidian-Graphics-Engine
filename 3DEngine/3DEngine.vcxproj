@@ -20,12 +20,26 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\3DEngine.cpp" />
+    <ClCompile Include="source\AxisAlignedBoundingBox.cpp" />
+    <ClCompile Include="source\BoundingEllipsoidPCA.cpp" />
+    <ClCompile Include="source\BoundingSphereCentroid.cpp" />
+    <ClCompile Include="source\BoundingSphereLarsson.cpp" />
+    <ClCompile Include="source\BoundingSpherePCA.cpp" />
+    <ClCompile Include="source\BoundingSphereRitter.cpp" />
+    <ClCompile Include="source\BoundingVolume.cpp" />
+    <ClCompile Include="source\BSPTree.cpp" />
+    <ClCompile Include="source\BVHAABB.cpp" />
+    <ClCompile Include="source\BVHBS.cpp" />
+    <ClCompile Include="source\Camera.cpp" />
+    <ClCompile Include="source\engine.cpp" />
+    <ClCompile Include="source\GJK.cpp" />
     <ClCompile Include="source\glm\detail\glm.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\GUI.cpp" />
     <ClCompile Include="source\imgui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -68,18 +82,24 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\Material.cpp" />
     <ClCompile Include="source\MetaStuff\StringCast.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\Object.cpp" />
+    <ClCompile Include="source\Octree.cpp" />
+    <ClCompile Include="source\OrientedBoundingBoxPCA.cpp" />
     <ClCompile Include="source\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\Projection.cpp" />
+    <ClCompile Include="source\Render.cpp" />
     <ClCompile Include="source\rttr\constructor.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -266,6 +286,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\shader.cpp" />
+    <ClCompile Include="source\Wireframe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\assimp\ai_assert.h" />
@@ -343,6 +365,18 @@
     <ClInclude Include="source\assimp\version.h" />
     <ClInclude Include="source\assimp\Vertex.h" />
     <ClInclude Include="source\assimp\XMLTools.h" />
+    <ClInclude Include="source\AxisAlignedBoundingBox.h" />
+    <ClInclude Include="source\BoundingEllipsoidPCA.h" />
+    <ClInclude Include="source\BoundingSphereCentroid.h" />
+    <ClInclude Include="source\BoundingSphereLarsson.h" />
+    <ClInclude Include="source\BoundingSpherePCA.h" />
+    <ClInclude Include="source\BoundingSphereRitter.h" />
+    <ClInclude Include="source\BoundingVolume.h" />
+    <ClInclude Include="source\BSPTree.h" />
+    <ClInclude Include="source\BVH.h" />
+    <ClInclude Include="source\BVHAABB.h" />
+    <ClInclude Include="source\BVHBS.h" />
+    <ClInclude Include="source\Camera.h" />
     <ClInclude Include="source\FMOD\fmod.h" />
     <ClInclude Include="source\FMOD\fmod.hpp" />
     <ClInclude Include="source\FMOD\fmod_codec.h" />
@@ -442,6 +476,7 @@
     <ClInclude Include="source\freetype\ttnameid.h" />
     <ClInclude Include="source\freetype\tttables.h" />
     <ClInclude Include="source\freetype\tttags.h" />
+    <ClInclude Include="source\GJK.h" />
     <ClInclude Include="source\glm\common.hpp" />
     <ClInclude Include="source\glm\detail\compute_vector_relational.hpp" />
     <ClInclude Include="source\glm\detail\qualifier.hpp" />
@@ -591,6 +626,7 @@
     <ClInclude Include="source\GL\glew.h" />
     <ClInclude Include="source\GL\glxew.h" />
     <ClInclude Include="source\GL\wglew.h" />
+    <ClInclude Include="source\GUI.h" />
     <ClInclude Include="source\imgui\imconfig.h" />
     <ClInclude Include="source\imgui\imgui.h" />
     <ClInclude Include="source\imgui\imgui_impl_opengl3.h" />
@@ -601,13 +637,22 @@
     <ClInclude Include="source\imgui\imstb_textedit.h" />
     <ClInclude Include="source\imgui\imstb_truetype.h" />
     <ClInclude Include="source\JSON\json.hpp" />
+    <ClInclude Include="source\Light.h" />
+    <ClInclude Include="source\Material.h" />
     <ClInclude Include="source\MetaStuff\detail\MetaHolder.h" />
     <ClInclude Include="source\MetaStuff\detail\template_helpers.h" />
     <ClInclude Include="source\MetaStuff\JsonCast.h" />
     <ClInclude Include="source\MetaStuff\Member.h" />
     <ClInclude Include="source\MetaStuff\Meta.h" />
     <ClInclude Include="source\MetaStuff\StringCast.h" />
+    <ClInclude Include="source\NodeTypes.h" />
+    <ClInclude Include="source\Object.h" />
+    <ClInclude Include="source\Octree.h" />
+    <ClInclude Include="source\OrientedBoundingBoxPCA.h" />
     <ClInclude Include="source\pch.h" />
+    <ClInclude Include="source\Projection.h" />
+    <ClInclude Include="source\random.h" />
+    <ClInclude Include="source\Render.h" />
     <ClInclude Include="source\rttr\access_levels.h" />
     <ClInclude Include="source\rttr\argument.h" />
     <ClInclude Include="source\rttr\array_range.h" />
@@ -830,6 +875,8 @@
     <ClInclude Include="source\SDL2\SDL_version.h" />
     <ClInclude Include="source\SDL2\SDL_video.h" />
     <ClInclude Include="source\SDL2\SDL_vulkan.h" />
+    <ClInclude Include="source\shader.hpp" />
+    <ClInclude Include="source\singleton.h" />
     <ClInclude Include="source\SOIL\SOIL.h" />
     <ClInclude Include="source\spdlog\async.h" />
     <ClInclude Include="source\spdlog\async_logger.h" />
@@ -880,6 +927,7 @@
     <ClInclude Include="source\spdlog\spdlog.h" />
     <ClInclude Include="source\spdlog\tweakme.h" />
     <ClInclude Include="source\spdlog\version.h" />
+    <ClInclude Include="source\Wireframe.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\assimp\color4.inl" />
