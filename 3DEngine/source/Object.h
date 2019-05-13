@@ -1,174 +1,102 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
-
-File Name: Object.h
-Purpose: header for custom object class to hold the model info
-Language: C++ MSVC
-Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
-Project: coleman.jonas_CS350_1
-Author: Coleman Jonas coleman.jonas 280003516
-Creation date: 5/18/18
-End Header --------------------------------------------------------*/
-
 #ifndef OBJECT_H
 #define OBJECT_H
-
+#define PI 3.14159265359f
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
 #include <vector>
-#include <set>
-#include <fstream>
 
-using namespace glm;
 
-struct Object
+using VBO = GLuint;
+using VAO = GLuint;
+using IBO = GLuint;
+
+struct Vertex
 {
-  std::vector<vec3> verts;
-  std::vector<vec2> uvCylindrical;
-  std::vector<vec2> uvSpherical;
-  std::vector<vec2> uvPlanar;
-  glm::mat4 modelMatrix;
+  glm::vec3 pos;
+  glm::vec3 normal;
+  glm::vec2 texCoords;
+};
 
-  
-  //0 = up, 1 = down, 2 = left, 3 = right, 4 = forward, 5 = backward
-  std::vector<uvec3> faces;
-  
-  //vert normals using verts pos in verts vec as positon
-  std::vector<vec3> vertexNormals;
+using Index = unsigned;
 
-  //face normals using facep Pos in faces vec as positon 
-  std::vector<vec3> faceNormals;
-  
-  glm::vec3 min, max;
+struct Texture
+{
+  std::string textureName = "DEFAULT_TEXTURE_NAME";
+  GLuint texture = -1;
+};
 
-  float timeToRead;
-  float scale;
-  vec3 center;
+enum class MeshUVSetting
+{
+  cylinder,
+  sphere,
+  planar,
+  custom
+};
+
+class Mesh
+{
+public:
+  Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
+       const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere, const std::vector<glm::vec2>& planar);
+
+  Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
+
+  VAO get_vao() const;
+  VBO get_vbo() const;
+  IBO get_ibo() const;
+
   std::string name;
+  std::vector<Vertex> vertices;
+  std::vector<Index> indices;
 
-  vec3 emissiveColor = vec3(0,0,0);
-  float Kambient, Kdiffuse, Kspecular, ns;
+  //so can swap between UV coords
+  MeshUVSetting uvSetting = MeshUVSetting::planar;
 
-  GLuint VAO; //entire thing
-  GLuint IBO; //faces
-  GLuint VBO[4];
-  //Positions
-  //VertNormals, 
-  //UVcoords;
-  //FaceNormals, 
+  //if uvSetting is custom then no coords in these
+  std::vector<glm::vec2> uvCylindrical;
+  std::vector<glm::vec2> uvSpherical;
+  std::vector<glm::vec2> uvPlanar;
+
+  // TODO: Cleanup meshes on unload
+  void change_uv_coord_mapping(MeshUVSetting newSetting);
+
+  glm::mat4 meshMatrix = glm::mat4(1.0f);
+private:
+
+  VAO vao = -1;
+  VBO vbo = -1;
+  IBO ibo = -1;
+
 
   void setup_mesh();
 };
 
+
+struct Model
+{
+  std::string modelName;
+  glm::mat4 modelMatrix = glm::mat4(1.0f);
+  std::vector<std::pair<VAO, std::size_t>> meshes;
+  std::vector<Mesh> meshData;
+  glm::vec3 halfExtents;
+};
+
 class ObjectReader
 {
+  Model load_model(const std::string& path);
+
+  void process_node(aiNode* node, const aiScene* scene, Model& m);
+
+  glm::vec2 uv_calc(glm::vec3 point);
+
+  Mesh process_mesh(aiMesh* mesh, const aiScene* scene);
+
 public:
-  bool ReadObject(std::string filename);
-  Object& GetObject(int location);
-  unsigned MaxObjects() { return objects.size(); };
-  void ReadFile(std::string filename);
-private:
-
-  std::vector<Object> objects;
+  Model load(const std::string& filename) noexcept;
+  void loadMultiple(const std::string& filename);
 };
 
-struct vec3Operator
-{
-  //float x, y, z;
-  //vec3Operator(const vec3& rhs) : x(rhs.x), y(rhs.y), z(rhs.z) {};
 
-  bool operator()(const vec3& lhs, const vec3& rhs) const
-  {
-    if ((lhs.x == rhs.x) && (lhs.y == rhs.y) && (lhs.x < rhs.x))
-      return true;
-    if ((lhs.x == rhs.x) && (lhs.y < rhs.y))
-      return true;
-    if ((lhs.x < rhs.x))
-      return true;
-    return false;
-  }
-};
-
-inline vec2 UVCalc(vec3 point)
-{
-  float absX = abs(point.x);
-  float absY = abs(point.y);
-  float absZ = abs(point.z);
-
-  bool XPositive = point.x > 0 ? true : false;
-  bool YPositive = point.y > 0 ? true : false;
-  bool ZPositive = point.z > 0 ? true : false;
-
-  float largestLine = 0;
-  vec2 uv;
-
-  //posx, negx, posy, negy, posz, negz
-  if (XPositive && absX >= absY && absX >= absZ) 
-  {
-
-    largestLine = absX;
-    uv.x = -point.z;
-    uv.y = point.y;
-  }
-  if (XPositive == false && absX >= absY && absX >= absZ) 
-  {
-
-    largestLine = absX;
-    uv.x = point.z;
-    uv.y = point.y;
-  }
-  if (YPositive && absY >= absX && absY >= absZ) 
-  {
-
-    largestLine = absY;
-    uv.x = point.x;
-    uv.y = -point.z;
-  }
-  if (YPositive == false && absY >= absX && absY >= absZ) 
-  {
-
-    largestLine = absY;
-    uv.x = point.x;
-    uv.y = point.z;
-  }
-  if (ZPositive && absZ >= absX && absZ >= absY) 
-  {
-
-    largestLine = absZ;
-    uv.x = point.x;
-    uv.y = point.y;
-  }
-  if (ZPositive == false && absZ >= absX && absZ >= absY) 
-  {
-
-    largestLine = absZ;
-    uv.x = -point.x;
-    uv.y = point.y;
-  }
-
-  uv.x = 0.5f * (uv.x / largestLine + 1.0f);
-  uv.y = 0.5f * (uv.y / largestLine + 1.0f);
-  return uv;
-}
-
-inline std::string load_file(const std::string& filename)
-{
-  std::ifstream file(filename);
-
-
-  std::string data;
-
-  file.seekg(0, std::ios::end);
-  data.reserve(static_cast<const unsigned>(file.tellg()));  //allocated all memory for it
-  file.seekg(0, std::ios::beg);
-
-  data.assign(std::istreambuf_iterator<char>(file),
-    std::istreambuf_iterator<char>());
-
-  return data;
-}
 
 #endif

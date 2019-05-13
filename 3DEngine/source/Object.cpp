@@ -1,351 +1,345 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
-
-File Name: Object.cpp
-Purpose: Implementation file for the object class
-Language: C++ MSVC
-Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
-Project: coleman.jonas_CS350_1
-Author: Coleman Jonas coleman.jonas 280003516
-Creation date: 5/18/18
-End Header --------------------------------------------------------*/
-#include <vector>
+#include <pch.h>
 #include "Object.h"
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <deque>
-#include <map>
-#include <algorithm>
-#include <chrono>
-#include <sstream>
+#include "singleton.h"
+#include "loadfile.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/transform.hpp>
-
-#define MAXLINELENGTH 10000
-#define PI 3.14159265359f
-
-bool ObjectReader::ReadObject(std::string filename)
+Mesh::Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
+           const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere,
+           const std::vector<glm::vec2>& planar): name(name), vertices(vertices), indices(indices),
+                                                  uvCylindrical(cyl), uvSpherical(sphere), uvPlanar(planar)
 {
-  auto start = std::chrono::system_clock::now();
-  vec3 maxSize(0, 0, 0);
-  vec3 minSize(0, 0, 0);
+  uvSetting = MeshUVSetting::sphere;
+  setup_mesh();
+}
 
-  std::vector<vec3> tempVerts;
+Mesh::Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices):name(name), vertices(vertices), indices(indices)
+{
+  uvSetting = MeshUVSetting::custom;
+  setup_mesh();
+}
 
-  std::vector<uvec3> tempFaces;
 
-  //vert tempNormals using tempVerts pos in tempVerts vec as positon
-  std::vector<vec3> tempvertexNormals;
+VAO Mesh::get_vao() const
+{
+  return vao;
+}
 
-  //face tempNormals using facep Pos in tempFaces vec as positon 
-  std::vector<vec3> tempFaceNormals;
+VBO Mesh::get_vbo() const
+{
+  return vbo;
+}
 
-  std::cout << "Reading File: " << filename << std::endl;
+IBO Mesh::get_ibo() const
+{
+  return ibo;
+}
 
-  Object object;
-  char buffer[MAXLINELENGTH];
-  
-  
-  std::ifstream file;
-  std::ofstream fileOut;
-
-  file.open(filename);
-
-  if(file)  
-    file >> buffer;
-
-  while (file)
+void Mesh::change_uv_coord_mapping(MeshUVSetting newSetting)
+{
+  uvSetting = newSetting;
+  if (uvSetting == MeshUVSetting::custom)
+    throw(
+      "UV setting cannot be set to custom, has to have custom UV coordinates loaded in at starting. check the mesh to make sure all verts have UV coords"
+    );
+  for (unsigned i = 0; i < vertices.size(); ++i)
   {
-    
-    
-    //if first character is comment then ignore
-    if (buffer[0] == '#'    //for comment
-      || (buffer[0] == 'v' && buffer[1] == 'n')   //for vn
-      || (buffer[0] == 'v' && buffer[1] == 't')   //for vt
-      || buffer[0] == 'g'   //for group
-      || buffer[0] == 'm'   //for mtllib
-      || buffer[0] == 'o'   //for object
-      || buffer[0] == 'u')  //for usemlt
-    {
-      file.ignore(MAXLINELENGTH, '\n');
-      file >> buffer;
-    }
-    else if (buffer[0] == 'v')
-    {
-      file >> buffer;
-
-      vec3 newVec;
-      //strip number//samenumber???
-      //substring of value and rest of string till next number
-      std::string parse = buffer;
-      newVec.x = atof(parse.c_str());
-      file >> buffer;
-
-      parse = buffer;
-      newVec.y = atof(parse.c_str());
-      file >> buffer;
-
-      parse = buffer;
-      newVec.z = atof(parse.c_str());
-
-      tempVerts.push_back(newVec);
-      file >> buffer;
-    }
-
-    //f = tempFaces (can be more than 3 in a row
-    else if (buffer[0] == 'f')
-    {
-      std::deque<int> tempFacesDeque;
-      file >> buffer;
-
-      while((buffer[0] >= '0' && buffer[0] <= '9')|| buffer[0] == '.' && file)
-      {
-        
-        std::string parse = buffer;
-        tempFacesDeque.push_back(atoi(parse.c_str()) - 1);
-        file >> buffer;
-      }
-
-      vec3 newVec;
-      newVec.x = tempFacesDeque[0];
-      newVec.y = tempFacesDeque[1];
-      newVec.z = tempFacesDeque[2];
-
-      //for 3+ tempFaces
-
-      tempFaces.push_back(newVec);
-      for(unsigned i = 0; i + 3 < tempFacesDeque.size(); ++i)
-      {
-        newVec.x = tempFacesDeque[0];
-        newVec.y = tempFacesDeque[i + 2];
-        newVec.z = tempFacesDeque[i + 3];
-        tempFaces.push_back(newVec);
-      }
-    }
-    else
-      file >> buffer;
-  }
-  
-  
-  //reserve the data so that at that position is guarenteed data
-  
-  //calculate face tempNormals
-  //for all VERTS generate normal
-  //for all tempFaces generate normal
-  for (unsigned i = 0; i < tempFaces.size(); ++i)
-  {
-    vec3 face = tempFaces.at(i);
-
-    vec3 U = tempVerts[face.y] - tempVerts[face.x];
-    vec3 V = tempVerts[face.z] - tempVerts[face.x];
-    vec3 N = cross(U, V);
-
-    tempFaceNormals.push_back(normalize(N));
-    
-  }
-  std::vector<vec3> temp;
-  std::vector<std::vector<vec3>> tempVecVecNormals(tempVerts.size(), temp);
-
-  for (unsigned i = 0; i < tempFaces.size(); ++i)
-  {
-    //add all the tempFaces to the vert list
-    //inserts vec3 normal at tempVecNormal of each vert in each face
-    tempVecVecNormals[tempFaces.at(i).x].push_back(tempFaceNormals.at(i));
-    tempVecVecNormals[tempFaces.at(i).y].push_back(tempFaceNormals.at(i));
-    tempVecVecNormals[tempFaces.at(i).z].push_back(tempFaceNormals.at(i));
+    if (uvSetting == MeshUVSetting::cylinder)
+      vertices[i].texCoords = uvCylindrical[i];
+    if (uvSetting == MeshUVSetting::sphere)
+      vertices[i].texCoords = uvSpherical[i];
+    if (uvSetting == MeshUVSetting::planar)
+      vertices[i].texCoords = uvPlanar[i];
   }
 
-  //remove unique values in tempVectorNormal list
-  //make sure all face tempNormals are unique
-  //have to instanciate to use operator() in std::sort
-  vec3Operator vec3op;// (vec3(99, 99, 99));
-  for(auto & it : tempVecVecNormals)
+  //need to re bind tex coords
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof Vertex, vertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof Index, indices.data(), GL_STATIC_DRAW);
+  // tex coords
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, texCoords)));
+
+  glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
+}
+
+void Mesh::setup_mesh()
+{
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ibo);
+  glBindVertexArray(vao);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof Vertex, vertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof Index, indices.data(), GL_STATIC_DRAW);
+  // positions
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof Vertex, nullptr);
+  // normals
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, normal)));
+  // tex coords
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, texCoords)));
+
+  glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
+}
+
+Model ObjectReader::load_model(const std::string& path)
+{
+  Assimp::Importer importer;
+  Model newModel{};
+  const auto scene = importer.ReadFile(path.c_str(),
+                                       aiProcessPreset_TargetRealtime_Quality | aiProcess_SortByPType |
+                                       aiProcess_PreTransformVertices);
+  if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
-    if(it.size() > 2)
-    {
-      std::sort(it.begin(), it.end(), vec3op);
-    }
-
-    if(it.size() > 1)
-    {
-      it.erase(std::unique(it.begin(), it.end()), it.end());
-    }
+    std::cout << "couldn't load model from path: " << path << std::endl;
   }
-  
-  //calculate avg of all tempNormals for each vert
-  for(std::vector<vec3> & vert : tempVecVecNormals)
+  process_node(scene->mRootNode, scene, newModel);
+  //Process materials and generate UV coordinates
+
+  return newModel;
+}
+
+void ObjectReader::process_node(aiNode* node, const aiScene* scene, Model& m)
+{
+  for (unsigned i = 0; i < node->mNumMeshes; ++i)
   {
-    vec3 vec(0, 0, 0);
-    for(vec3& normal: vert)
-    {
-      vec += normal;
-    }
-    
-    //push back vector normal after its normalized to object
-    tempvertexNormals.push_back(normalize(vec));
+    const auto mesh = scene->mMeshes[node->mMeshes[i]];
+    m.meshData.emplace_back(process_mesh(mesh, scene));
+    m.meshData.back().change_uv_coord_mapping(MeshUVSetting::planar);
   }
-  //push all data into GLfloat,GLuint datatypes
-  //creates bounding box with min and max size of object
-  for(auto& vert: tempVerts)
+  for (unsigned i = 0; i < node->mNumChildren; ++i)
   {
-    if (vert.x > maxSize.x)
-      maxSize.x = vert.x;
-    if (vert.y > maxSize.y)
-      maxSize.y = vert.y;
-    if (vert.z > maxSize.z)
-      maxSize.z = vert.z;
+    process_node(node->mChildren[i], scene, m);
+  }
+}
 
-    if (vert.x < minSize.x)
-      minSize.x = vert.x;
-    if (vert.y < minSize.y)
-      minSize.y = vert.y;
-    if (vert.z < minSize.z)
-      minSize.z = vert.z;
+glm::vec2 ObjectReader::uv_calc(glm::vec3 point)
+{
+  float absX = abs(point.x);
+  float absY = abs(point.y);
+  float absZ = abs(point.z);
 
-    object.verts.push_back(vert);
+  bool XPositive = point.x > 0 ? true : false;
+  bool YPositive = point.y > 0 ? true : false;
+  bool ZPositive = point.z > 0 ? true : false;
+
+  float largestLine = 0;
+  glm::vec2 uv{0, 0};
+
+  //posx, negx, posy, negy, posz, negz
+  if (XPositive && absX >= absY && absX >= absZ)
+  {
+    largestLine = absX;
+    uv.x = -point.z;
+    uv.y = point.y;
+  }
+  if (XPositive == false && absX >= absY && absX >= absZ)
+  {
+    largestLine = absX;
+    uv.x = point.z;
+    uv.y = point.y;
+  }
+  if (YPositive && absY >= absX && absY >= absZ)
+  {
+    largestLine = absY;
+    uv.x = point.x;
+    uv.y = -point.z;
+  }
+  if (YPositive == false && absY >= absX && absY >= absZ)
+  {
+    largestLine = absY;
+    uv.x = point.x;
+    uv.y = point.z;
+  }
+  if (ZPositive && absZ >= absX && absZ >= absY)
+  {
+    largestLine = absZ;
+    uv.x = point.x;
+    uv.y = point.y;
+  }
+  if (ZPositive == false && absZ >= absX && absZ >= absY)
+  {
+    largestLine = absZ;
+    uv.x = -point.x;
+    uv.y = point.y;
   }
 
-  object.faces = tempFaces;
-  object.vertexNormals = tempvertexNormals;
-  object.faceNormals = tempFaceNormals;
+  uv.x = 0.5f * (uv.x / largestLine + 1.0f);
+  uv.y = 0.5f * (uv.y / largestLine + 1.0f);
+  return uv;
+}
 
-  
-  object.scale = minSize.x - maxSize.x;
-  object.min = minSize;
-  object.max = maxSize;
+Mesh ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
+{
+  std::string name(mesh->mName.C_Str());
 
-  unsigned end = filename.find_last_of(".obj");
-  end -= filename.find_last_of('/') + 4;
-  object.name = filename.substr(filename.find_last_of('/') + 1, end);
-  
-  object.center = (maxSize + minSize) / 2.0f;
+  glm::vec3 maxSize(0, 0, 0);
+  glm::vec3 minSize(0, 0, 0);
+  //bool texCoordsExist = true;
+  std::vector<Vertex> vertices;
+  std::vector<Index> indices;
 
-  object.scale = abs(object.scale);
+  for (unsigned i = 0; i < mesh->mNumVertices; ++i)
+  {
+    Vertex vert;
+    vert.pos.x = mesh->mVertices[i].x;
+    vert.pos.y = mesh->mVertices[i].y;
+    vert.pos.z = mesh->mVertices[i].z;
+    vert.normal.x = mesh->mNormals[i].x;
+    vert.normal.y = mesh->mNormals[i].y;
+    vert.normal.z = mesh->mNormals[i].z;
+
+    if (vert.pos.x > maxSize.x)
+      maxSize.x = vert.pos.x;
+    if (vert.pos.y > maxSize.y)
+      maxSize.y = vert.pos.y;
+    if (vert.pos.z > maxSize.z)
+      maxSize.z = vert.pos.z;
+
+    if (vert.pos.x < minSize.x)
+      minSize.x = vert.pos.x;
+    if (vert.pos.y < minSize.y)
+      minSize.y = vert.pos.y;
+    if (vert.pos.z < minSize.z)
+      minSize.z = vert.pos.z;
+
+    vertices.push_back(vert);
+  }
+
+  for (unsigned i = 0; i < mesh->mNumFaces; ++i)
+  {
+    const auto face = mesh->mFaces[i];
+    if (face.mNumIndices < 3)
+      continue;
+    indices.push_back(face.mIndices[0]);
+    indices.push_back(face.mIndices[1]);
+    indices.push_back(face.mIndices[2]);
+  }
 
 
+  glm::vec3 center = (maxSize + minSize) / 2.0f;
+  float scale = abs(minSize.x - maxSize.x);
 
-  //*********************************************************************//
-  //generate UV
+  glm::mat4 matrix(1.0f);
+  matrix = glm::scale(matrix, glm::vec3(1.0f / scale));
+  matrix = translate(matrix, glm::vec3(-center.x, -center.y, -center.z));
 
-  //transform object to center of sphere/cylinder
-  mat4 matrix(1.0f);
-  matrix = scale(matrix, vec3(1.0f / object.scale));
-  matrix = translate(matrix, vec3(-object.center.x, -object.center.y, -object.center.z));
+  std::vector<glm::vec2> uvCylindrical;
+  std::vector<glm::vec2> uvSpherical;
+  std::vector<glm::vec2> uvPlanar;
+
+  float u, v;
 
   //Cylindrical 
-  for (auto & preTransformVert : tempVerts)
+  for (auto& preTransformVert : vertices)
   {
-    float u, v;
-
-    vec4 vert = matrix * vec4(preTransformVert, 1.0f);
-    vec4 newMin = matrix * vec4(minSize, 1.0f);
-    vec4 newMax = matrix * vec4(maxSize, 1.0f);
+    glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
+    glm::vec4 newMin = matrix * glm::vec4(minSize, 1.0f);
+    glm::vec4 newMax = matrix * glm::vec4(maxSize, 1.0f);
 
     //divide by 360 degrees   
-    float theta = atan2(vert.z, vert.x);  //if u is negative add 2PI
+    float theta = atan2(vert.z, vert.x); //if u is negative add 2PI
     u = (theta + PI) / (2.0f * PI);
-    
+
     //y not z cause its y up not z up
     v = 1 - ((vert.y - newMin.y) / (newMax.y - newMin.y));
-    object.uvCylindrical.push_back({ u,v });
+    uvCylindrical.push_back({u, v});
     if (u > 1.0f || u < 0.0f || v > 1.0f || v < 0.0f)
       std::cout << "u or v is out of range!" << std::endl;
   }
 
   //Spherical
-  for (auto & preTransformVert : tempVerts)
+  for (auto& preTransformVert : vertices)
   {
-    float u, v;
+    glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
 
-    vec4 vert = matrix * vec4(preTransformVert, 1.0f);
-
-    float theta = atan2(-vert.z, vert.x);  
+    float theta = atan2(-vert.z, vert.x);
     u = (theta + PI) / (2.0f * PI);
 
     v = acosf(vert.y) / PI; // / r); r = 1
 
-    object.uvSpherical.push_back({ u,v });
+    uvSpherical.push_back({u, v});
     if (u > 1.0f || u < 0.0f || v > 1.0f || v < 0.0f)
       std::cout << "u or v is out of range!" << std::endl;
   }
 
   //Planar
-  for (unsigned i = 0; i < tempVerts.size(); ++i)
+  for (auto& preTransformVert : vertices)
   {
-    //centeres object
-    vec4 vert = matrix * vec4(tempVerts[i], 1.0f);
-    float u, v;
+    glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
     //0 = x, 1 = y, 2 = x
-    vec2 uv = UVCalc(vert);
-
-    object.uvPlanar.push_back(uv);
-
+    glm::vec2 uv = uv_calc(vert);
+    uvPlanar.push_back(uv);
   }
-  object.modelMatrix = translate(scale(glm::mat4(1.0f), vec3(1.0f / object.scale)), vec3(-object.center.x, -object.center.y, -object.center.z));
-  
-  object.setup_mesh();
-  objects.push_back(object);
-  //read object
-  auto endTime = std::chrono::system_clock::now();
-  auto chronoDt = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - start);
-  object.timeToRead = chronoDt.count();
-
-  std::cout << "Time to Read Object File: " << filename << " Took: " << object.timeToRead << " Milliseconds" << std::endl;
-
-  
-  return true;
+  return Mesh(name, vertices, indices, uvCylindrical, uvSpherical, uvPlanar);
 }
 
-void Object::setup_mesh()
+Model ObjectReader::load(const std::string& filename) noexcept
 {
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(4, VBO);
-  glGenBuffers(1, &IBO);
-  glBindVertexArray(VAO);
+  const auto md = load_model("assets/models/fbx/" + filename);
+  Model info;
 
-  //faces
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size() * sizeof glm::uvec3, faces.data(), GL_STATIC_DRAW);
-  //2
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
-  glEnableVertexAttribArray(3);
+  glm::vec3 minSize(0, 0, 0);
+  glm::vec3 maxSize(0, 0, 0);
 
-  //verts
-  glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-  glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof glm::vec3, verts.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-  
-  // vert normals
-  glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-  glBufferData(GL_ARRAY_BUFFER, vertexNormals.size() * sizeof glm::vec3, vertexNormals.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+  for (const auto& mesh : md.meshData)
+  {
+    /*
+      So here is where we ran unto a WONDERFUL issue with the editor/sizing models where the walls would not easily line up
+     this is fixed by in Maya creating a plane that represents the 1x1(possibly 1x1x1) unit square the mesh will be scaled down too
+     this is to allow things such as uncentered walls and corners to line up properly. the debug is not added to the actual render but
+     is used in the 1x1 calculation. We decided the easiest way is solving this with the DEBUG_PLANE. Think of it as a meter stick
+     used to measure and scale walls properly. Its only needed for room walls and things that need pixel perfect matching aka walls,
+     and things that are on the grid that need to match other things on the grid. - Coleman
+   */
 
-  // uvs
-  glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-  glBufferData(GL_ARRAY_BUFFER, uvCylindrical.size() * sizeof glm::vec2, uvCylindrical.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-  
-  //face normals
-  glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-  glBufferData(GL_ARRAY_BUFFER, faceNormals.size() * sizeof glm::vec3, faceNormals.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    if (mesh.name != std::string("DEBUG_PLANE"))
+      info.meshes.emplace_back(std::make_pair(mesh.get_vao(), mesh.indices.size()));
 
-  glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
+    //generate model to world transform
+    //gets the min and max sizes of each
+
+    for (const auto& vert : mesh.vertices)
+    {
+      if (vert.pos.x > maxSize.x)
+        maxSize.x = vert.pos.x;
+      if (vert.pos.y > maxSize.y)
+        maxSize.y = vert.pos.y;
+      if (vert.pos.z > maxSize.z)
+        maxSize.z = vert.pos.z;
+
+      if (vert.pos.x < minSize.x)
+        minSize.x = vert.pos.x;
+      if (vert.pos.y < minSize.y)
+        minSize.y = vert.pos.y;
+      if (vert.pos.z < minSize.z)
+        minSize.z = vert.pos.z;
+    }
+  }
+  info.modelName = filename;
+  glm::vec3 scale = abs(minSize - maxSize);
+
+  info.halfExtents = scale / 2.0f;
+
+  //scale the object by the largest axis
+  float maxVal = std::max(scale.x, std::max(scale.y, scale.z));
+
+  glm::vec3 center = (maxSize + minSize) / 2.0f;
+
+  info.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / maxVal));
+  info.modelMatrix = translate(info.modelMatrix, glm::vec3(-center.x, -center.y, -center.z));
+
+  return info;
 }
 
-Object& ObjectReader::GetObject(int location)
+void ObjectReader::loadMultiple(const std::string& filename)
 {
-  return objects[location];
-}
 
-void ObjectReader::ReadFile(std::string filename)
-{
   std::string file = load_file(filename);
 
   //append new line to end of file
@@ -360,19 +354,19 @@ void ObjectReader::ReadFile(std::string filename)
     unsigned i = 1;
 
     //while still filename
-    while(file.size() > findPos + i + 1 && file[findPos + i] != '\n')
+    while (file.size() > findPos + i + 1 && file[findPos + i] != '\n')
     {
       ++i;
     }
 
     //push back filename
     //only push back file if its greater than size of 3 (for suffix *.obj)
-    if(i > 4)
+    if (i > 4)
       objects.push_back(file.substr(findPos, i));
     file.erase(findPos, i);
 
     findPos = file.find_first_of('\n');
-    if(findPos != std::string::npos)
+    if (findPos != std::string::npos)
     {
       file.erase(findPos, 1);
     }
@@ -386,8 +380,10 @@ void ObjectReader::ReadFile(std::string filename)
   } while (findPos != std::string::npos && findPos != lastPos);
 
   //load objects into loader
-  for(auto& objName: objects)
+  for (auto& objName : objects)
   {
-    ReadObject(objName);
+    load(objName);
   }
+  
+
 }

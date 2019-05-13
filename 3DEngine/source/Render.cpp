@@ -1,29 +1,23 @@
+#include <pch.h>
 #define PI 3.14159265359f
-#define GLM_ENABLE_EXPERIMENTAL
 
 // Include standard headers
-#include <stdio.h>
-#include <stdlib.h>
-#include <vector>
-#include <iostream>
-#include <cstring>
-#include <chrono>
+//#include <stdio.h>
+//#include <stdlib.h>
+
 
 // Include GLEW
 #include <GL/glew.h>
-
-// Include GLFW
-#include <GLFW/glfw3.h>
-#include "Render.h"
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include "Projection.h"
 #include "SOIL/SOIL.h"
 #include "shader.hpp"
 
+#include "Render.h"
 #include "Wireframe.h"
-#include "Octree.h"
-#include "BSPTree.h"
+#include "singleton.h"
+
 
 Render::Render()
 {
@@ -57,8 +51,9 @@ Render::~Render()
   glDeleteBuffers(1, &GBufferDepthBuffer);
 
 
-  // Close OpenGL window and terminate GLFW
-  glfwTerminate();
+  // Close the SDL window
+  
+  SDL_DestroyWindow(window);
 }
 
 void Render::GenGBuffer()
@@ -805,129 +800,6 @@ void Render::UpdateCamera(float dt)
   inverseCamRotate = rotate(rotateRate * dt, pos);
 }
 
-void Render::Draw(OctreeNode* object)
-{
-  glUseProgram(programID);
-
-  if(object->verts.size() > 0)
-  {
-      
-    glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->color));
-
-    // Uniform transformation (vertex shader)
-
-    projectionMatrix = cameraToNDC(currentCamera);
-    if (flipX == true)
-      projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
-    viewMatrix = worldToCamera(currentCamera);
-
-    glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
-      glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    //already in world coords
-
-  }
-
-  Draw_rec(object);
-}
-
-void Render::Draw(BSPNode* object)
-{
-  glUseProgram(programID);
-
-  if (object->verts.size() > 0)
-  {
-
-    glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->color));
-
-    // Uniform transformation (vertex shader)
-
-    projectionMatrix = cameraToNDC(currentCamera);
-    if (flipX == true)
-      projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
-    viewMatrix = worldToCamera(currentCamera);
-
-    glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
-      glm::value_ptr(projectionMatrix));
-    glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    //already in world coords
-
-  }
-
-  Draw_rec(object);
-}
-
-void Render::Draw_rec(BSPNode* object)
-{
-  glUseProgram(programID);
-
-  if (object->verts.size() > 0)
-  {
-    glBindVertexArray(object->VAO);
-    glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->color));
-    glDrawArrays(GL_TRIANGLES, 0, object->verts.size());
-  }
-  //recursively draw all other children
-  for (auto* child : object->children)
-  {
-    Draw_rec(child);
-  }
-}
-
-void Render::Draw_rec(OctreeNode* object)
-{
-  glUseProgram(programID);
-
-  if (object->verts.size() > 0)
-  {
-    glBindVertexArray(object->VAO);
-    glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->color));
-    glDrawArrays(GL_TRIANGLES, 0, object->verts.size());
-  }
-  //recursively draw all other children
-  for (auto* child : object->children)
-  {
-    Draw_rec(child);
-  }
-}
-
-void Render::Draw_Wireframe(OctreeNode* object)
-{
-  glUseProgram(programID);
-
-  glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->colorWireframe));
- 
-
-  projectionMatrix = cameraToNDC(currentCamera);
-  if (flipX == true)
-    projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
-  viewMatrix = worldToCamera(currentCamera);
-
-  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
-    glm::value_ptr(projectionMatrix));
-  glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-  //already in world coords
-
-  //recursively draw all other children
-  Draw_Wireframe_rec(object);
-
-}
-
-void Render::Draw_Wireframe_rec(OctreeNode* object)
-{
-  //draw wireframe
-  glBindVertexArray(object->wireframe_VAO);
-  glUniform4fv(glGetUniformLocation(programID, "color"), 1, glm::value_ptr(object->colorWireframe));
-
-  glDrawArrays(GL_LINES, 0, object->wireframe_verts.size());
-
-  //recursively draw all other children
-  for (auto* child : object->children)
-  {
-    Draw_Wireframe_rec(child);
-  }
-}
-
 void Render::Draw(Wireframe& object)
 {
   glUseProgram(programID);
@@ -972,43 +844,6 @@ void Render::Draw(Object& object)
 
   glDrawElements(GL_TRIANGLES, object.faces.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
 
-  /*
-  if (setting == rsFaceNormal)
-  {
-    //glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
-    glVertexAttribPointer(
-      0, // attribute 0. MUST match the layout in the shader.
-      3, // size
-      GL_FLOAT, // type
-      GL_FALSE, // normalized?
-      0, // stride
-      (void*)0 // array buffer offset
-    );
-    glDrawElements(GL_LINES, object.faces.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
-    //rebind old buffer
-    //BindModelBuffer();
-    glEnableVertexAttribArray(1);
-  }
-  else if (setting == rsVertNormal)
-  {
-    //glDisableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[3]);
-    glVertexAttribPointer(
-      0, // attribute 0. MUST match the layout in the shader.
-      3, // size
-      GL_FLOAT, // type
-      GL_FALSE, // normalized?
-      0, // stride
-      (void*)0 // array buffer offset
-    );
-
-    glDrawElements(GL_LINES, object.faces.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
-    //rebind old buffer
-    //BindModelBuffer();
-    glEnableVertexAttribArray(1);
-  }
-    */
 }
 
 void Render::EndDrawing()
@@ -1017,7 +852,7 @@ void Render::EndDrawing()
   //glDisableVertexAttribArray(1);
   //glDisableVertexAttribArray(2);
   // Swap buffers
-  glfwSwapBuffers(window);
+  SDL_GL_SwapWindow(window);
 }
 
 void Render::ClearColor(vec4 color)
@@ -1031,7 +866,8 @@ void Render::SetTitle(std::string object)
   title += object;
   title += " Setting: ";
   title += renderSetting;
-  glfwSetWindowTitle(window, title.c_str());
+
+  SDL_SetWindowTitle(window, title.c_str());
 }
 
 void Render::AddLight(Light light)

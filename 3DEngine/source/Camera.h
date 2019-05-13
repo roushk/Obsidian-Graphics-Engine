@@ -1,19 +1,5 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
-
-File Name: Camera.h
-Purpose: Camera class
-Language: C++ MSVC
-Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
-Project: coleman.jonas_CS350_1
-Author: Coleman Jonas coleman.jonas 280003516
-Creation date: 7/15/18
-End Header --------------------------------------------------------*/
-
-#ifndef CS250_CAMERA_H
-#define CS250_CAMERA_H
+#ifndef CAMERA_H
+#define CAMERA_H
 
 #include <glm/glm.hpp>
 

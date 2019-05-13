@@ -209,6 +209,9 @@
     <ClCompile Include="source\engine.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
+    <ClCompile Include="source\loadfile.h">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\assimp\ai_assert.h">

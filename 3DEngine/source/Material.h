@@ -1,16 +1,3 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
-
-File Name: Material.h
-Purpose: header for custom material class to hold the material info
-Language: C++ MSVC
-Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
-Project: coleman.jonas_CS350_1
-Author: Coleman Jonas coleman.jonas 280003516
-Creation date: 6/30/18
-End Header --------------------------------------------------------*/
 
 #ifndef MATERIAL_H
 #define MATERIAL_H

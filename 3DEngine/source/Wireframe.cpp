@@ -6,8 +6,6 @@
 //#include <glm/glm.hpp>
 //#include <glm/ext.hpp>
 
-
-
 Wireframe::Wireframe(const Wireframe& rhs)
 {
   verts = rhs.verts;
@@ -17,20 +15,25 @@ Wireframe::Wireframe(const Wireframe& rhs)
 }
 
 //creates wireframe out of object
-Wireframe::Wireframe(Object& obj)
+Wireframe::Wireframe(Model& obj)
 {
-  for(auto& face: obj.faces)
+  for(auto& mesh : obj.meshData)
   {
-    //from tri a,b,c to line segments a,b a,c b,c
-    faces.push_back({face.x, face.y});
-    faces.push_back({face.x, face.z});
-    faces.push_back({face.y, face.z});
-  }
+    
+    for(unsigned i = 0; i < mesh.indices.size() + 2; i += 3)
+    {
+      
+      //from tri a,b,c to line segments a,b a,c b,c
+      faces.push_back({ mesh.indices[0], mesh.indices[1] });
+      faces.push_back({ mesh.indices[0], mesh.indices[2] });
+      faces.push_back({ mesh.indices[1], mesh.indices[2] });
+    }
 
-  for (auto& vert : obj.verts)
-  {
-    glm::vec3 postVert = obj.modelMatrix * glm::vec4(vert, 1);
-    verts.push_back(postVert);
+    for (auto& vert : mesh.vertices)
+    {
+      glm::vec3 postVert = obj.modelMatrix * mesh.meshMatrix * glm::vec4(vert.pos, 1);
+      verts.push_back(postVert);
+    }
   }
 
 

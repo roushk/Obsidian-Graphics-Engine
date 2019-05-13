@@ -4,13 +4,13 @@
 #include <GL/glew.h>
 
 
-struct Object;
+struct Model;
 
 class Wireframe
 {
 public:
   Wireframe(const Wireframe& rhs);
-  Wireframe(Object& obj);
+  Wireframe(Model& obj);
 
 
   ~Wireframe();

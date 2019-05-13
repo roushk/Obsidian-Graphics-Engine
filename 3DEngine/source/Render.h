@@ -1,25 +1,15 @@
-/* Start Header -------------------------------------------------------
-Copyright (C) 2019 DigiPen Institute of Technology.
-Reproduction or disclosure of this file or its contents without the prior written
-consent of DigiPen Institute of Technology is prohibited.
 
-File Name: Render.h
-Purpose: Render class header and implementation to setup and render the models
-Language: C++ MSVC
-Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
-Project: coleman.jonas_CS350_1
-Author: Coleman Jonas coleman.jonas 280003516
-Creation date: 5/26/18
-End Header --------------------------------------------------------*/
 #pragma once
 #include <glm/glm.hpp>
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 #include "Object.h"
 #include "Light.h"
 #include "Material.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.h"
+#include "SDL2/SDL_bits.h"
+#include "SDL2/SDL.h"
 
 
 #define PI 3.14159265359f
@@ -171,17 +161,6 @@ public:
   void UpdateCamera(float dt);
   void Draw(Object& object);
   void Draw(Wireframe& object);
-  
-  void Draw(OctreeNode* object);
-  void Draw_rec(OctreeNode* object);
-  
-  void Draw(BSPNode* object);
-  void Draw_rec(BSPNode* object);
-
-  void Draw_Wireframe(OctreeNode* object);
-  void Draw_Wireframe_rec(OctreeNode* object);
-
-
 
   void EndDrawing();
   void ClearColor(vec4 color);
@@ -202,7 +181,8 @@ public:
   */
   bool flipX = false;
   mat4 inverseCamRotate;
-  GLFWwindow* window;
+  
+  SDL_Window* window;
   int height;
   float aspect = 1;
 

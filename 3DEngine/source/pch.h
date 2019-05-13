@@ -13,6 +13,7 @@
 #include <Windows.h>
 #undef near
 #undef far
+#undef GetObject
 
 
 // SDL2 library
