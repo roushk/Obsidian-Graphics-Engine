@@ -154,6 +154,15 @@ void Render::GenFrameBuffers()
   glGenRenderbuffers(6, FBODepthBuffers);
 }
 
+
+void Render::resize(int w, int h)
+{
+  height = h;
+  SDL_SetWindowSize(gWindow, w, height);
+  glViewport(0, 0, w, height);
+  aspect = float(w) / float(height);
+}
+
 void Render:: BindAndCreateGBuffers()
 {
   GLuint numBuffers = 5;

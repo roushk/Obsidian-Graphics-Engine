@@ -192,13 +192,16 @@ public:
 
   float nearPlane = 1.0f;
   float farPlane = 120.0f;
-  
+
+
   GLuint skyboxTextureID[6];  //texture ID's for the skybox
 
   GLuint specularMaterialID;
   GLuint diffuseMaterialID;
   int currentUVModel = 0;
   unsigned setting = rsNone;
+
+  void resize(int w, int h);
 
   void AddLight(Light light);
   void ClearLights();
