@@ -212,6 +212,9 @@
     <ClCompile Include="source\loadfile.h">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
+    <ClCompile Include="source\InputManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\assimp\ai_assert.h">
@@ -2082,6 +2085,9 @@
     </ClInclude>
     <ClInclude Include="source\GUI.h">
       <Filter>Source Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="source\InputManager.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

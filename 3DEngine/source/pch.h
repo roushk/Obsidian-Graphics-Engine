@@ -117,3 +117,11 @@ namespace json = nlohmann;
 namespace filesystem = std::experimental::filesystem::v1;
 using namespace std::chrono_literals;
 
+#include "singleton.h"
+#include "InputManager.h"
+#include "Render.h"
+#include "GUI.h"
+#include "Wireframe.h"
+#include "Camera.h"
+#include "Light.h"
+

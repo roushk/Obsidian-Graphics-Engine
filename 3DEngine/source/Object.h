@@ -34,13 +34,19 @@ enum class MeshUVSetting
   custom
 };
 
-class Mesh
-{
-public:
-  Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
-       const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere, const std::vector<glm::vec2>& planar);
 
-  Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
+
+struct Model
+{
+  Model(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
+    const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere, const std::vector<glm::vec2>& planar);
+
+  Model(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
+  Model() { name = "DEFAULT_MODEL_NAME"; };
+  std::string modelName;
+  glm::mat4 modelMatrix = glm::mat4(1.0f);
+  std::pair<VAO, std::size_t> meshes;
+  glm::vec3 halfExtents {0,0,0};
 
   VAO get_vao() const;
   VBO get_vbo() const;
@@ -62,24 +68,13 @@ public:
   void change_uv_coord_mapping(MeshUVSetting newSetting);
 
   glm::mat4 meshMatrix = glm::mat4(1.0f);
+  void setup_mesh();
+
 private:
 
   VAO vao = -1;
   VBO vbo = -1;
   IBO ibo = -1;
-
-
-  void setup_mesh();
-};
-
-
-struct Model
-{
-  std::string modelName;
-  glm::mat4 modelMatrix = glm::mat4(1.0f);
-  std::vector<std::pair<VAO, std::size_t>> meshes;
-  std::vector<Mesh> meshData;
-  glm::vec3 halfExtents;
 };
 
 class ObjectReader
@@ -90,7 +85,7 @@ class ObjectReader
 
   glm::vec2 uv_calc(glm::vec3 point);
 
-  Mesh process_mesh(aiMesh* mesh, const aiScene* scene);
+  Model process_mesh(aiMesh* mesh, const aiScene* scene);
 
 public:
   Model load(const std::string& filename) noexcept;

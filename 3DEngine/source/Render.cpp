@@ -53,7 +53,7 @@ Render::~Render()
 
   // Close the SDL window
   
-  SDL_DestroyWindow(window);
+  SDL_DestroyWindow(gWindow);
 }
 
 void Render::GenGBuffer()
@@ -442,10 +442,10 @@ void Render::LoadModel(Wireframe& object)
 }
 
 
-void Render::LoadModel(Object& object)
+void Render::LoadModel(Model& object)
 {
   glUseProgram(programID);
-  glBindVertexArray(object.VAO);
+  glBindVertexArray(object.get_vao());
 
  /*
   glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
@@ -646,44 +646,67 @@ void Render::SetCurrentDebugTexture(unsigned debugTextureNext)
 
 bool Render::InitRender()
 {
-  // Initialise GLFW
-  glfwWindowHint(GLFW_SAMPLES, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  if (!glfwInit())
-  {
-    std::cout << "Failed to initialize GLFW" << std::endl;
-    getchar();
-    return false;
-  }
+  
 
-  // Open a window and create its OpenGL context 1024, 768
-  window = glfwCreateWindow(1024, 768, "CS350: Assignment 1", NULL, NULL);
-  if (window == NULL)
-  {
-    std::cout <<
-      "Failed to open GLFW window. If you have an Intel GPU, they are not 4.0 compatible. Try the 2.1 version of the tutorials.\n" << std::endl;
-    getchar();
-    glfwTerminate();
-    return false;
-  }
-  glfwMakeContextCurrent(window);
+  //initialise openGL window and context using SDL
+  gWindow = NULL;
+  gContext = new SDL_GLContext;
 
-  // Initialize GLEW
-  glewExperimental = true; // Needed for core profile
-  if (glewInit() != GLEW_OK)
-  {
-    std::cout << "Failed to initialize GLEW" << std::endl;
-    getchar();
-    glfwTerminate();
-    return false;
-  }
+  //Initialization flag
+  creationSuccess = false;
 
-  // Ensure we can capture the escape key being pressed below
-  glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-  Update();
+  //Initialize SDL
+  if (SDL_Init(SDL_INIT_VIDEO) < 0)
+  {
+    std::cout << "SDL could not initialize the window! SDL_Error: %s\n" << SDL_GetError() << std::endl;
+    creationSuccess = false;
+    return;
+  }
+  else
+  {
+    std::string programName = "3DEngine";
+    int screenWidth = 1024;
+    int screenHeight = 768;
+
+    //creates window and sets window flags
+    gWindow = SDL_CreateWindow(programName.c_str(), SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (gWindow == NULL)
+    {
+      std::cout << "Window could not be created! SDL_Error: %s\n" << SDL_GetError() << std::endl;
+
+      creationSuccess = false;
+      return;
+    }
+
+    *gContext = SDL_GL_CreateContext(gWindow);
+
+    //~~~~~~~~~~~~~~~~~~~~~//
+    //SET OPENGL ATTRIBUTES//
+    //~~~~~~~~~~~~~~~~~~~~~//
+
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    //sets OpenGL context version of the SDL window
+    //set to OpenGL 4.3
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    //enableing double buffering
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);  //may need to be 16 or 32
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+
+    //~~~~~~~~~~~~~~~~~~//
+    //INITIALIZEING GLEW//
+    //~~~~~~~~~~~~~~~~~~//
+
+    //sets us to use newest versions of functions
+    glewExperimental = GL_TRUE;
+
+    glewInit();
+
+    //sets refresh rate to the monitors refresh rate
+    SDL_GL_SetSwapInterval(1);
+    Update();
+  }
 }
 
 void Render::CopyDepthBuffer()
@@ -704,9 +727,9 @@ void Render::BufferRefractionData()
 
 void Render::Update()
 {
-  glfwPollEvents();
+  //SDL_PollEvent();
   int width;
-  glfwGetWindowSize(window, &width, &height);
+  SDL_GetWindowSize(gWindow, &width, &height);
   glViewport(0, 0, width, height);
   float oldAspect = aspect;
   aspect = float(width) / float(height);
@@ -823,7 +846,7 @@ void Render::Draw(Wireframe& object)
   glDrawElements(GL_LINES, object.faces.size() * 2, GL_UNSIGNED_INT, 0);
 }
 
-void Render::Draw(Object& object)
+void Render::Draw(Model& object)
 {
   glUseProgram(programID);
 
@@ -842,7 +865,7 @@ void Render::Draw(Object& object)
 
   //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
-  glDrawElements(GL_TRIANGLES, object.faces.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
+  glDrawElements(GL_TRIANGLES, object.indices.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
 
 }
 
@@ -852,7 +875,7 @@ void Render::EndDrawing()
   //glDisableVertexAttribArray(1);
   //glDisableVertexAttribArray(2);
   // Swap buffers
-  SDL_GL_SwapWindow(window);
+  SDL_GL_SwapWindow(gWindow);
 }
 
 void Render::ClearColor(vec4 color)
@@ -867,7 +890,7 @@ void Render::SetTitle(std::string object)
   title += " Setting: ";
   title += renderSetting;
 
-  SDL_SetWindowTitle(window, title.c_str());
+  SDL_SetWindowTitle(gWindow, title.c_str());
 }
 
 void Render::AddLight(Light light)

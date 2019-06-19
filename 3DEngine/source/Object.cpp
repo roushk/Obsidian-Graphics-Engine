@@ -3,38 +3,39 @@
 #include "singleton.h"
 #include "loadfile.h"
 
-Mesh::Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
-           const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere,
-           const std::vector<glm::vec2>& planar): name(name), vertices(vertices), indices(indices),
-                                                  uvCylindrical(cyl), uvSpherical(sphere), uvPlanar(planar)
+
+Model::Model(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices,
+  const std::vector<glm::vec2>& cyl, const std::vector<glm::vec2>& sphere,
+  const std::vector<glm::vec2>& planar) : name(name), vertices(vertices), indices(indices),
+  uvCylindrical(cyl), uvSpherical(sphere), uvPlanar(planar)
 {
   uvSetting = MeshUVSetting::sphere;
   setup_mesh();
 }
 
-Mesh::Mesh(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices):name(name), vertices(vertices), indices(indices)
+Model::Model(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices) :name(name), vertices(vertices), indices(indices)
 {
   uvSetting = MeshUVSetting::custom;
   setup_mesh();
 }
 
 
-VAO Mesh::get_vao() const
+VAO Model::get_vao() const
 {
   return vao;
 }
 
-VBO Mesh::get_vbo() const
+VBO Model::get_vbo() const
 {
   return vbo;
 }
 
-IBO Mesh::get_ibo() const
+IBO Model::get_ibo() const
 {
   return ibo;
 }
 
-void Mesh::change_uv_coord_mapping(MeshUVSetting newSetting)
+void Model::change_uv_coord_mapping(MeshUVSetting newSetting)
 {
   uvSetting = newSetting;
   if (uvSetting == MeshUVSetting::custom)
@@ -63,7 +64,7 @@ void Mesh::change_uv_coord_mapping(MeshUVSetting newSetting)
   glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
 }
 
-void Mesh::setup_mesh()
+void Model::setup_mesh()
 {
   glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
@@ -90,7 +91,7 @@ void Mesh::setup_mesh()
 Model ObjectReader::load_model(const std::string& path)
 {
   Assimp::Importer importer;
-  Model newModel{};
+  Model newModel;
   const auto scene = importer.ReadFile(path.c_str(),
                                        aiProcessPreset_TargetRealtime_Quality | aiProcess_SortByPType |
                                        aiProcess_PreTransformVertices);
@@ -98,6 +99,9 @@ Model ObjectReader::load_model(const std::string& path)
   {
     std::cout << "couldn't load model from path: " << path << std::endl;
   }
+  
+  newModel.name = scene->mRootNode->mName.C_Str();
+
   process_node(scene->mRootNode, scene, newModel);
   //Process materials and generate UV coordinates
 
@@ -109,8 +113,8 @@ void ObjectReader::process_node(aiNode* node, const aiScene* scene, Model& m)
   for (unsigned i = 0; i < node->mNumMeshes; ++i)
   {
     const auto mesh = scene->mMeshes[node->mMeshes[i]];
-    m.meshData.emplace_back(process_mesh(mesh, scene));
-    m.meshData.back().change_uv_coord_mapping(MeshUVSetting::planar);
+    m = process_mesh(mesh, scene);
+    m.change_uv_coord_mapping(MeshUVSetting::planar);
   }
   for (unsigned i = 0; i < node->mNumChildren; ++i)
   {
@@ -174,7 +178,7 @@ glm::vec2 ObjectReader::uv_calc(glm::vec3 point)
   return uv;
 }
 
-Mesh ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
+Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
 {
   std::string name(mesh->mName.C_Str());
 
@@ -276,7 +280,7 @@ Mesh ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
     glm::vec2 uv = uv_calc(vert);
     uvPlanar.push_back(uv);
   }
-  return Mesh(name, vertices, indices, uvCylindrical, uvSpherical, uvPlanar);
+  return Model(name, vertices, indices, uvCylindrical, uvSpherical, uvPlanar);
 }
 
 Model ObjectReader::load(const std::string& filename) noexcept
@@ -287,40 +291,40 @@ Model ObjectReader::load(const std::string& filename) noexcept
   glm::vec3 minSize(0, 0, 0);
   glm::vec3 maxSize(0, 0, 0);
 
-  for (const auto& mesh : md.meshData)
+  const auto& mesh = md;
+  
+  /*
+    So here is where we ran unto a WONDERFUL issue with the editor/sizing models where the walls would not easily line up
+   this is fixed by in Maya creating a plane that represents the 1x1(possibly 1x1x1) unit square the mesh will be scaled down too
+   this is to allow things such as uncentered walls and corners to line up properly. the debug is not added to the actual render but
+   is used in the 1x1 calculation. We decided the easiest way is solving this with the DEBUG_PLANE. Think of it as a meter stick
+   used to measure and scale walls properly. Its only needed for room walls and things that need pixel perfect matching aka walls,
+   and things that are on the grid that need to match other things on the grid. - Coleman
+ */
+
+  if (mesh.name != std::string("DEBUG_PLANE"))
+    info.meshes = (std::make_pair(mesh.get_vao(), mesh.indices.size()));
+
+  //generate model to world transform
+  //gets the min and max sizes of each
+
+  for (const auto& vert : mesh.vertices)
   {
-    /*
-      So here is where we ran unto a WONDERFUL issue with the editor/sizing models where the walls would not easily line up
-     this is fixed by in Maya creating a plane that represents the 1x1(possibly 1x1x1) unit square the mesh will be scaled down too
-     this is to allow things such as uncentered walls and corners to line up properly. the debug is not added to the actual render but
-     is used in the 1x1 calculation. We decided the easiest way is solving this with the DEBUG_PLANE. Think of it as a meter stick
-     used to measure and scale walls properly. Its only needed for room walls and things that need pixel perfect matching aka walls,
-     and things that are on the grid that need to match other things on the grid. - Coleman
-   */
+    if (vert.pos.x > maxSize.x)
+      maxSize.x = vert.pos.x;
+    if (vert.pos.y > maxSize.y)
+      maxSize.y = vert.pos.y;
+    if (vert.pos.z > maxSize.z)
+      maxSize.z = vert.pos.z;
 
-    if (mesh.name != std::string("DEBUG_PLANE"))
-      info.meshes.emplace_back(std::make_pair(mesh.get_vao(), mesh.indices.size()));
-
-    //generate model to world transform
-    //gets the min and max sizes of each
-
-    for (const auto& vert : mesh.vertices)
-    {
-      if (vert.pos.x > maxSize.x)
-        maxSize.x = vert.pos.x;
-      if (vert.pos.y > maxSize.y)
-        maxSize.y = vert.pos.y;
-      if (vert.pos.z > maxSize.z)
-        maxSize.z = vert.pos.z;
-
-      if (vert.pos.x < minSize.x)
-        minSize.x = vert.pos.x;
-      if (vert.pos.y < minSize.y)
-        minSize.y = vert.pos.y;
-      if (vert.pos.z < minSize.z)
-        minSize.z = vert.pos.z;
-    }
+    if (vert.pos.x < minSize.x)
+      minSize.x = vert.pos.x;
+    if (vert.pos.y < minSize.y)
+      minSize.y = vert.pos.y;
+    if (vert.pos.z < minSize.z)
+      minSize.z = vert.pos.z;
   }
+
   info.modelName = filename;
   glm::vec3 scale = abs(minSize - maxSize);
 

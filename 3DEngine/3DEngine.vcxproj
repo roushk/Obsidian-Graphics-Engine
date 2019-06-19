@@ -71,6 +71,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\InputManager.cpp" />
     <ClCompile Include="source\loadfile.h" />
     <ClCompile Include="source\Material.cpp" />
     <ClCompile Include="source\MetaStuff\StringCast.cpp">
@@ -612,6 +613,7 @@
     <ClInclude Include="source\imgui\imstb_rectpack.h" />
     <ClInclude Include="source\imgui\imstb_textedit.h" />
     <ClInclude Include="source\imgui\imstb_truetype.h" />
+    <ClInclude Include="source\InputManager.h" />
     <ClInclude Include="source\JSON\json.hpp" />
     <ClInclude Include="source\Light.h" />
     <ClInclude Include="source\Material.h" />

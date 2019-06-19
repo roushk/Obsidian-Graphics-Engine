@@ -130,7 +130,7 @@ public:
 
   void BindMaterials(SceneLighting& lighting);
 
-  void LoadModel(Object& object); // Object object); 
+  void LoadModel(Model& object); // Object object); 
   void LoadModel(Wireframe& object);
   
   void ClearScreen();
@@ -159,7 +159,7 @@ public:
   void Update();
   void BindModelBuffer();
   void UpdateCamera(float dt);
-  void Draw(Object& object);
+  void Draw(Model& object);
   void Draw(Wireframe& object);
 
   void EndDrawing();
@@ -182,8 +182,12 @@ public:
   bool flipX = false;
   mat4 inverseCamRotate;
   
-  SDL_Window* window;
-  int height;
+  SDL_Window* gWindow;
+  SDL_GLContext* gContext;
+  bool creationSuccess;
+  int height = 1;
+
+  //width/height, width = aspect * height
   float aspect = 1;
 
   float nearPlane = 1.0f;
