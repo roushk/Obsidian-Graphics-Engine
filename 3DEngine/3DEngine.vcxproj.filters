@@ -59,27 +59,6 @@
     <ClCompile Include="source\glm\detail\glm.cpp">
       <Filter>Libraries\glm</Filter>
     </ClCompile>
-    <ClCompile Include="source\imgui\imgui.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_demo.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_draw.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_impl_opengl3.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_impl_sdl.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_stl.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="source\imgui\imgui_widgets.cpp">
-      <Filter>Libraries\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="source\MetaStuff\StringCast.cpp">
       <Filter>Libraries\MetaStuff</Filter>
     </ClCompile>
@@ -214,6 +193,27 @@
     </ClCompile>
     <ClCompile Include="source\InputManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_impl_sdl.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_stl.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_widgets.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_demo.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_draw.cpp">
+      <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\imgui\imgui_impl_opengl3.cpp">
+      <Filter>Libraries\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1186,33 +1186,6 @@
     <ClInclude Include="source\glm\vector_relational.hpp">
       <Filter>Libraries\glm</Filter>
     </ClInclude>
-    <ClInclude Include="source\imgui\imconfig.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imgui.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imgui_impl_opengl3.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imgui_impl_sdl.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imgui_internal.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imgui_stl.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imstb_rectpack.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imstb_textedit.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
-    <ClInclude Include="source\imgui\imstb_truetype.h">
-      <Filter>Libraries\imgui</Filter>
-    </ClInclude>
     <ClInclude Include="source\MetaStuff\detail\MetaHolder.h">
       <Filter>Libraries\MetaStuff</Filter>
     </ClInclude>
@@ -2088,6 +2061,36 @@
     </ClInclude>
     <ClInclude Include="source\InputManager.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imgui_impl_opengl3.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imgui_impl_sdl.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imgui_internal.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imgui_stl.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imstb_rectpack.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imstb_textedit.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imstb_truetype.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imconfig.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\imgui\imgui.h">
+      <Filter>Libraries\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="source\engine.h">
+      <Filter>Source Files\main</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

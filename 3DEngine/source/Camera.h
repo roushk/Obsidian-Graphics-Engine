@@ -16,13 +16,13 @@ inline glm::vec4 cross(const glm::vec4& left, const glm::vec4& right)
 class Camera {
   public:
     Camera(void);
-    Camera(const glm::vec4& E, const glm::vec4& look, const glm::vec4& rel,
+    Camera(const glm::vec3& E, const glm::vec3& look, const glm::vec3& rel,
            float fov, float aspect, float N, float F);
-    glm::vec4 eye(void) const;  //camera pos
-    glm::vec4 right(void) const;
-    glm::vec4 up(void) const;
-    glm::vec4 back(void) const;
-    glm::vec4 viewportGeometry(void) const;
+    glm::vec3 eye(void) const;  //camera pos
+    glm::vec3 right(void) const;
+    glm::vec3 up(void) const;
+    glm::vec3 back(void) const;
+    glm::vec3 viewportGeometry(void) const;
 
     float nearDistance(void) const;
     float farDistance(void) const;
@@ -33,9 +33,9 @@ class Camera {
     Camera& roll(float angle);
     Camera& leftRight(float distance);
     Camera& upDown(float distance);
+    glm::vec3 right_vector, up_vector, back_vector;
   private:
-    glm::vec4 eye_point;
-    glm::vec4 right_vector, up_vector, back_vector;
+    glm::vec3 eye_point;
     float width, height, distance,
           near, far;
 };

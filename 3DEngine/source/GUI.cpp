@@ -2,9 +2,12 @@
 #include "GUI.h"
 
 
-GUI::GUI(ObjectReader& reader_, SceneLighting& lighting_, Render& render_): reader(reader_), lighting(lighting_),
-                                                                            render(render_)
+
+GUI::GUI() : reader(pattern::get<ObjectReader>()), lighting(pattern::get<SceneLighting>()),
+render(pattern::get<Render>())
 {
+  if (render.gWindow == nullptr)
+    std::cout << "test" << std::endl;
 }
 
 void GUI::SetStyle()
@@ -69,7 +72,7 @@ void GUI::SetStyle()
   Style.Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
 }
 
-void GUI::BindImGUI(GLFWwindow* window)
+void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -80,8 +83,8 @@ void GUI::BindImGUI(GLFWwindow* window)
 
   io.IniFilename = NULL; //disable imgui.ini
 
-  ImGui_ImplGlfw_InitForOpenGL(window, true);
-  ImGui_ImplOpenGL3_Init();
+  ImGui_ImplSDL2_InitForOpenGL(window, context);
+   ImGui_ImplOpenGL3_Init("#version 430");
 
   // Setup style
   //SetStyle();
@@ -93,7 +96,7 @@ void GUI::BindImGUI(GLFWwindow* window)
 void GUI::RenderFrame()
 {
   ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
+  ImGui_ImplSDL2_NewFrame(pattern::get<Render>().gWindow);
   ImGui::NewFrame();
   //***************************************************************//
   //ImGui::ShowDemoWindow();
@@ -483,6 +486,6 @@ void GUI::Update(float dt)
 GUI::~GUI()
 {
   ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
+  ImGui_ImplSDL2_Shutdown();
   ImGui::DestroyContext();
 }

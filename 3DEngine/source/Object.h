@@ -87,9 +87,12 @@ class ObjectReader
 
   Model process_mesh(aiMesh* mesh, const aiScene* scene);
 
+  std::vector<Model> models;
 public:
-  Model load(const std::string& filename) noexcept;
+  Model& load(const std::string& filename) noexcept;
   void loadMultiple(const std::string& filename);
+  Model& GetObject(int objNum);
+
 };
 
 

@@ -4,31 +4,15 @@
 //*****************************************************//
 
 #include <pch.h>
+#include "engine.h"
 
-
-int engine(int argc, char** argv)
-{
-  /*
-  utils::initialize();
-
-  {
-    game::Game dave;
-    dave.initialize();
-    dave.run();
-    dave.destroy();
-  }
-
-  utils::uninitialize();
-  */
-  return EXIT_SUCCESS;
-}
 
 int main(int argc, char* argv[])
 {
   std::cout << "test" << std::endl;
   try
   {
-    return engine(argc, argv);
+    return engineRun(); // (argc, argv);
   }
   catch (const std::exception& e)
   {

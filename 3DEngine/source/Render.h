@@ -272,6 +272,9 @@ public:
 
   float transmissionCoefficient = 1.0f;
   float highlightTightness = 0.5f;
+
+  glm::vec2 position{ 0,0 };
+
 private:
   vec3 objectPos;
   vec4 eyePos{0, 0, 2, 0};
@@ -312,6 +315,8 @@ private:
   GLuint uboHandle[2];
   GLubyte* uboBuffer[2];
   unsigned debugTexture = 0;
+
+
 };
 #endif
 

@@ -28,11 +28,12 @@ bool MaterialReader::ReadMaterial(std::string filename)
   unsigned comment = data.find('#'); //sets comment pos
 
   //strips comments
-  while (comment != std::string::npos)
+  //for some reason was not breaking when comment was npos so added the -1
+  while (comment != std::string::npos && comment != -1)
   {
     unsigned newLine = data.find('\n', comment);
 
-    if (newLine == std::string::npos)
+    if (newLine == std::string::npos || newLine == -1)
       throw(std::string("No newline for end of comment in Material Reader for Material:") + filename);
 
     //erases the comment from pos comment of size newline pos - comment pos

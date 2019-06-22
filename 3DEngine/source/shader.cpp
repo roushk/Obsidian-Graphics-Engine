@@ -9,7 +9,7 @@ Language: C++ MSVC
 Platform: VS 141, OpenGL 4.3 compatabile device driver, Win10
 Author: Pushpak Karnick
 End Header --------------------------------------------------------*/
-
+#include "pch.h"
 #include <stdio.h>
 #include <string>
 #include <vector>

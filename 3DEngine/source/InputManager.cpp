@@ -16,10 +16,11 @@ InputManager::~InputManager()
 
 void InputManager::Update(float dt)
 {
-  auto render = pattern::get<Render>();
-  auto input = pattern::get<InputManager>();
-  auto gui = pattern::get<GUI>();
-  auto reader = pattern::get<ObjectReader>();
+  auto& render = pattern::get<Render>();
+  auto& input = pattern::get<InputManager>();
+  auto& gui = pattern::get<GUI>();
+  auto& reader = pattern::get<ObjectReader>();
+  auto& camera = render.currentCamera;
 
 
   bool pressedLeft = false;
@@ -28,6 +29,11 @@ void InputManager::Update(float dt)
   bool pressedB = false;
   dvec2 cursorPos(0, 0);
   unsigned iteratorVal = 0;
+
+  int windowX = 0;
+  int windowY = 0;
+  SDL_GetWindowPosition(render.gWindow, &windowX, &windowY);
+  render.position = glm::vec2(windowX, windowY);
 
   if (pressedLeft && gui.buttonLeftDown == false)
   {
@@ -44,7 +50,6 @@ void InputManager::Update(float dt)
   {
     pressedLeft = true;
   }
-
   if (pressedRight && gui.buttonRightDown == false)
   {
     /*
@@ -76,7 +81,6 @@ void InputManager::Update(float dt)
  
   const float speed = 1.0f * dt;
 
-
   SDL_Event event;
   //while event queue is not empty pop off and deal with
   while (SDL_PollEvent(&event))
@@ -99,7 +103,7 @@ void InputManager::Update(float dt)
         //|| event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) //breaks everything called ALOT
 
       {
-        pattern::get<Render>().resize(event.window.data1, event.window.data2);
+       render.resize(event.window.data1, event.window.data2);
       }
       else if (event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
       {
@@ -118,35 +122,35 @@ void InputManager::Update(float dt)
 
       if (event.key.keysym.scancode == SDL_SCANCODE_W)
       {
-        render.cameraBase.forward(speed * 2.0f);
+        camera.forward(speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_A)
       {
-        render.cameraBase.leftRight(speed * 2.0f);
+        camera.leftRight(speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_S)
       {
-        render.cameraBase.forward(-speed * 2.0f);
+        camera.forward(-speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_D)
       {
-        render.cameraBase.leftRight(-speed * 2.0f);
+        camera.leftRight(-speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT)
       {
-        render.cameraBase.upDown(-speed * 2.0f);
+        camera.upDown(-speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL)
       {
-        render.cameraBase.upDown(speed * 2.0f);
+        camera.upDown(speed * 2.0f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_Q)
       {
-        render.cameraBase.roll(speed * 0.8f);
+        camera.roll(speed * 0.8f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_E)
       {
-        render.cameraBase.roll(-speed * 0.8f);
+        camera.roll(-speed * 0.8f);
       }
       
       //engine.GetSystem<Render>()->cameraPos =
@@ -216,17 +220,17 @@ void InputManager::Update(float dt)
           front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
           //mainCamera.cameraRight
           //mainCamera.cameraUp
-          render.cameraBase.back() = glm::normalize(front);
-          render.cameraBase.right = glm::normalize(glm::cross(render.cameraBase.up, render.cameraBase.forward));
+          camera.back_vector = glm::vec4(glm::normalize(-front),1);
+          camera.right_vector =
+            glm::vec4(glm::normalize(glm::cross(camera.up_vector,
+              camera.back_vector)), 1);;
 
 
-          utils::update_camera("mainCamera", mainCamera);
-          utils::set_camera(registryKey);
-
-
-          glm::vec2 windowPos = pattern::get<utils::Window>().get_position();
-          glm::vec2 windowRes = pattern::get<utils::Window>().get_resolution();
-
+          //utils::update_camera("mainCamera", mainCamera);
+          //utils::set_camera(registryKey);
+          
+          glm::vec2 windowPos = render.position;
+          glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
           SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
             windowPos.y + windowRes.y / 2);
@@ -256,15 +260,14 @@ void InputManager::Update(float dt)
       float scale = 1.0f;
       if (event.wheel.y > 0) // scroll up
       {
-        scale = 1.1f;
+        camera.zoom(1.1f);
         // Pull up code here!
       }
       else if (event.wheel.y < 0) // scroll down
       {
         // Pull down code here!
-        scale = 0.9f;
+        camera.zoom(0.9f);
       }
-      engine.GetSystem<Render>()->cameraScale *= scale;
       //= glm::scale(engine.GetSystem<Render>()->cameraPos, glm::vec3(scale, scale, 1.0f));
     }
     break;

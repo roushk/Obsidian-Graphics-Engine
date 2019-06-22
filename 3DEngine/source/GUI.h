@@ -1,18 +1,10 @@
-
 #ifndef GUI_H
 #define GUI_H
 #define PI 3.14159265359f
 
-#include <vector>
-#include <GL/glew.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_sdl.h"
-#include "imgui/imgui_impl_opengl3.h"
-#include "imgui/imgui_internal.h"
 
 #include "Object.h"
 #include "Light.h"
@@ -38,13 +30,13 @@ class GUI
 {
 public:
 
-  GUI(ObjectReader& reader_, SceneLighting& lighting_, Render& render_);
+  GUI();
+  ~GUI();
 
   void SetStyle();
-  void BindImGUI(GLFWwindow* window);
+  void BindImGUI(SDL_Window* window, SDL_GLContext* context);
   void RenderFrame();
   void Update(float dt = 0);
-  ~GUI();
 
   bool buttonLeftDown = false;
   bool buttonRightDown = false;

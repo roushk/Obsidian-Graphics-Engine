@@ -1,15 +1,14 @@
 #include <pch.h>
 #include "Projection.h"
-#include <glm/gtc/matrix_transform.inl>
 
 
 glm::mat4 cameraToWorld(const Camera& cam)
 {
   glm::mat4 Mc(1.0f);
-  glm::vec4 U = cam.right();
-  glm::vec4 V = cam.up();
-  glm::vec4 N = cam.back();
-  glm::vec4 E = cam.eye();
+  glm::vec3 U = cam.right();
+  glm::vec3 V = cam.up();
+  glm::vec3 N = cam.back();
+  glm::vec3 E = cam.eye();
   
   Mc[0] = glm::vec4(glm::vec3(U), 0);
   Mc[1] = glm::vec4(glm::vec3(V), 0);
@@ -28,7 +27,7 @@ glm::mat4 cameraToNDC(const Camera& cam)
 {
   glm::mat4 M(1.0f);
   //W,H,D
-  glm::vec4 v = cam.viewportGeometry();
+  glm::vec3 v = cam.viewportGeometry();
   float N = cam.nearDistance();
   float F = cam.farDistance();
   M[0] = glm::vec4((2.0f * v.z)/v.x, 0,0,0);
@@ -46,10 +45,10 @@ glm::mat4 cameraToNDC(const Camera& cam)
 glm::mat4 cameraToWorldSkyBox(const Camera& cam)
 {
   glm::mat4 Mc(1.0f);
-  glm::vec4 U = cam.right();
-  glm::vec4 V = cam.up();
-  glm::vec4 N = cam.back();
-  glm::vec4 E = cam.eye();
+  glm::vec3 U = cam.right();
+  glm::vec3 V = cam.up();
+  glm::vec3 N = cam.back();
+  glm::vec3 E = cam.eye();
 
 
   Mc[3] = glm::vec4(glm::vec3(E), 1);

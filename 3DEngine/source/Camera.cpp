@@ -1,7 +1,7 @@
 #include <pch.h>
 #include "Camera.h"
 
-const float PI = 4.0f*atanf(1.0f);
+//const float PI = 4.0f*atanf(1.0f);
 
 Camera::Camera(void)
 {
@@ -23,7 +23,7 @@ Camera::Camera(void)
   //same with height
 }
 
-Camera::Camera(const glm::vec4& E, const glm::vec4& look, const glm::vec4& rel,
+Camera::Camera(const glm::vec3& E, const glm::vec3& look, const glm::vec3& rel,
        float fov, float aspect, float N, float F)
 {
   /*    
@@ -37,18 +37,12 @@ Camera::Camera(const glm::vec4& E, const glm::vec4& look, const glm::vec4& rel,
   */
   eye_point = E;
   
-  glm::vec4 newLook = look;
+  glm::vec3 newLook = look;
 
   back_vector = (-1.0f / glm::length(newLook)) * newLook;
 
   right_vector = ((1.0f / glm::length(cross(look, rel))) * cross(look, rel) );
-  back_vector.w = 1.0f;
-  right_vector.w = 1.0f;
-
   up_vector = cross(back_vector, right_vector);
-
-  up_vector.w = 1.0f;
-
 
   near = N;
   far = F;
@@ -102,9 +96,9 @@ Camera& Camera::yaw(float angle)
   //V = up_vector
   //N = back_vector
   //right_vector←R(θup_vector)right_vector 
-  right_vector = rotate(angle, glm::vec3(up_vector)) * right_vector;
+  right_vector = rotate(angle, glm::vec3(up_vector)) * glm::vec4(right_vector, 1);
   //back_vector←R(θup_vector) back_vector
-  back_vector = rotate(angle, glm::vec3(up_vector)) *  back_vector;
+  back_vector = rotate(angle, glm::vec3(up_vector)) *  glm::vec4(back_vector, 1);
   return *this;
 
 }
@@ -113,45 +107,45 @@ Camera& Camera::pitch(float angle)
 {
   
   //up_vector←R(θright_vector)up_vector
-  up_vector = rotate(angle, glm::vec3(right_vector)) * up_vector;
+  up_vector = rotate(angle, glm::vec3(right_vector)) * glm::vec4(up_vector, 1);
   //back_vector←R(θright_vector)back_vector
-  back_vector = rotate(angle, glm::vec3(right_vector)) * back_vector;
+  back_vector = rotate(angle, glm::vec3(right_vector)) * glm::vec4(back_vector, 1);
   return *this;
 }
 
 Camera& Camera::roll(float angle)
 {
   //right_vector←R(θback_vector)right_vector 
-  right_vector = rotate(angle, glm::vec3(back_vector)) * right_vector;
+  right_vector = rotate(angle, glm::vec3(back_vector)) * glm::vec4(right_vector,1);
   //up_vector(θback_vector)up_vector
-  up_vector = rotate(angle, glm::vec3(back_vector)) * up_vector;
+  up_vector = rotate(angle, glm::vec3(back_vector)) * glm::vec4(up_vector,1);
   return *this;
 }
 
-glm::vec4 Camera::eye(void) const
+glm::vec3 Camera::eye(void) const
 {
   return eye_point;
 }
 
-glm::vec4 Camera::right(void) const
+glm::vec3 Camera::right(void) const
 {
   return right_vector;
 }
 
-glm::vec4 Camera::up(void) const
+glm::vec3 Camera::up(void) const
 {
   return up_vector;
 }
 
 
-glm::vec4 Camera::back(void) const
+glm::vec3 Camera::back(void) const
 {
   return back_vector;
 }
 
-glm::vec4 Camera::viewportGeometry(void) const
+glm::vec3 Camera::viewportGeometry(void) const
 {
-  return glm::vec4(width, height, distance, 1);
+  return glm::vec3(width, height, distance);
 }
 
 

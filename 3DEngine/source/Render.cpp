@@ -490,24 +490,24 @@ void Render::ClearScreen()
 
 void Render::CreateShaders()
 {
-  //programIDs[ssBlinnLighting] = LoadShaders("Shaders/BlinnLighting.vert", "Shaders/BlinnLighting.frag");
-  //programIDs[ssPhongLighting] = LoadShaders("Shaders/PhongLighting.vert", "Shaders/PhongLighting.frag");
-  //programIDs[ssPhongShading] = LoadShaders("Shaders/PhongShading.vert", "Shaders/PhongShading.frag");
-  programIDs[ssLightShader] = LoadShaders("Shaders/LightShader.vert", "Shaders/LightShader.frag");
-  //programIDs[ssSkyboxShader] = LoadShaders("Shaders/SkyboxShader.vert", "Shaders/SkyboxShader.frag");
-  //programIDs[ssPhongShadingAndReflection] = LoadShaders("Shaders/PhongShadingAndReflection.vert",
-  //                                                      "Shaders/PhongShadingAndReflection.frag");
-  //programIDs[ssReflectionMap] = LoadShaders("Shaders/ReflectionMap.vert", "Shaders/ReflectionMap.frag");
-  //programIDs[ssRefractionMap] = LoadShaders("Shaders/RefractionMap.vert", "Shaders/RefractionMap.frag");
-  //programIDs[ssFrenselApprox] = LoadShaders("Shaders/Frensel.vert", "Shaders/Frensel.frag");
-  //programIDs[ssPhongShadingAndFrensel] = LoadShaders("Shaders/PhongShadingAndFrensel.vert",
-  //                                                   "Shaders/PhongShadingAndFrensel.frag");
-  programIDs[ssWireframe] = LoadShaders("Shaders/WireframeShader.vert", "Shaders/WireframeShader.frag");
+  //programIDs[ssBlinnLighting] = LoadShaders("shaders/BlinnLighting.vert", "shaders/BlinnLighting.frag");
+  //programIDs[ssPhongLighting] = LoadShaders("shaders/PhongLighting.vert", "shaders/PhongLighting.frag");
+  //programIDs[ssPhongShading] = LoadShaders("shaders/PhongShading.vert", "shaders/PhongShading.frag");
+  programIDs[ssLightShader] = LoadShaders("shaders/LightShader.vert", "shaders/LightShader.frag");
+  //programIDs[ssSkyboxShader] = LoadShaders("shaders/SkyboxShader.vert", "shaders/SkyboxShader.frag");
+  //programIDs[ssPhongShadingAndReflection] = LoadShaders("shaders/PhongShadingAndReflection.vert",
+  //                                                      "shaders/PhongShadingAndReflection.frag");
+  //programIDs[ssReflectionMap] = LoadShaders("shaders/ReflectionMap.vert", "shaders/ReflectionMap.frag");
+  //programIDs[ssRefractionMap] = LoadShaders("shaders/RefractionMap.vert", "shaders/RefractionMap.frag");
+  //programIDs[ssFrenselApprox] = LoadShaders("shaders/Frensel.vert", "shaders/Frensel.frag");
+  //programIDs[ssPhongShadingAndFrensel] = LoadShaders("shaders/PhongShadingAndFrensel.vert",
+  //                                                   "shaders/PhongShadingAndFrensel.frag");
+  programIDs[ssWireframe] = LoadShaders("shaders/WireframeShader.vert", "shaders/WireframeShader.frag");
 
-  programIDs[ssDeferredGeometry] = LoadShaders("Shaders/DeferredGeometry.vert", "Shaders/DeferredGeometry.frag");
-  programIDs[ssDeferredRendering] = LoadShaders("Shaders/DeferredRendering.vert", "Shaders/DeferredRendering.frag");
+  programIDs[ssDeferredGeometry] = LoadShaders("shaders/DeferredGeometry.vert", "shaders/DeferredGeometry.frag");
+  programIDs[ssDeferredRendering] = LoadShaders("shaders/DeferredRendering.vert", "shaders/DeferredRendering.frag");
 
-  programIDs[ssPhongShadingDeferred] = LoadShaders("Shaders/DeferredRendering.vert", "Shaders/PhongShadingDeferred.frag");
+  programIDs[ssPhongShadingDeferred] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferred.frag");
   programID = programIDs[ssLightShader];
 }
 
@@ -669,7 +669,7 @@ bool Render::InitRender()
   {
     std::cout << "SDL could not initialize the window! SDL_Error: %s\n" << SDL_GetError() << std::endl;
     creationSuccess = false;
-    return;
+    return creationSuccess;
   }
   else
   {
@@ -685,7 +685,7 @@ bool Render::InitRender()
       std::cout << "Window could not be created! SDL_Error: %s\n" << SDL_GetError() << std::endl;
 
       creationSuccess = false;
-      return;
+      return creationSuccess;
     }
 
     *gContext = SDL_GL_CreateContext(gWindow);

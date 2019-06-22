@@ -17,24 +17,24 @@ Wireframe::Wireframe(const Wireframe& rhs)
 //creates wireframe out of object
 Wireframe::Wireframe(Model& obj)
 {
-  for(auto& mesh : obj.meshData)
+  auto& mesh = obj;
+
+  
+  for(unsigned i = 0; i < mesh.indices.size() + 2; i += 3)
   {
     
-    for(unsigned i = 0; i < mesh.indices.size() + 2; i += 3)
-    {
-      
-      //from tri a,b,c to line segments a,b a,c b,c
-      faces.push_back({ mesh.indices[0], mesh.indices[1] });
-      faces.push_back({ mesh.indices[0], mesh.indices[2] });
-      faces.push_back({ mesh.indices[1], mesh.indices[2] });
-    }
-
-    for (auto& vert : mesh.vertices)
-    {
-      glm::vec3 postVert = obj.modelMatrix * mesh.meshMatrix * glm::vec4(vert.pos, 1);
-      verts.push_back(postVert);
-    }
+    //from tri a,b,c to line segments a,b a,c b,c
+    faces.push_back({ mesh.indices[0], mesh.indices[1] });
+    faces.push_back({ mesh.indices[0], mesh.indices[2] });
+    faces.push_back({ mesh.indices[1], mesh.indices[2] });
   }
+
+  for (auto& vert : mesh.vertices)
+  {
+    glm::vec3 postVert = obj.modelMatrix * mesh.meshMatrix * glm::vec4(vert.pos, 1);
+    verts.push_back(postVert);
+  }
+
 
 
   BindVertsAndFaces();

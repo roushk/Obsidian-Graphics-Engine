@@ -283,9 +283,9 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
   return Model(name, vertices, indices, uvCylindrical, uvSpherical, uvPlanar);
 }
 
-Model ObjectReader::load(const std::string& filename) noexcept
+Model& ObjectReader::load(const std::string& filename) noexcept
 {
-  const auto md = load_model("assets/models/fbx/" + filename);
+  const auto md = load_model("models/" + filename);
   Model info;
 
   glm::vec3 minSize(0, 0, 0);
@@ -337,7 +337,7 @@ Model ObjectReader::load(const std::string& filename) noexcept
 
   info.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / maxVal));
   info.modelMatrix = translate(info.modelMatrix, glm::vec3(-center.x, -center.y, -center.z));
-
+  models.push_back(info);
   return info;
 }
 
@@ -390,4 +390,9 @@ void ObjectReader::loadMultiple(const std::string& filename)
   }
   
 
+}
+
+Model& ObjectReader::GetObject(int objNum)
+{
+  return models[objNum];
 }
