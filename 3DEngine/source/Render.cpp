@@ -21,8 +21,10 @@
 
 Render::Render()
 {
+  InitRender();
   //mvTransform = glm::mat4(1.0);
   //vTransform = glm::mat4(1.0);
+  GetError();
 }
 
 Render::~Render()
@@ -490,6 +492,7 @@ void Render::ClearScreen()
 
 void Render::CreateShaders()
 {
+  GetError();
   //programIDs[ssBlinnLighting] = LoadShaders("shaders/BlinnLighting.vert", "shaders/BlinnLighting.frag");
   //programIDs[ssPhongLighting] = LoadShaders("shaders/PhongLighting.vert", "shaders/PhongLighting.frag");
   //programIDs[ssPhongShading] = LoadShaders("shaders/PhongShading.vert", "shaders/PhongShading.frag");
@@ -658,12 +661,11 @@ bool Render::InitRender()
   
 
   //initialise openGL window and context using SDL
-  gWindow = NULL;
+  gWindow = nullptr;
   gContext = new SDL_GLContext;
 
   //Initialization flag
   creationSuccess = false;
-
   //Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
   {
@@ -687,7 +689,6 @@ bool Render::InitRender()
       creationSuccess = false;
       return creationSuccess;
     }
-
     *gContext = SDL_GL_CreateContext(gWindow);
 
     //~~~~~~~~~~~~~~~~~~~~~//
@@ -715,6 +716,7 @@ bool Render::InitRender()
     //sets refresh rate to the monitors refresh rate
     SDL_GL_SetSwapInterval(1);
     Update();
+    GetError();
   }
 }
 

@@ -26,6 +26,18 @@ class Wireframe;
 //#include "stbi_image_write.h"
 using namespace glm;
 
+
+inline void GetError()
+{
+  GLenum err;
+  ///////////////////////////////////////////////////
+  while ((err = glGetError()) != GL_NO_ERROR)
+  {
+    std::cout << "There was an Error: " << err << std::endl;
+  }
+  ///////////////////////////////////////////////////
+}
+
 enum shaderSetting
 {
   ssReflectionMap,
@@ -101,10 +113,9 @@ class Render
 {
 public:
   Render();
-
   ~Render();
-  std::string GetSetting();
 
+  std::string GetSetting();
 
   void SetModelOffset(float x, float y, float z, float scale_ = 1.0f);
   void SetModelOffset(vec4 pos, float scale_ = 1.0f);
@@ -155,6 +166,7 @@ public:
 
   void CopyDepthBuffer();
   void BufferRefractionData();
+  
 
   void Update();
   void BindModelBuffer();

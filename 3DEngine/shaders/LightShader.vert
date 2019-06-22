@@ -12,7 +12,7 @@ Author: Coleman Jonas coleman.jonas 280003516
 Creation date: 7/2/18
 End Header --------------------------------------------------------*/
 
-#version 430 core
+#version 430
 // This matrix holds the model-to-view transform
 uniform mat4  viewMatrix;
 
