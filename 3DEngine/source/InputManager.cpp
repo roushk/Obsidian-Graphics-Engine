@@ -5,8 +5,6 @@
 InputManager::InputManager()
 {
   name = "Input Manager";
-  //auto input = pattern::get<InputManager>();
-  auto render = pattern::get<Render>();
 }
 
 InputManager::~InputManager()
@@ -152,6 +150,11 @@ void InputManager::Update(float dt)
       {
         camera.roll(-speed * 0.8f);
       }
+      if (event.key.keysym.scancode == SDL_SCANCODE_R)
+      {
+        toggleCamera = !toggleCamera;
+      }
+      
       
       //engine.GetSystem<Render>()->cameraPos =
       //  glm::translate(engine.GetSystem<Render>()->cameraPos, glm::vec3(cameraPos, 0));
@@ -164,7 +167,7 @@ void InputManager::Update(float dt)
       /*SDL_MouseButtonEvent*/
     case SDL_MOUSEBUTTONDOWN:
     {
-      if (event.button.button == SDL_BUTTON_LEFT && event.button.clicks == 1)
+      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED)
       {
         /*
         newCursorPos

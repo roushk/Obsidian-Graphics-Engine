@@ -24,7 +24,6 @@ Render::Render()
   InitRender();
   //mvTransform = glm::mat4(1.0);
   //vTransform = glm::mat4(1.0);
-  GetError();
 }
 
 Render::~Render()
@@ -662,7 +661,6 @@ bool Render::InitRender()
 
   //initialise openGL window and context using SDL
   gWindow = nullptr;
-  gContext = new SDL_GLContext;
 
   //Initialization flag
   creationSuccess = false;
@@ -681,7 +679,9 @@ bool Render::InitRender()
 
     //creates window and sets window flags
     gWindow = SDL_CreateWindow(programName.c_str(), SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+      SDL_WINDOWPOS_UNDEFINED, screenWidth, screenHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+
+
     if (gWindow == NULL)
     {
       std::cout << "Window could not be created! SDL_Error: %s\n" << SDL_GetError() << std::endl;
@@ -689,7 +689,8 @@ bool Render::InitRender()
       creationSuccess = false;
       return creationSuccess;
     }
-    *gContext = SDL_GL_CreateContext(gWindow);
+
+    gContext = SDL_GL_CreateContext(gWindow);
 
     //~~~~~~~~~~~~~~~~~~~~~//
     //SET OPENGL ATTRIBUTES//
@@ -703,6 +704,7 @@ bool Render::InitRender()
     //enableing double buffering
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);  //may need to be 16 or 32
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
     //~~~~~~~~~~~~~~~~~~//
     //INITIALIZEING GLEW//
@@ -886,6 +888,7 @@ void Render::EndDrawing()
   //glDisableVertexAttribArray(1);
   //glDisableVertexAttribArray(2);
   // Swap buffers
+
   SDL_GL_SwapWindow(gWindow);
 }
 

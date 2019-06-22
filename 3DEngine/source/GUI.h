@@ -10,21 +10,7 @@
 #include "Light.h"
 #include "Render.h"
 
-enum class BoundingBoxes : int
-{
-  AABB,
-  BSCentroid,
-  BSRitter,
-  BSLarsson,
-  BSPCA,
-  BEPCA,
-  OBBPCA,
 
-  BVH_AABB,
-  BVH_BS,
-  NONE
-
-};
 /*create new light and set type with load and name and provide data*/
 class GUI
 {
@@ -46,14 +32,9 @@ public:
   static int currentFBO;
   static int currentGJK;
 
-  static BoundingBoxes currentBoundingMethod;
   static bool debugDrawMode;
   static bool copyDepth;
-  static bool topDown;
-  static bool reloadOctree;
-  static bool renderOctree;
-  static bool reloadBSPTree;
-  static bool renderBSPTree;
+
   static bool renderModels;
 private:
   SceneLighting& lighting;

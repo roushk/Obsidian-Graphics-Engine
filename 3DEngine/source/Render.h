@@ -195,7 +195,7 @@ public:
   mat4 inverseCamRotate;
   
   SDL_Window* gWindow;
-  SDL_GLContext* gContext;
+  SDL_GLContext gContext;
   bool creationSuccess;
   int height = 1;
 

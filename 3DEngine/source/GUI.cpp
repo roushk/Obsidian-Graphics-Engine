@@ -161,37 +161,12 @@ void GUI::RenderFrame()
       "BS Bounding Volume Heiarchy"
     };
 
-    ImGui::Text("Bounding Box Selection");
-    ImGui::PushItemWidth(-1);
-    int cbm = static_cast<int>(currentBoundingMethod);
-    ImGui::ListBox("BoundingBoxes", &cbm, listbox_items2, IM_ARRAYSIZE(listbox_items2), 5);
-    currentBoundingMethod = static_cast<BoundingBoxes>(cbm);
-
-    ImGui::PopItemWidth();
 
 
-    const char* listbox_items3[] = {
-      "BVH AABB",
-      "Octree",
-      "BSPTree",
 
-    };
-
-    ImGui::Text("GJK Selection");
-    ImGui::PushItemWidth(-1);
-    ImGui::ListBox("GJKSelection", &currentGJK, listbox_items3, IM_ARRAYSIZE(listbox_items3), 3);
-
-    ImGui::PopItemWidth();
 
     static bool overwriteParams = true;
     ImGui::Checkbox("Overwrite Params", &overwriteParams);
-    ImGui::Checkbox("Render Models", &renderModels);
-
-    ImGui::Checkbox("Regenerate Octree (Will take some time)", &reloadOctree);
-    ImGui::Checkbox("Render Octree", &renderOctree);
-
-    ImGui::Checkbox("Regenerate BSPTree (Will take some time)", &reloadBSPTree);
-    ImGui::Checkbox("Render BSPTree", &renderBSPTree);
 
     if (overwriteParams)
     {
@@ -325,7 +300,6 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
-    ImGui::Checkbox("Top Down", &topDown);
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
     ImGui::BeginChild("Global Color", {390, 90});
