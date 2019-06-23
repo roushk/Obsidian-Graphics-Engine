@@ -21,28 +21,23 @@ void InputManager::Update(float dt)
   auto& camera = render.currentCamera;
 
 
-  bool pressedLeft = false;
-  bool pressedRight = false;
-
-  bool pressedB = false;
-  dvec2 cursorPos(0, 0);
-  unsigned iteratorVal = 0;
-
   int windowX = 0;
   int windowY = 0;
   SDL_GetWindowPosition(render.gWindow, &windowX, &windowY);
   render.position = glm::vec2(windowX, windowY);
+  
+  auto& object = pattern::get<Model>();
 
   if (pressedLeft && gui.buttonLeftDown == false)
   {
-    /*
+    
     ++iteratorVal;
-    iteratorVal = iteratorVal % reader.MaxObjects();
+    iteratorVal = iteratorVal % reader.models.size();
     object = reader.GetObject(iteratorVal);
 
     render.SetTitle(object.name);
     pressedLeft = false;
-    */
+    
   }
   if (gui.buttonLeftDown == true)
   {
@@ -50,15 +45,15 @@ void InputManager::Update(float dt)
   }
   if (pressedRight && gui.buttonRightDown == false)
   {
-    /*
+    
     --iteratorVal;
-    iteratorVal += reader.MaxObjects(); //incase 0
-    iteratorVal = iteratorVal % reader.MaxObjects();
+    iteratorVal += reader.models.size(); //incase 0
+    iteratorVal = iteratorVal % reader.models.size();
     object = reader.GetObject(iteratorVal);
 
     render.SetTitle(object.name);
     pressedRight = false;
-    */
+    
   }
   if (gui.buttonRightDown == true)
   {
@@ -77,7 +72,7 @@ void InputManager::Update(float dt)
   }
   */
  
-  const float speed = 1.0f * dt;
+  const float speed = 100.0f * dt;
 
   SDL_Event event;
   //while event queue is not empty pop off and deal with
@@ -101,7 +96,7 @@ void InputManager::Update(float dt)
         //|| event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) //breaks everything called ALOT
 
       {
-       render.resize(event.window.data1, event.window.data2);
+        render.resize(event.window.data1, event.window.data2);
       }
       else if (event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
       {
@@ -117,7 +112,7 @@ void InputManager::Update(float dt)
 
       float cameraAccelSpeed = 10.0f;
       
-
+      
       if (event.key.keysym.scancode == SDL_SCANCODE_W)
       {
         camera.forward(speed * 2.0f);
@@ -150,10 +145,7 @@ void InputManager::Update(float dt)
       {
         camera.roll(-speed * 0.8f);
       }
-      if (event.key.keysym.scancode == SDL_SCANCODE_R)
-      {
-        toggleCamera = !toggleCamera;
-      }
+
       
       
       //engine.GetSystem<Render>()->cameraPos =
@@ -169,80 +161,23 @@ void InputManager::Update(float dt)
     {
       if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED)
       {
-        /*
-        newCursorPos
-        if (newCursorPos.x > cursorPos.x)
+        if (toggleCamera == false)
         {
-          render.cameraBase.yaw(-speed);
+          toggleCamera = true;
+          SDL_SetRelativeMouseMode(SDL_bool(true));
         }
-        if (newCursorPos.x < cursorPos.x)
+        else if (toggleCamera == true)
         {
-          render.cameraBase.yaw(speed);
-        }
+          toggleCamera = false;
+          SDL_SetRelativeMouseMode(SDL_bool(false));
 
-        if (newCursorPos.y > cursorPos.y)
-        {
-          render.cameraBase.pitch(-speed);
-        }
-        if (newCursorPos.y < cursorPos.y)
-        {
-          render.cameraBase.pitch(speed);
-        }
-        */
-
-        if (firstMouse)
-        {
-          lastX = mousePosition.x;
-          lastY = mousePosition.y;
-          firstMouse = false;
-        }
-
-        float xoffset = mousePosition.x - lastX;
-        float yoffset = lastY - mousePosition.y;
-        lastX = mousePosition.x;
-        lastY = mousePosition.y;
-
-        if (toggleCamera)
-        {
-
-
-          xoffset *= sensitivity;
-          yoffset *= sensitivity;
-
-          yaw += xoffset;
-          pitch += yoffset;
-
-          if (pitch > 89.0f)
-            pitch = 89.0f;
-          if (pitch < -89.0f)
-            pitch = -89.0f;
-
-          glm::vec3 front;
-          front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-          front.y = sin(glm::radians(pitch));
-          front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-          //mainCamera.cameraRight
-          //mainCamera.cameraUp
-          camera.back_vector = glm::vec4(glm::normalize(-front),1);
-          camera.right_vector =
-            glm::vec4(glm::normalize(glm::cross(camera.up_vector,
-              camera.back_vector)), 1);;
-
-
-          //utils::update_camera("mainCamera", mainCamera);
-          //utils::set_camera(registryKey);
-          
           glm::vec2 windowPos = render.position;
           glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
           SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
             windowPos.y + windowRes.y / 2);
-          /*
-          SDL_WarpMouseInWindow(
-            pattern::get<utils::Window>().get_window_ptr(),
-            windowRes.x / 2, windowRes.y / 2);
-           */
         }
+
       }
 
     }
@@ -263,13 +198,13 @@ void InputManager::Update(float dt)
       float scale = 1.0f;
       if (event.wheel.y > 0) // scroll up
       {
-        camera.zoom(1.1f);
+        camera.zoom(0.9f);
         // Pull up code here!
       }
       else if (event.wheel.y < 0) // scroll down
       {
+        camera.zoom(1.1f);
         // Pull down code here!
-        camera.zoom(0.9f);
       }
       //= glm::scale(engine.GetSystem<Render>()->cameraPos, glm::vec3(scale, scale, 1.0f));
     }
@@ -285,5 +220,64 @@ void InputManager::Update(float dt)
     }
     break;
     }
+    }
+
+
+    if (firstMouse)
+    {
+      lastX = mousePosition.x;
+      lastY = mousePosition.y;
+      firstMouse = false;
+    }
+
+    float xoffset = mousePosition.x - lastX;
+    float yoffset = lastY - mousePosition.y;
+    lastX = mousePosition.x;
+    lastY = mousePosition.y;
+
+    if (toggleCamera)
+    {
+
+
+      xoffset *= sensitivity;
+      yoffset *= sensitivity;
+
+      yaw = xoffset;
+      pitch = yoffset;
+      /*
+      yaw += xoffset;
+      pitch += yoffset;
+
+      if (pitch > 89.0f)
+        pitch = 89.0f;
+      if (pitch < -89.0f)
+        pitch = -89.0f;
+      glm::vec3 back;
+      back.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+      back.y = sin(glm::radians(pitch));
+      back.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+      //mainCamera.cameraRight
+      //mainCamera.cameraUp
+      camera.right_vector = -glm::normalize(back);
+      camera.back_vector =
+        -glm::normalize(glm::cross(camera.up_vector, camera.back_vector));
+      */
+      camera.pitch(pitch);
+      camera.yaw(-yaw);
+
+
+      //utils::update_camera("mainCamera", mainCamera);
+      //utils::set_camera(registryKey);
+
+      glm::vec2 windowPos = render.position;
+      glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
+
+      SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
+        windowPos.y + windowRes.y / 2);
+      /*
+      SDL_WarpMouseInWindow(
+        pattern::get<utils::Window>().get_window_ptr(),
+        windowRes.x / 2, windowRes.y / 2);
+       */
     }
   }

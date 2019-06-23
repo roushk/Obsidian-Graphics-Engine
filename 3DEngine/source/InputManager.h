@@ -15,10 +15,20 @@ public:
   bool stop = false;
   glm::vec2 mousePosition{0,0};
   glm::vec2 offset{0,0};
+
   bool firstMouse = true;
   int lastY, lastX;
   float yaw, pitch;
+
   bool toggleCamera = false;
   bool oldPos = false;
-  float sensitivity = 0.05;
+  float sensitivity = 0.001;
+  //float sensitivity = 0.05;
+
+
+  bool pressedLeft = false;
+  bool pressedRight = false;
+  unsigned iteratorVal = 0;
+
+
 };

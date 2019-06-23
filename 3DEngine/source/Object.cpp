@@ -19,6 +19,31 @@ Model::Model(const std::string& name, const std::vector<Vertex>& vertices, const
   setup_mesh();
 }
 
+Model::Model(const Model& rhs)
+{
+  *this = rhs;
+
+}
+
+Model& Model::operator=(const Model& rhs)
+{
+  modelMatrix = rhs.modelMatrix;
+  meshes = rhs.meshes;
+  halfExtents = rhs.halfExtents;
+  name = rhs.name;;
+  vertices = rhs.vertices;
+  indices = rhs.indices;
+  uvSetting = rhs.uvSetting;
+  uvCylindrical = rhs.uvCylindrical;
+  uvSpherical = rhs.uvSpherical;
+  uvPlanar = rhs.uvPlanar;
+  meshMatrix = rhs.meshMatrix;
+  vao = rhs.vao;
+  vbo = rhs.vbo;
+  ibo = rhs.ibo;
+  return *this;
+}
+
 
 VAO Model::get_vao() const
 {
@@ -61,7 +86,7 @@ void Model::change_uv_coord_mapping(MeshUVSetting newSetting)
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, texCoords)));
 
-  glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
+  glBindVertexArray(0); // so other commands don't accidentally mess up our vao
 }
 
 void Model::setup_mesh()
@@ -85,7 +110,7 @@ void Model::setup_mesh()
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, texCoords)));
 
-  glBindVertexArray(0); // so other commands don't accidentally fuck up our vao
+  glBindVertexArray(0); // so other commands don't accidentally mess up our vao
 }
 
 Model ObjectReader::load_model(const std::string& path)
@@ -285,13 +310,11 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
 
 Model& ObjectReader::load(const std::string& filename) noexcept
 {
-  const auto md = load_model("models/" + filename);
-  Model info;
+  Model mesh = load_model("models/" + filename);
 
   glm::vec3 minSize(0, 0, 0);
   glm::vec3 maxSize(0, 0, 0);
 
-  const auto& mesh = md;
   
   /*
     So here is where we ran unto a WONDERFUL issue with the editor/sizing models where the walls would not easily line up
@@ -302,8 +325,8 @@ Model& ObjectReader::load(const std::string& filename) noexcept
    and things that are on the grid that need to match other things on the grid. - Coleman
  */
 
-  if (mesh.name != std::string("DEBUG_PLANE"))
-    info.meshes = (std::make_pair(mesh.get_vao(), mesh.indices.size()));
+  //if (mesh.name != std::string("DEBUG_PLANE"))
+  //  info.meshes = (std::make_pair(mesh.get_vao(), mesh.indices.size()));
 
   //generate model to world transform
   //gets the min and max sizes of each
@@ -325,20 +348,20 @@ Model& ObjectReader::load(const std::string& filename) noexcept
       minSize.z = vert.pos.z;
   }
 
-  info.modelName = filename;
+  mesh.name = filename;
   glm::vec3 scale = abs(minSize - maxSize);
 
-  info.halfExtents = scale / 2.0f;
+  mesh.halfExtents = scale / 2.0f;
 
   //scale the object by the largest axis
   float maxVal = std::max(scale.x, std::max(scale.y, scale.z));
 
   glm::vec3 center = (maxSize + minSize) / 2.0f;
 
-  info.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / maxVal));
-  info.modelMatrix = translate(info.modelMatrix, glm::vec3(-center.x, -center.y, -center.z));
-  models.push_back(info);
-  return info;
+  mesh.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / maxVal));
+  mesh.modelMatrix = translate(mesh.modelMatrix, glm::vec3(-center.x, -center.y, -center.z));
+  models.push_back(mesh);
+  return mesh;
 }
 
 void ObjectReader::loadMultiple(const std::string& filename)

@@ -43,7 +43,9 @@ struct Model
 
   Model(const std::string& name, const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
   Model() { name = "DEFAULT_MODEL_NAME"; };
-  std::string modelName;
+  Model(const Model& rhs);
+  Model& operator=(const Model& rhs);
+
   glm::mat4 modelMatrix = glm::mat4(1.0f);
   std::pair<VAO, std::size_t> meshes;
   glm::vec3 halfExtents {0,0,0};
@@ -87,8 +89,8 @@ class ObjectReader
 
   Model process_mesh(aiMesh* mesh, const aiScene* scene);
 
-  std::vector<Model> models;
 public:
+  std::vector<Model> models;
   Model& load(const std::string& filename) noexcept;
   void loadMultiple(const std::string& filename);
   Model& GetObject(int objNum);
