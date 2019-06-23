@@ -288,6 +288,7 @@ public:
   glm::vec2 position{ 0,0 };
 
 private:
+  //objectPos is used for the eye point of the reflection cameras
   vec3 objectPos;
   vec4 eyePos{0, 0, 2, 0};
   vec4 lookAt{0, 0, -1, 0 };

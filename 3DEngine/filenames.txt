@@ -1,8 +1,7 @@
 hdsphere.obj
 hdcube.obj
-cup.obj
-rhino.obj
 toadpot-shelled.obj
 4Sphere.obj
 cube2.obj
 sphere.obj
+lucy_princeton.obj

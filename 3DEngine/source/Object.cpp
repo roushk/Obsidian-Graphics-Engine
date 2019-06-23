@@ -41,6 +41,8 @@ Model& Model::operator=(const Model& rhs)
   vao = rhs.vao;
   vbo = rhs.vbo;
   ibo = rhs.ibo;
+  maxSize = rhs.maxSize;
+  minSize = rhs.minSize;
   return *this;
 }
 
@@ -118,8 +120,12 @@ Model ObjectReader::load_model(const std::string& path)
   Assimp::Importer importer;
   Model newModel;
   const auto scene = importer.ReadFile(path.c_str(),
-                                       aiProcessPreset_TargetRealtime_Quality | aiProcess_SortByPType |
-                                       aiProcess_PreTransformVertices);
+    /*aiProcessPreset_TargetRealtime_Quality | */ 
+    aiProcess_GenSmoothNormals | 
+    aiProcess_JoinIdenticalVertices |
+    aiProcess_SortByPType |
+    aiProcess_PreTransformVertices);
+
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     std::cout << "couldn't load model from path: " << path << std::endl;
@@ -138,7 +144,7 @@ void ObjectReader::process_node(aiNode* node, const aiScene* scene, Model& m)
   for (unsigned i = 0; i < node->mNumMeshes; ++i)
   {
     const auto mesh = scene->mMeshes[node->mMeshes[i]];
-    m = process_mesh(mesh, scene);
+    process_mesh(mesh, scene, m);
     m.change_uv_coord_mapping(MeshUVSetting::planar);
   }
   for (unsigned i = 0; i < node->mNumChildren; ++i)
@@ -203,15 +209,19 @@ glm::vec2 ObjectReader::uv_calc(glm::vec3 point)
   return uv;
 }
 
-Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
+void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
 {
+  //if (mesh->mNumVertices <= 2 || mesh->mNumFaces <= 0)
+  //  return;
+
   std::string name(mesh->mName.C_Str());
 
-  glm::vec3 maxSize(0, 0, 0);
-  glm::vec3 minSize(0, 0, 0);
+  glm::vec3 maxSize(std::numeric_limits<float>::min());
+  glm::vec3 minSize(std::numeric_limits<float>::max());
   //bool texCoordsExist = true;
   std::vector<Vertex> vertices;
-  std::vector<Index> indices;
+
+  vertices.reserve(mesh->mNumVertices);
 
   for (unsigned i = 0; i < mesh->mNumVertices; ++i)
   {
@@ -222,7 +232,7 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
     vert.normal.x = mesh->mNormals[i].x;
     vert.normal.y = mesh->mNormals[i].y;
     vert.normal.z = mesh->mNormals[i].z;
-
+    
     if (vert.pos.x > maxSize.x)
       maxSize.x = vert.pos.x;
     if (vert.pos.y > maxSize.y)
@@ -237,6 +247,7 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
     if (vert.pos.z < minSize.z)
       minSize.z = vert.pos.z;
 
+    m.vertices.push_back(vert);
     vertices.push_back(vert);
   }
 
@@ -245,9 +256,9 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
     const auto face = mesh->mFaces[i];
     if (face.mNumIndices < 3)
       continue;
-    indices.push_back(face.mIndices[0]);
-    indices.push_back(face.mIndices[1]);
-    indices.push_back(face.mIndices[2]);
+    m.indices.push_back(face.mIndices[0]);
+    m.indices.push_back(face.mIndices[1]);
+    m.indices.push_back(face.mIndices[2]);
   }
 
 
@@ -257,10 +268,6 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
   glm::mat4 matrix(1.0f);
   matrix = glm::scale(matrix, glm::vec3(1.0f / scale));
   matrix = translate(matrix, glm::vec3(-center.x, -center.y, -center.z));
-
-  std::vector<glm::vec2> uvCylindrical;
-  std::vector<glm::vec2> uvSpherical;
-  std::vector<glm::vec2> uvPlanar;
 
   float u, v;
 
@@ -277,7 +284,7 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
 
     //y not z cause its y up not z up
     v = 1 - ((vert.y - newMin.y) / (newMax.y - newMin.y));
-    uvCylindrical.push_back({u, v});
+    m.uvCylindrical.push_back({u, v});
     if (u > 1.0f || u < 0.0f || v > 1.0f || v < 0.0f)
       std::cout << "u or v is out of range!" << std::endl;
   }
@@ -292,7 +299,7 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
 
     v = acosf(vert.y) / PI; // / r); r = 1
 
-    uvSpherical.push_back({u, v});
+    m.uvSpherical.push_back({u, v});
     if (u > 1.0f || u < 0.0f || v > 1.0f || v < 0.0f)
       std::cout << "u or v is out of range!" << std::endl;
   }
@@ -303,19 +310,15 @@ Model ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene)
     glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
     //0 = x, 1 = y, 2 = x
     glm::vec2 uv = uv_calc(vert);
-    uvPlanar.push_back(uv);
+    m.uvPlanar.push_back(uv);
   }
-  return Model(name, vertices, indices, uvCylindrical, uvSpherical, uvPlanar);
+
 }
 
-Model& ObjectReader::load(const std::string& filename) noexcept
+void ObjectReader::load(const std::string& filename) noexcept
 {
   Model mesh = load_model("models/" + filename);
 
-  glm::vec3 minSize(0, 0, 0);
-  glm::vec3 maxSize(0, 0, 0);
-
-  
   /*
     So here is where we ran unto a WONDERFUL issue with the editor/sizing models where the walls would not easily line up
    this is fixed by in Maya creating a plane that represents the 1x1(possibly 1x1x1) unit square the mesh will be scaled down too
@@ -331,37 +334,38 @@ Model& ObjectReader::load(const std::string& filename) noexcept
   //generate model to world transform
   //gets the min and max sizes of each
 
-  for (const auto& vert : mesh.vertices)
+  
+  for(auto& vert: mesh.vertices)
   {
-    if (vert.pos.x > maxSize.x)
-      maxSize.x = vert.pos.x;
-    if (vert.pos.y > maxSize.y)
-      maxSize.y = vert.pos.y;
-    if (vert.pos.z > maxSize.z)
-      maxSize.z = vert.pos.z;
+    if (vert.pos.x > mesh.maxSize.x)
+      mesh.maxSize.x = vert.pos.x;
+    if (vert.pos.y > mesh.maxSize.y)
+      mesh.maxSize.y = vert.pos.y;
+    if (vert.pos.z > mesh.maxSize.z)
+      mesh.maxSize.z = vert.pos.z;
 
-    if (vert.pos.x < minSize.x)
-      minSize.x = vert.pos.x;
-    if (vert.pos.y < minSize.y)
-      minSize.y = vert.pos.y;
-    if (vert.pos.z < minSize.z)
-      minSize.z = vert.pos.z;
+    if (vert.pos.x < mesh.minSize.x)
+      mesh.minSize.x = vert.pos.x;
+    if (vert.pos.y < mesh.minSize.y)
+      mesh.minSize.y = vert.pos.y;
+    if (vert.pos.z < mesh.minSize.z)
+      mesh.minSize.z = vert.pos.z;
   }
 
   mesh.name = filename;
-  glm::vec3 scale = abs(minSize - maxSize);
+  glm::vec3 scale = abs(mesh.minSize - mesh.maxSize);
 
   mesh.halfExtents = scale / 2.0f;
 
   //scale the object by the largest axis
   float maxVal = std::max(scale.x, std::max(scale.y, scale.z));
 
-  glm::vec3 center = (maxSize + minSize) / 2.0f;
+  glm::vec3 center = (mesh.maxSize + mesh.minSize) / 2.0f;
 
   mesh.modelMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / maxVal));
   mesh.modelMatrix = translate(mesh.modelMatrix, glm::vec3(-center.x, -center.y, -center.z));
+  mesh.setup_mesh();
   models.push_back(mesh);
-  return mesh;
 }
 
 void ObjectReader::loadMultiple(const std::string& filename)

@@ -71,6 +71,9 @@ struct Model
 
   glm::mat4 meshMatrix = glm::mat4(1.0f);
   void setup_mesh();
+  
+  glm::vec3 maxSize{ std::numeric_limits<float>::min() };
+  glm::vec3 minSize{ std::numeric_limits<float>::max() };
 
 private:
 
@@ -87,11 +90,11 @@ class ObjectReader
 
   glm::vec2 uv_calc(glm::vec3 point);
 
-  Model process_mesh(aiMesh* mesh, const aiScene* scene);
+  void process_mesh(aiMesh* mesh, const aiScene* scene, Model& m);
 
 public:
   std::vector<Model> models;
-  Model& load(const std::string& filename) noexcept;
+  void load(const std::string& filename) noexcept;
   void loadMultiple(const std::string& filename);
   Model& GetObject(int objNum);
 
