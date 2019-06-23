@@ -129,8 +129,9 @@ void main()
     
     //Light Direction * matrix
     vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
+    vec4 ReflectVec = (2 * (NdotL) * vertexNormal) - L;  //ReflectVec = 2(N.L)N - L
 
-    const float alpha = dot(normalize(LightDir), normalize(LightDir - vertexPosition));
+    const float alpha = dot(normalize(LightDir), normalize(ReflectVec));
     /*enum LightType C++ defenition
       {
         ltNone,
@@ -148,9 +149,8 @@ void main()
     
     //*************************************************************************************************//
     // Specular (complete the implementation)
-    vec4 R = (2 * (NdotL) * vertexNormal) - L;  //R = 2(N.L)N - L
     vec3 V = normalize(cameraPos - vertexPosition.xyz);
-    vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(R.xyz,V), 0), ns); //Is Ks (R dot V)^ns
+    vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(ReflectVec.xyz,V), 0), ns); //Is Ks (R dot V)^ns
 
 
     // Attenutation terms (complete the implementation)
