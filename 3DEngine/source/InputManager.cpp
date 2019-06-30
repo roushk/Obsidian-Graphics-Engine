@@ -78,6 +78,7 @@ void InputManager::Update(float dt)
   //while event queue is not empty pop off and deal with
   while (SDL_PollEvent(&event))
   {
+    ImGui_ImplSDL2_ProcessEvent(&event);
     switch (event.type)
     {
     default:

@@ -47,7 +47,7 @@ void main()
 {
   vs_out.position = modelTransform * modelMatrix * vec4( modelPosition, 1.0f ); //world coords
 
-  vs_out.normal = mat4(transpose(inverse(modelMatrix))) * vec4( modelNormal, 0.0f );
+  vs_out.normal = vec4( modelNormal, 0.0f );
 
   vs_out.texCoords = texCoords;
 

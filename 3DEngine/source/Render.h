@@ -298,7 +298,6 @@ private:
 
   GLuint programID;
   
-  GLint numLights = 2;
   
   GLfloat theta = 0.0;
 

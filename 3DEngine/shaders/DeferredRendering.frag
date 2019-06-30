@@ -71,6 +71,7 @@ void main()
   {
     debugColor = emissive;
   }
+
     
 
   fragColor = vec4(debugColor, 1.0f);

@@ -1,7 +1,3 @@
-hdsphere.obj
-hdcube.obj
-toadpot-shelled.obj
-4Sphere.obj
-cube2.obj
-sphere.obj
-lucy_princeton.obj
+sphere.3ds
+teapot.3ds
+angryteapot.3ds

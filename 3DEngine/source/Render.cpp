@@ -773,6 +773,8 @@ void Render::Update()
   {
     cameras[i] = newCameras[i];
   }
+
+  
 }
 
 
@@ -863,6 +865,8 @@ void Render::Draw(Model& object)
 {
   glUseProgram(programID);
 
+  glUniform3f(glGetUniformLocation(programID, "camera"),
+    currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
 
   projectionMatrix = cameraToNDC(currentCamera);
@@ -929,8 +933,7 @@ void Render::SetCurrentCamera(int cam)
   else
     currentCamera = cameras[cam];
 
-  glUniform3f(glGetUniformLocation(programID, "camera"),
-    currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
+  
 }
 
 void Render::SetObjectShader(int shader)

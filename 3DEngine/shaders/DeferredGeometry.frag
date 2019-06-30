@@ -25,7 +25,7 @@ in VS_OUT
 layout (location = 0) out vec4 ViewPosOut;  //COLOR_ATTACH 0 + emissive x
 layout (location = 1) out vec4 NormalOut;   //COLOR_ATTACH 1 + emissive y
 layout (location = 2) out vec4 DiffuseOut;  //COLOR_ATTACH 2 + emissive z
-layout (location = 3) out vec4 SpecularOut; //COLOR_ATTACH 3 + shininess
+layout (location = 3) out vec4 SpecularOut; //COLOR_ATTACH 3
 layout (location = 4) out vec3 AmbientOut;  //COLOR_ATTACH 4
 layout (location = 5) out vec3 DepthOut;    //DEPTH_ATTACH 1
 
@@ -49,8 +49,6 @@ void main()
   ViewPosOut.a = Kemissive.r;
   NormalOut.a = Kemissive.g;
   DiffuseOut.a = Kemissive.b;
-
-  SpecularOut.a = SpecularOut.r * SpecularOut.r;  //ns = spec.r^2
   
 
   //TexCoordOut = vec3(fs_in.texCoords, 0.0); 
