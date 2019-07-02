@@ -65,6 +65,18 @@ in VS_OUT
   vec2 texCoords;
 } fs_in;
 
+// This matrix holds the model-to-view transform
+uniform mat4  viewMatrix;
+
+// This matrix holds the projection matrix
+uniform mat4  projectionMatrix;
+
+//model matrix
+uniform mat4  modelMatrix;
+//model matrix
+uniform mat4  modelTransform;
+
+
 out vec3 color;
 
 void main()
@@ -78,7 +90,8 @@ void main()
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = vec3(0,0,0); //texture(gAmbientMap, fs_in.texCoords).xyz;
 
-  float ns = 0.01f; //texture(gSpecularMap, fs_in.texCoords).a;
+  float ns = 32.0f; //texture(gSpecularMap, fs_in.texCoords).a;
+  //Kspecular *= 0.5f;
 
   vec3 Kemissive;
 
@@ -120,12 +133,13 @@ void main()
     //Light Position * matrix
     // L = light pos - vert pos
     //lightVec = lightPos - worldPos;
-    vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz + vec3(0,3.0f,0);
+    //vec4 lightPos = LA.lights[i].LightPosition
+    vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz;
 
     vec3 L = normalize(LnotNormal);                         // L = light pos - vert pos
 
     if(LA.lights[i].type != 1)  //2 or 3
-      L = normalize(LA.lights[i].LightDirection.rgb);
+      L = -normalize(LA.lights[i].LightDirection.rgb);
 
   
     //float NdotL = max( dot(vec4(vertexNormal,1.0f), vec4(L, 1.0f) ), 0.0f ); //L is normalized and vertNormal is normalized
@@ -136,8 +150,10 @@ void main()
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
-    vec3 ReflectVec = normalize((((2.0f * NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
+    //vec3 ReflectVec = normalize((((2.0f * NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
+  vec3 ReflectVec = reflect(-L, vertexNormal);  //ReflectVec = 2(N.L)N - L
 
+  
     float Spe = 1.0f;
     if(LA.lights[i].type == 3)
     {
@@ -154,18 +170,18 @@ void main()
 
 
     // Attenutation terms (complete the implementation)
-    //float dL = length(LnotNormal);
+    float dL = length(LnotNormal);
 
-    //float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
+    float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
 
     // Final color
-    //finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
-    finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
+    finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
+    //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
-    color = ReflectVec;
+    //color = ReflectVec;
   }
 
-  /*
+  
   //calculate S for fog
   float cameraDist = length(cameraPos - vertexPosition.xyz);
 
@@ -173,12 +189,12 @@ void main()
 
   //fog equation
   vec3 Ifinal = S * finalColor + (1.0f - S)  * G.FogColor.rgb;
-  */
+  
 
   // VS outputs - position and color
-  color = finalColor;
+  //color = finalColor;
 
-  //color = Ifinal;
+  color = Ifinal;
   
   //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
 }

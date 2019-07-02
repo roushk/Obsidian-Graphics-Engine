@@ -71,18 +71,18 @@ std::string Render::GetSetting()
 
 void Render::SetModelOffset(float x, float y, float z, float scale_)
 {
-  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(x, y, z));
-
+  modelTransform = translate(vec3(x, y, z)) * scale(vec3(scale_)) * glm::mat4(1.0f);
 }
 
 void Render::SetModelOffset(vec4 pos, float scale_)
 {
-  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
+  //modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
+  modelTransform = translate(vec3(pos)) * scale(vec3(scale_)) * glm::mat4(1.0f);
 }
 
 void Render::SetModelOffset(vec3 pos, float scale_)
 {
-  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), pos);
+  modelTransform = translate(pos) * scale(vec3(scale_)) * glm::mat4(1.0f);
 }
 
 void Render::LoadMaterial(Material materialSpec, Material materialDiff)
