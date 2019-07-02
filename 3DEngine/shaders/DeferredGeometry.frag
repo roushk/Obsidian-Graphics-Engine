@@ -37,7 +37,7 @@ uniform vec3 Kambient;  //Ambient: No texture, user specified value [RGB]
 
 void main()
 {
-  ViewPosOut.rgb = fs_in.position.xyz;
+  ViewPosOut.xyz = fs_in.position.xyz;
   
   DiffuseOut.rgb = texture(Kdiffuse, fs_in.texCoords).xyz;
   SpecularOut.rgb = texture(Kspecular, fs_in.texCoords).xyz;

@@ -71,7 +71,7 @@ void main()
 {
   
   vec3 clearcolor = vec3(0.0f);
-  vec3 viewPos = texture(gPositionMap, fs_in.texCoords).xyz;
+  vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
 
@@ -88,8 +88,7 @@ void main()
   
 
   vec3 cameraPos = camera.xyz;
-  vec4 vertexPosition = vec4(viewPos,1.0f); //V = cameraPos - vertexPosition.xyz; = cam - V = viewPos
-  vec4 vertexNormal = vec4(normal, 0.0f);
+  vec3 vertexNormal = normalize(normal);
 
 /*
   if(viewPos == clearcolor && normal == clearcolor )
@@ -99,7 +98,8 @@ void main()
   }
   */
   //eyeVec = eye - worldPos;
-  vec3 V = normalize(cameraPos - vertexPosition.xyz);
+  //V = cameraPos - vertexPosition.xyz; = cam - V = viewPos
+  vec3 V = cameraPos - vertexPosition.xyz;
   //*************************************************************************************************//
   // Emissive
   vec3 Iemissive = Kemissive; //set in GUI  //WORKS
@@ -120,22 +120,24 @@ void main()
     //Light Position * matrix
     // L = light pos - vert pos
     //lightVec = lightPos - worldPos;
-    vec4 LnotNormal = vec4(LA.lights[i].LightPosition.xyz - vertexPosition.xyz, 0.0f);
+    vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz;
 
-    vec4 L = normalize(LnotNormal);                         // L = light pos - vert pos
+    vec3 L = normalize(LnotNormal);                         // L = light pos - vert pos
 
-    if(LA.lights[i].type == 2)
-      L = normalize(vec4(LA.lights[i].LightDirection.rgb, 1.0f));
+    if(LA.lights[i].type != 1)  //2 or 3
+      L = normalize(LA.lights[i].LightDirection.rgb);
 
-    float NdotL = max( dot(vertexNormal, L ), 0.0f ); //L is normalized and vertNormal is normalized
+  
+    //float NdotL = max( dot(vec4(vertexNormal,1.0f), vec4(L, 1.0f) ), 0.0f ); //L is normalized and vertNormal is normalized
+    float NdotL = max( dot(normalize(vec4(vertexNormal,1.0f)), normalize(vec4(L, 1.0f)) ), 0.0f ); //L is normalized and vertNormal is normalized
 
     vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
     
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
-    vec4 ReflectVec = (2.0f * (NdotL) * vertexNormal) - L;  //ReflectVec = 2(N.L)N - L
-    const float alpha = dot(normalize(L), normalize(ReflectVec));
+    vec3 ReflectVec = ((2.0f * (NdotL) * vertexNormal) - L);  //ReflectVec = 2(N.L)N - L
+    const float alpha = dot(L, ReflectVec);
 
     float Spe = 1.0f;
     if(LA.lights[i].type == 3)
@@ -152,15 +154,17 @@ void main()
 
 
     // Attenutation terms (complete the implementation)
-    float dL = length(LnotNormal);
+    //float dL = length(LnotNormal);
 
-    float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
+    //float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
 
     // Final color
-    finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
+    //finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
+    finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
   }
 
+  /*
   //calculate S for fog
   float cameraDist = length(cameraPos - vertexPosition.xyz);
 
@@ -168,10 +172,13 @@ void main()
 
   //fog equation
   vec3 Ifinal = S * finalColor + (1.0f - S)  * G.FogColor.rgb;
-
+  */
 
   // VS outputs - position and color
-  color = Ifinal;
+  color = finalColor;
+  //color = Ifinal;
+  
+  //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
 }
 
 //In fragment shader:

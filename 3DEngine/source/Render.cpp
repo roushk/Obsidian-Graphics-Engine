@@ -71,26 +71,18 @@ std::string Render::GetSetting()
 
 void Render::SetModelOffset(float x, float y, float z, float scale_)
 {
-  modelTransform = glm::mat4(1.0f);
-  modelTransform = translate(modelTransform, vec3(x, y, z));
+  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(x, y, z));
 
-  modelTransform = scale(modelTransform, vec3(scale_));
 }
 
 void Render::SetModelOffset(vec4 pos, float scale_)
 {
-  modelTransform = glm::mat4(1.0f);
-  modelTransform = translate(modelTransform, vec3(pos));
-
-  modelTransform = scale(modelTransform, vec3(scale_));
+  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
 }
 
 void Render::SetModelOffset(vec3 pos, float scale_)
 {
-  modelTransform = glm::mat4(1.0f);
-  modelTransform = translate(modelTransform, pos);
-
-  modelTransform = scale(modelTransform, vec3(scale_));
+  modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), pos);
 }
 
 void Render::LoadMaterial(Material materialSpec, Material materialDiff)
@@ -520,7 +512,7 @@ void Render::CreateBuffers()
 
 void Render::LoadDiffuseForLight(Light& light)
 {
-  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(light.diffuse));
+  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(glm::normalize(light.diffuse)));
 }
 void Render::LoadDiffuseForLight(glm::vec4& light)
 {

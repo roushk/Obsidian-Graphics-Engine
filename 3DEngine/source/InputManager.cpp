@@ -160,7 +160,8 @@ void InputManager::Update(float dt)
       /*SDL_MouseButtonEvent*/
     case SDL_MOUSEBUTTONDOWN:
     {
-      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED)
+      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED
+      && event.button.type == SDL_MOUSEBUTTONDOWN)
       {
         if (toggleCamera == false)
         {
@@ -221,64 +222,64 @@ void InputManager::Update(float dt)
     }
     break;
     }
-    }
+  }
 
 
-    if (firstMouse)
-    {
-      lastX = mousePosition.x;
-      lastY = mousePosition.y;
-      firstMouse = false;
-    }
-
-    float xoffset = mousePosition.x - lastX;
-    float yoffset = lastY - mousePosition.y;
+  if (firstMouse)
+  {
     lastX = mousePosition.x;
     lastY = mousePosition.y;
-
-    if (toggleCamera)
-    {
-
-
-      xoffset *= sensitivity;
-      yoffset *= sensitivity;
-
-      yaw = xoffset;
-      pitch = yoffset;
-      /*
-      yaw += xoffset;
-      pitch += yoffset;
-
-      if (pitch > 89.0f)
-        pitch = 89.0f;
-      if (pitch < -89.0f)
-        pitch = -89.0f;
-      glm::vec3 back;
-      back.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-      back.y = sin(glm::radians(pitch));
-      back.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-      //mainCamera.cameraRight
-      //mainCamera.cameraUp
-      camera.right_vector = -glm::normalize(back);
-      camera.back_vector =
-        -glm::normalize(glm::cross(camera.up_vector, camera.back_vector));
-      */
-      camera.pitch(pitch);
-      camera.yaw(-yaw);
-
-
-      //utils::update_camera("mainCamera", mainCamera);
-      //utils::set_camera(registryKey);
-
-      glm::vec2 windowPos = render.position;
-      glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
-
-      SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
-        windowPos.y + windowRes.y / 2);
-      /*
-      SDL_WarpMouseInWindow(
-        pattern::get<utils::Window>().get_window_ptr(),
-        windowRes.x / 2, windowRes.y / 2);
-       */
-    }
+    firstMouse = false;
   }
+
+  float xoffset = mousePosition.x - lastX;
+  float yoffset = lastY - mousePosition.y;
+  lastX = mousePosition.x;
+  lastY = mousePosition.y;
+
+  if (toggleCamera)
+  {
+
+
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw = xoffset;
+    pitch = yoffset;
+    /*
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if (pitch > 89.0f)
+      pitch = 89.0f;
+    if (pitch < -89.0f)
+      pitch = -89.0f;
+    glm::vec3 back;
+    back.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    back.y = sin(glm::radians(pitch));
+    back.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    //mainCamera.cameraRight
+    //mainCamera.cameraUp
+    camera.right_vector = -glm::normalize(back);
+    camera.back_vector =
+      -glm::normalize(glm::cross(camera.up_vector, camera.back_vector));
+    */
+    camera.pitch(pitch);
+    camera.yaw(-yaw);
+
+
+    //utils::update_camera("mainCamera", mainCamera);
+    //utils::set_camera(registryKey);
+
+    glm::vec2 windowPos = render.position;
+    glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
+
+    SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
+      windowPos.y + windowRes.y / 2);
+    /*
+    SDL_WarpMouseInWindow(
+      pattern::get<utils::Window>().get_window_ptr(),
+      windowRes.x / 2, windowRes.y / 2);
+     */
+  }
+}
