@@ -72,7 +72,7 @@ void InputManager::Update(float dt)
   }
   */
  
-  const float speed = 100.0f * dt;
+  const float speed = 20.0f * dt;
 
   SDL_Event event;
   //while event queue is not empty pop off and deal with
