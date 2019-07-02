@@ -42,7 +42,7 @@ void main()
   DiffuseOut.rgb = texture(Kdiffuse, fs_in.texCoords).xyz;
   SpecularOut.rgb = texture(Kspecular, fs_in.texCoords).xyz;
 
-  NormalOut.rgb = fs_in.normal.xyz;
+  NormalOut.rgb = normalize(fs_in.normal.xyz);
 
   AmbientOut.rgb = Kambient;
 

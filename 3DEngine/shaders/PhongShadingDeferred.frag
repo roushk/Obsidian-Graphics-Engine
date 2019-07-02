@@ -88,7 +88,7 @@ void main()
   
 
   vec3 cameraPos = camera.xyz;
-  vec3 vertexNormal = normalize(normal);
+  vec3 vertexNormal = normal.xyz;
 
 /*
   if(viewPos == clearcolor && normal == clearcolor )
@@ -99,7 +99,7 @@ void main()
   */
   //eyeVec = eye - worldPos;
   //V = cameraPos - vertexPosition.xyz; = cam - V = viewPos
-  vec3 V = cameraPos - vertexPosition.xyz;
+  vec3 V = normalize(cameraPos - vertexPosition.xyz);
   //*************************************************************************************************//
   // Emissive
   vec3 Iemissive = Kemissive; //set in GUI  //WORKS
@@ -120,7 +120,7 @@ void main()
     //Light Position * matrix
     // L = light pos - vert pos
     //lightVec = lightPos - worldPos;
-    vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz;
+    vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz + vec3(0,3.0f,0);
 
     vec3 L = normalize(LnotNormal);                         // L = light pos - vert pos
 
@@ -129,14 +129,14 @@ void main()
 
   
     //float NdotL = max( dot(vec4(vertexNormal,1.0f), vec4(L, 1.0f) ), 0.0f ); //L is normalized and vertNormal is normalized
-    float NdotL = max( dot(normalize(vec4(vertexNormal,1.0f)), normalize(vec4(L, 1.0f)) ), 0.0f ); //L is normalized and vertNormal is normalized
+    float NdotL = max( dot(vertexNormal, L), 0.0f ); //L is normalized and vertNormal is normalized
 
     vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
     
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
-    vec3 ReflectVec = ((2.0f * (NdotL) * vertexNormal) - L);  //ReflectVec = 2(N.L)N - L
+    vec3 ReflectVec = normalize(((2.0f * (NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
     const float alpha = dot(L, ReflectVec);
 
     float Spe = 1.0f;
@@ -162,6 +162,7 @@ void main()
     //finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
     finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
+    color = ReflectVec;
   }
 
   /*
@@ -176,6 +177,7 @@ void main()
 
   // VS outputs - position and color
   color = finalColor;
+
   //color = Ifinal;
   
   //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
