@@ -78,7 +78,7 @@ void main()
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = vec3(0,0,0); //texture(gAmbientMap, fs_in.texCoords).xyz;
 
-  float ns = 0.1f; //texture(gSpecularMap, fs_in.texCoords).a;
+  float ns = 0.01f; //texture(gSpecularMap, fs_in.texCoords).a;
 
   vec3 Kemissive;
 
@@ -136,12 +136,12 @@ void main()
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
-    vec3 ReflectVec = normalize(((2.0f * (NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
-    const float alpha = dot(L, ReflectVec);
+    vec3 ReflectVec = normalize((((2.0f * NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
 
     float Spe = 1.0f;
     if(LA.lights[i].type == 3)
     {
+      const float alpha = dot(L, ReflectVec);
       Spe = pow(
       ( ( alpha - cos(LA.lights[i].outerRadius) ) /
        ( cos(LA.lights[i].innerRadius) - cos(LA.lights[i].outerRadius) ) ) , LA.lights[i].falloffValue );
@@ -150,7 +150,7 @@ void main()
     //*************************************************************************************************//
     // Specular (complete the implementation)
     
-    vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(V,ReflectVec.xyz), 0), ns); //Is Ks (R dot V)^ns
+    vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(V,ReflectVec), 0), ns); //Is Ks (R dot V)^ns
 
 
     // Attenutation terms (complete the implementation)

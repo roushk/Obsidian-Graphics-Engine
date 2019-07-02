@@ -1,4 +1,4 @@
 sphere.3ds
 teapot.3ds
 angryteapot.3ds
-box.obj
+box.object
