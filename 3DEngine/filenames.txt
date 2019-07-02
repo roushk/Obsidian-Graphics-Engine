@@ -1,4 +1,5 @@
 sphere.3ds
 teapot.3ds
 angryteapot.3ds
-box.object
+box2.object
+torus.object

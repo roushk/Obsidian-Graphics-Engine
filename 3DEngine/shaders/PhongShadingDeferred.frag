@@ -151,7 +151,7 @@ void main()
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
     //vec3 ReflectVec = normalize((((2.0f * NdotL) * vertexNormal) - L));  //ReflectVec = 2(N.L)N - L
-  vec3 ReflectVec = reflect(-L, vertexNormal);  //ReflectVec = 2(N.L)N - L
+    vec3 ReflectVec = reflect(-L, vertexNormal);  //ReflectVec = 2(N.L)N - L
 
   
     float Spe = 1.0f;
@@ -167,7 +167,7 @@ void main()
     // Specular (complete the implementation)
     
     vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(V,ReflectVec), 0), ns); //Is Ks (R dot V)^ns
-
+ 
 
     // Attenutation terms (complete the implementation)
     float dL = length(LnotNormal);
@@ -178,7 +178,10 @@ void main()
     finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
+
     //color = ReflectVec;
+    //color = vertexPosition.xyz;
+  
   }
 
   
@@ -188,7 +191,7 @@ void main()
   float S = (G.far - cameraDist) / (G.far - G.near);
 
   //fog equation
-  vec3 Ifinal = S * finalColor + (1.0f - S)  * G.FogColor.rgb;
+  vec3 Ifinal = S * finalColor + (1.0f - S) * G.FogColor.rgb;
   
 
   // VS outputs - position and color
