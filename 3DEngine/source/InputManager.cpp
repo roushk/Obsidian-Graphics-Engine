@@ -98,6 +98,7 @@ void InputManager::Update(float dt)
 
       {
         render.resize(event.window.data1, event.window.data2);
+        
       }
       else if (event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
       {

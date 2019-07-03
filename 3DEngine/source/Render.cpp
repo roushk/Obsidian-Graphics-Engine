@@ -154,6 +154,7 @@ void Render::resize(int w, int h)
   SDL_SetWindowSize(gWindow, w, height);
   glViewport(0, 0, w, height);
   aspect = float(w) / float(height);
+  currentCamera = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,1 }, PI / 2.0f, aspect, nearPlane, farPlane);
 }
 
 void Render:: BindAndCreateGBuffers()
@@ -829,7 +830,7 @@ void Render::Draw(Wireframe& object)
   glUseProgram(programID);
 
   // Uniform transformation (vertex shader)
-
+  
   projectionMatrix = cameraToNDC(currentCamera);
   if (flipX == true)
     projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
