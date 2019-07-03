@@ -16,7 +16,7 @@ inline void RandomInit()
   //std::srand(int('0123'));//seeding value
 
   //more "truer" random
-  std::srand(std::time(nullptr));
+  std::srand(std::time(NULL));
 }
 
 //values are from low to high; RandomValue(0,5) returns [0,5]

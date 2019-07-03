@@ -38,11 +38,6 @@ void main()
   vec3 specular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 ambient = texture(gAmbientMap, fs_in.texCoords).xyz;
 
-  vec3 emissive;
-  emissive.r = texture(gPositionMap, fs_in.texCoords).a;
-  emissive.g = texture(gNormalMap, fs_in.texCoords).a;
-  emissive.b = texture(gDiffuseMap, fs_in.texCoords).a;
-  
 
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);
@@ -69,7 +64,7 @@ void main()
   }
   else if(debugTexture == 5)
   {
-    debugColor = emissive;
+    debugColor = vec3(0,0,0);
   }
 
     

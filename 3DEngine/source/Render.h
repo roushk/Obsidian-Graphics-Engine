@@ -53,6 +53,8 @@ enum shaderSetting
   ssDeferredGeometry,
   ssDeferredRendering,
   ssPhongShadingDeferred,
+  ssPhongShadingDeferredLightSphere,
+
 
   ssLightShader,
   ssSkyboxShader,
@@ -149,8 +151,8 @@ public:
 
   void CreateBuffers();
 
-  void LoadDiffuseForLight(Light& light);
-  void LoadDiffuseForLight(glm::vec4& light);
+  void LoadDiffuseForLight(Light& light, float scale = 1.0f);
+  void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
 
   void SetCurrentShader(int shader);
 
@@ -167,7 +169,7 @@ public:
   void CopyDepthBuffer();
   void BufferRefractionData();
   
-
+  void LoadScreenSize();
   void Update();
   void BindModelBuffer();
   void UpdateCamera(float dt);
@@ -177,6 +179,8 @@ public:
   void EndDrawing();
   void ClearColor(vec4 color);
   void SetTitle(std::string object);
+
+
   /*
   void TakePicOfFBO(int i)
   {

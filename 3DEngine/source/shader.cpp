@@ -34,13 +34,16 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	// Read the Vertex Shader code from the file
 	std::string VertexShaderCode;
 	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if(VertexShaderStream.is_open()){
+	if(VertexShaderStream.is_open())
+  {
 		std::string Line = "";
 		while(getline(VertexShaderStream, Line))
 			VertexShaderCode += "\n" + Line;
 		VertexShaderStream.close();
-	}else{
-		printf("Impossible to open %s. Are you in the right directory ? Don't forget to read the FAQ !\n", vertex_file_path);
+	}
+  else
+  {
+		printf("Impossible to open %s. Are you in the right directory ?\n", vertex_file_path);
 		getchar();
 		return 0;
 	}
@@ -48,12 +51,20 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	// Read the Fragment Shader code from the file
 	std::string FragmentShaderCode;
 	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if(FragmentShaderStream.is_open()){
+	if(FragmentShaderStream.is_open())
+  {
 		std::string Line = "";
 		while(getline(FragmentShaderStream, Line))
 			FragmentShaderCode += "\n" + Line;
 		FragmentShaderStream.close();
 	}
+  else 
+  {
+    printf("Impossible to open %s. Are you in the right directory ?\n", fragment_file_path);
+    getchar();
+    return 0;
+  }
+
 
 	GLint Result = GL_FALSE;
 	int InfoLogLength;

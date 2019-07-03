@@ -76,33 +76,41 @@ uniform mat4  modelMatrix;
 //model matrix
 uniform mat4  modelTransform;
 
+int height = 1;
+int width = 1;
 
 out vec3 color;
 
 void main()
 {
   
+  //vec2 uv = fs_in.texCoords;
+  vec2 uv = vec2(gl_FragCoord.xy) / vec2(width, height);
   vec3 clearcolor = vec3(0.0f);
-  vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
-  vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
-  vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
+  vec3 vertexPosition = texture(gPositionMap, uv).xyz;
+  vec3 normal = texture(gNormalMap, uv).xyz;
+  vec3 KdiffuseColor = texture(gDiffuseMap, uv).xyz;
 
-  vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
+  vec3 Kspecular = texture(gSpecularMap, uv).xyz;
   vec3 Kambient = vec3(0,0,0); //texture(gAmbientMap, fs_in.texCoords).xyz;
-
+ 
   float ns = 32.0f; //texture(gSpecularMap, fs_in.texCoords).a;
   //Kspecular *= 0.5f;
 
   vec3 Kemissive;
 
-  Kemissive.r = 0; // texture(gPositionMap, fs_in.texCoords).a;
+  Kemissive.r = 0; //texture(gPositionMap, fs_in.texCoords).a;
   Kemissive.g = 0; //texture(gNormalMap, fs_in.texCoords).a;
   Kemissive.b = 0; //texture(gDiffuseMap, fs_in.texCoords).a;
   
 
   vec3 cameraPos = camera.xyz;
   vec3 vertexNormal = normal.xyz;
-
+  
+  //if(distance(vertexPosition.xyz, LA.lights[0].LightPosition.xyz) > 5)
+  
+   // discard;
+  
 /*
   if(viewPos == clearcolor && normal == clearcolor )
   {
@@ -175,7 +183,7 @@ void main()
     float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
 
     // Final color
-    finalColor += (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
+    finalColor +=  (att * Iambient) + (att * Spe * (Idiffuse + Ispecular));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
 
@@ -194,14 +202,19 @@ void main()
   float S = (G.far - cameraDist) / (G.far - G.near);
 
   //fog equation
-  vec3 Ifinal = finalColor;//S * finalColor + (1.0f - S) * G.FogColor.rgb;
+  vec3 Ifinal = S * finalColor + (1.0f - S) * vec3(0,0,0);//G.FogColor.rgb;
   
 
   // VS outputs - position and color
   //color = finalColor;
-  
-  color = Ifinal;
-  
+  color = finalColor;
+  //color.rg = uv;
+  //color.b = 0;
+  //color = vec3(1,1,1);
+  if(normal == vec3(0.5f,0.5f,0.5f) && vertexPosition == vec3(0.5f,0.5f,0.5f))
+ {
+   color = vec3(1,0,0);
+ }
   //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
 }
 

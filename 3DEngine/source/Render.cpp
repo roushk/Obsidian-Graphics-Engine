@@ -163,62 +163,49 @@ void Render:: BindAndCreateGBuffers()
   glBindFramebuffer(GL_FRAMEBUFFER, Gbuffer);
   int width = height * aspect;
 
-  //Per GBuffer
+  //Per GBuffer View Pos Out
   glActiveTexture(GL_TEXTURE8);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
-
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
   //End Per GBuffer
 
-  //Per GBuffer
+  //Per GBuffer NormalOut
   glActiveTexture(GL_TEXTURE9);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[1]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
-
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GBufferTexture[1], 0);
+
   //End Per GBuffer
 
-  //Per GBuffer
+  //Per GBuffer DiffuseOut
   glActiveTexture(GL_TEXTURE10);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[2]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, 0);
-
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GBufferTexture[2], 0);
   //End Per GBuffer
 
-  //Per GBuffer
+  //Per GBuffer SpecularOut
   glActiveTexture(GL_TEXTURE11);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[3]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_FLOAT, 0);
-
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-;
-
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GBufferTexture[3], 0);
   //End Per GBuffer
 
-  //Per GBuffer
+  //Per GBuffer AmbientOut
   glActiveTexture(GL_TEXTURE12);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
-
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GBufferTexture[4], 0);
   //End Per GBuffer
 
@@ -291,8 +278,8 @@ void Render::BindAndCreateFrameBuffers(int i)
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   glBindRenderbuffer(GL_RENDERBUFFER, FBODepthBuffers[i]);
 
@@ -497,6 +484,8 @@ void Render::CreateShaders()
   programIDs[ssDeferredRendering] = LoadShaders("shaders/DeferredRendering.vert", "shaders/DeferredRendering.frag");
 
   programIDs[ssPhongShadingDeferred] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferred.frag");
+  programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
+
   programID = programIDs[ssLightShader];
 }
 
@@ -505,13 +494,13 @@ void Render::CreateBuffers()
   glGenBuffers(5, vertexbuffers);
 }
 
-void Render::LoadDiffuseForLight(Light& light)
+void Render::LoadDiffuseForLight(Light& light, float scale)
 {
-  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(glm::normalize(light.diffuse)));
+  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(scale * glm::normalize(light.diffuse)));
 }
-void Render::LoadDiffuseForLight(glm::vec4& light)
+void Render::LoadDiffuseForLight(glm::vec4& light, float scale)
 {
-  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(light));
+  glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(scale * light));
 }
 
 
@@ -723,6 +712,12 @@ void Render::BufferRefractionData()
 {
   glUniform1f(glGetUniformLocation(programID, "highlightTightness"), highlightTightness);
   glUniform1f(glGetUniformLocation(programID, "transCoeff"), transmissionCoefficient);
+}
+
+void Render::LoadScreenSize()
+{
+  glUniform1i(glGetUniformLocation(programID, "height"), height);
+  glUniform1i(glGetUniformLocation(programID, "width"), height * aspect);
 }
 
 void Render::Update()

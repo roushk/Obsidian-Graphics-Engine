@@ -27,6 +27,7 @@ layout (location = 1) out vec4 NormalOut;   //COLOR_ATTACH 1 + emissive y
 layout (location = 2) out vec4 DiffuseOut;  //COLOR_ATTACH 2 + emissive z
 layout (location = 3) out vec4 SpecularOut; //COLOR_ATTACH 3
 layout (location = 4) out vec3 AmbientOut;  //COLOR_ATTACH 4
+
 layout (location = 5) out vec3 DepthOut;    //DEPTH_ATTACH 1
 
 uniform sampler2D Kdiffuse;
@@ -44,11 +45,11 @@ void main()
 
   NormalOut.rgb = normalize(fs_in.normal.xyz);
 
-  AmbientOut.rgb = Kambient;
+  //AmbientOut.rgb = Kambient;
 
-  ViewPosOut.a = Kemissive.r;
-  NormalOut.a = Kemissive.g;
-  DiffuseOut.a = Kemissive.b;
+  //ViewPosOut.a = Kemissive.r;
+  //NormalOut.a = Kemissive.g;
+  //DiffuseOut.a = Kemissive.b;
   
 
   //TexCoordOut = vec3(fs_in.texCoords, 0.0); 
