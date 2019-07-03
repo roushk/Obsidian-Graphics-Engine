@@ -179,7 +179,10 @@ void main()
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
 
-    //color = ReflectVec;
+    //color = LnotNormal;
+    //color = L;
+    //color = LA.lights[i].LightPosition.xyz;
+    //color = vertexPosition.xyz;
     //color = vertexPosition.xyz;
   
   }
@@ -196,7 +199,7 @@ void main()
 
   // VS outputs - position and color
   //color = finalColor;
-
+  
   color = Ifinal;
   
   //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;

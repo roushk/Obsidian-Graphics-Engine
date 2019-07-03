@@ -123,7 +123,7 @@ Model ObjectReader::load_model(const std::string& path)
     /*aiProcessPreset_TargetRealtime_Quality | */
     //aiProcess_OptimizeMeshes |
     //aiProcess_GenSmoothNormals |
-    aiProcess_GenNormals |
+    //aiProcess_GenNormals |
     //aiProcess_JoinIdenticalVertices |
     aiProcess_GenUVCoords |
     aiProcess_SortByPType |
