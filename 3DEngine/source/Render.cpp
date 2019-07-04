@@ -159,6 +159,10 @@ void Render::GenFrameBuffers()
   glGenFramebuffers(6, FrameBuffers);
   glGenTextures(6, RenderedTextures);
   glGenRenderbuffers(6, FBODepthBuffers);
+
+  glGenFramebuffers(1, shadowFBO);
+  glGenTextures(1, shadowTexture);
+  //glGenRenderbuffers(1, shadowRBO);
 }
 
 
@@ -169,6 +173,59 @@ void Render::resize(int w, int h)
   glViewport(0, 0, w, height);
   aspect = float(w) / float(height);
   currentCamera = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,1 }, PI / 2.0f, aspect, nearPlane, farPlane);
+}
+
+
+void Render::BindShadowTextures()
+{
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
+  glUniform1i(glGetUniformLocation(programID, "gPositionMap"), 2);
+  glBindSampler(GL_TEXTURE2, glGetUniformLocation(programID, "gPositionMap"));
+}
+
+
+void Render::BindAndCreateShadowBuffers()
+{
+  GLuint numBuffers = 1;
+  glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[0]);
+  int width = height * aspect;
+  int shadowMapScale = 2;
+
+  glActiveTexture(GL_TEXTURE13);
+  glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width * shadowMapScale, 
+    height * shadowMapScale, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
+
+  
+  //glBindRenderbuffer(GL_RENDERBUFFER, shadowRBO[0]);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTexture[0], 0);
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  //check for completeness
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::cout << "Shadow Map Bind and Create Failed" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Render::BindShadowBuffer()
+{
+  //bind frame buffer i 
+  glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[0]);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::cout << "Shadow Map buffer bind Failed" << std::endl;
+  }
+
+  glViewport(0, 0, height * aspect, height);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //draw scene
 }
 
 void Render:: BindAndCreateGBuffers()
@@ -499,7 +556,7 @@ void Render::CreateShaders()
 
   programIDs[ssPhongShadingDeferred] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferred.frag");
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
-
+  programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
   programID = programIDs[ssLightShader];
 }
 
@@ -884,8 +941,42 @@ void Render::Draw(Model& object)
   }
 
 
+
   glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
                      glm::value_ptr(projectionMatrix));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "modelTransform"), 1, GL_FALSE, glm::value_ptr(modelTransform));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "modelMatrix"), 1, GL_FALSE, glm::value_ptr(object.modelMatrix));
+
+  //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+  glDrawElements(GL_TRIANGLES, object.indices.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
+
+}
+
+void Render::DrawShadow(const Model& object, const glm::vec3& objPos, const Light& light)
+{
+  glUseProgram(programID);
+
+  glUniform3f(glGetUniformLocation(programID, "camera"),
+    currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
+  // Uniform transformation (vertex shader)
+  if (cameraChanged == true)
+  {
+    projectionMatrix = cameraToNDC(currentCamera);
+
+    if (flipX == true)
+      projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
+
+    viewMatrix = worldToCamera(currentCamera);
+    cameraChanged = false;
+  }
+
+  viewMatrix = glm::lookAt(glm::vec3(light.position), objPos, vec3(0, 1, 0));
+
+
+  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
+    glm::value_ptr(projectionMatrix));
   glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
   glUniformMatrix4fv(glGetUniformLocation(programID, "modelTransform"), 1, GL_FALSE, glm::value_ptr(modelTransform));
   glUniformMatrix4fv(glGetUniformLocation(programID, "modelMatrix"), 1, GL_FALSE, glm::value_ptr(object.modelMatrix));

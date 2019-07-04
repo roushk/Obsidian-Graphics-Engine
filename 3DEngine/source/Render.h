@@ -48,8 +48,8 @@ enum shaderSetting
   ssPhongShading,
   ssPhongLighting,
   ssBlinnLighting,
-
   ssWireframe,
+  ssShadowShader,
   ssDeferredGeometry,
   ssDeferredRendering,
   ssPhongShadingDeferred,
@@ -127,8 +127,9 @@ public:
   void SetModelOffset(vec3 pos, float scale_ = 1.0f);
   void LoadMaterial(Material materialSpec, Material materialDiff);
   void LoadSkybox(std::vector<std::string>& skyboxNames);
+
   //Gbuffers
-  void GenGBuffer();
+  void GenGBuffer();  //also gens shadow buffer
   void BindGBufferTextures();
   void BindAndCreateGBuffers();
   void BindGBuffer();
@@ -139,13 +140,14 @@ public:
   void BindFrameBufferToRenderTo(unsigned i);
   void BindFrameBufferTextures();
 
+  //shadow FBO stuff
+  void BindShadowTextures();
+  void BindAndCreateShadowBuffers();
+  void BindShadowBuffer();
+
   void BindDefaultFrameBuffer();
-
-
   void BindSkybox();
-
   void BindMaterials(SceneLighting& lighting);
-
   void LoadModel(Model& object); // Object object); 
   void LoadModel(Wireframe& object);
   
@@ -182,7 +184,7 @@ public:
   void EndDrawing();
   void ClearColor(vec4 color);
   void SetTitle(std::string object);
-
+  void DrawShadow(const Model& object, const glm::vec3& objPos, const Light& light);
 
   /*
   void TakePicOfFBO(int i)
@@ -257,6 +259,10 @@ public:
 
   GLuint FBODepthBuffers[6];
 
+  GLuint shadowFBO[1];  //shadow map output FBO
+  GLuint shadowTexture[1];  //depth map
+  //dont need color buffer only depth buffer
+  //GLuint shadowRBO[1]; //shadow render buffer object
 
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
@@ -284,8 +290,6 @@ public:
   //depth | depth        |           | R24f
 
   std::vector<LightData> lightDatas;
-  
-  
 
 
   float rotateRate = 2.0f * PI / 20.0f;
