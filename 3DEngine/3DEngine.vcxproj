@@ -684,6 +684,7 @@
     <ClInclude Include="source\pch.h" />
     <ClInclude Include="source\Projection.h" />
     <ClInclude Include="source\random.h" />
+    <ClInclude Include="source\Remap.h" />
     <ClInclude Include="source\Render.h" />
     <ClInclude Include="source\rttr\access_levels.h" />
     <ClInclude Include="source\rttr\argument.h" />

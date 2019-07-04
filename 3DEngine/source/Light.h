@@ -18,8 +18,10 @@ End Header --------------------------------------------------------*/
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <string>
+#include "Remap.h"
 
 
+class SceneLighting;
 using namespace glm;
 
 enum LightType
@@ -114,12 +116,13 @@ public:
 
   std::string name;
 
+  void setRadius(SceneLighting& lighting, int maxLights);
 
   static int lightID;
   int lightNum;
+  float radius;
 
 };
-
 
 
 
@@ -166,7 +169,10 @@ class SceneLighting
   //fog
   struct Global
   {
-    vec4 AttenParam = { 0.1f,0.1f,0.1f, 1};  //c1 = x, c2 = y, c3 = z
+   
+    //float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
+    //x = constant, y = linear, z = quadratic
+    vec4 AttenParam = { 1.0f,0.7f,0.1f, 1.8f};  //c1 = x, c2 = y, c3 = z
     vec4 FogColor = { 0,0,0 , 1 };
     vec4 Iglobal = { 0,0,0 , 1 };
     float Kglobal = 0;
@@ -182,6 +188,26 @@ class SceneLighting
   int activeLights = 0;
   std::vector<Light> lights;
 };
+
+
+inline void Light::setRadius(SceneLighting& lighting, int maxLights)
+{
+  float constant = lighting.global.AttenParam.x;
+  float linear = lighting.global.AttenParam.y;
+  float quadratic = lighting.global.AttenParam.z;
+
+   //float brightestValuePerLight = 256.0 / 5.0;
+  //brightest value is that each light can only be as bright as 1 / maxLights of the scene
+  //assuming that 256 is the most light we can accumulate in the scene (1-255 bytes)
+  float brightestValuePerLight = (1.0f / maxLights) * 256.0f;
+
+  float lightMax = std::fmaxf(std::fmaxf(diffuse.r, diffuse.g), diffuse.b);
+  float inside2 =  (constant - (brightestValuePerLight * lightMax));
+  double inside = std::sqrtf(std::abs(linear * linear - 4.0f * quadratic * inside2));
+  //radius = (-linear + inside) / (2 * quadratic);
+  radius = 2 * (-linear + inside) / (quadratic);
+
+}
 
 #endif
 

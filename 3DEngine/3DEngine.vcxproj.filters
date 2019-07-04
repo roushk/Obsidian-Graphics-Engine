@@ -2092,6 +2092,9 @@
     <ClInclude Include="source\engine.h">
       <Filter>Source Files\main</Filter>
     </ClInclude>
+    <ClInclude Include="source\Remap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="source\assimp\color4.inl">
