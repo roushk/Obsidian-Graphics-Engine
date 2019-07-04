@@ -117,10 +117,21 @@ public:
   std::string name;
 
   void setRadius(SceneLighting& lighting, int maxLights);
+  void SetPositionAndScaleCalc(const vec4& pos, float scale_)
+  {
+    modelTransform = translate(vec3(pos)) * scale(glm::mat4(1.0f), vec3(scale_));
+  }
+  void SetPositionAndScaleView(const vec4& pos, float scale_)
+  {
+    modelTransformView = translate(vec3(pos)) * scale(glm::mat4(1.0f), vec3(scale_));
+  }
+  glm::mat4& getMatrix() { return modelTransform; };
 
   static int lightID;
   int lightNum;
   float radius;
+  glm::mat4 modelTransform = glm::mat4(1.0f);
+  glm::mat4 modelTransformView = glm::mat4(1.0f);
 
 };
 

@@ -118,34 +118,42 @@ void InputManager::Update(float dt)
       if (event.key.keysym.scancode == SDL_SCANCODE_W)
       {
         camera.forward(speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_A)
       {
         camera.leftRight(speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_S)
       {
         camera.forward(-speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_D)
       {
         camera.leftRight(-speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT)
       {
         camera.upDown(-speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL)
       {
         camera.upDown(speed * 2.0f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_Q)
       {
         camera.roll(speed * 0.2f);
+        render.cameraChanged = true;
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_E)
       {
         camera.roll(-speed * 0.2f);
+        render.cameraChanged = true;
       }
 
       
@@ -202,11 +210,13 @@ void InputManager::Update(float dt)
       if (event.wheel.y > 0) // scroll up
       {
         camera.zoom(0.9f);
+        render.cameraChanged = true;
         // Pull up code here!
       }
       else if (event.wheel.y < 0) // scroll down
       {
         camera.zoom(1.1f);
+        render.cameraChanged = true;
         // Pull down code here!
       }
       //= glm::scale(engine.GetSystem<Render>()->cameraPos, glm::vec3(scale, scale, 1.0f));
@@ -240,7 +250,7 @@ void InputManager::Update(float dt)
 
   if (toggleCamera)
   {
-
+    render.cameraChanged = true;
 
     xoffset *= sensitivity;
     yoffset *= sensitivity;

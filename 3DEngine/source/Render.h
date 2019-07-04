@@ -121,6 +121,9 @@ public:
 
   void SetModelOffset(float x, float y, float z, float scale_ = 1.0f);
   void SetModelOffset(vec4 pos, float scale_ = 1.0f);
+  void SetModelOffset(const Light& light);
+  void SetModelOffsetView(const Light& light);
+
   void SetModelOffset(vec3 pos, float scale_ = 1.0f);
   void LoadMaterial(Material materialSpec, Material materialDiff);
   void LoadSkybox(std::vector<std::string>& skyboxNames);
@@ -196,6 +199,7 @@ public:
   GLbyte * data;
   */
   bool flipX = false;
+  bool cameraChanged = false;
   mat4 inverseCamRotate;
   
   SDL_Window* gWindow;
@@ -279,7 +283,9 @@ public:
   //aux1  | specular  12 | shininess | ARGB8
   //depth | depth        |           | R24f
 
-
+  std::vector<LightData> lightDatas;
+  
+  
 
 
   float rotateRate = 2.0f * PI / 20.0f;

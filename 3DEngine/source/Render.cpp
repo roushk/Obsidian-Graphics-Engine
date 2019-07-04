@@ -22,6 +22,7 @@
 Render::Render()
 {
   InitRender();
+  lightDatas.resize(8);
   //mvTransform = glm::mat4(1.0);
   //vTransform = glm::mat4(1.0);
 }
@@ -71,18 +72,31 @@ std::string Render::GetSetting()
 
 void Render::SetModelOffset(float x, float y, float z, float scale_)
 {
-  modelTransform = translate(vec3(x, y, z)) * scale(vec3(scale_)) * glm::mat4(1.0f);
+  modelTransform = translate(vec3(x, y, z)) * scale(glm::mat4(1.0f),vec3(scale_));
 }
 
 void Render::SetModelOffset(vec4 pos, float scale_)
 {
   //modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
-  modelTransform = translate(vec3(pos)) * scale(vec3(scale_)) * glm::mat4(1.0f);
+  modelTransform = translate(vec3(pos)) * scale(glm::mat4(1.0f), vec3(scale_));
+}
+
+//because static lights arent moving we dont want to recalculate its model transform
+//every single frame, slows down alot
+void Render::SetModelOffset(const Light& light)
+{
+  //modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
+  modelTransform = light.modelTransform;
+}
+void Render::SetModelOffsetView(const Light& light)
+{
+  //modelTransform = translate(scale(glm::mat4(1.0f), vec3(scale_)), vec3(pos));
+  modelTransform = light.modelTransformView;
 }
 
 void Render::SetModelOffset(vec3 pos, float scale_)
 {
-  modelTransform = translate(pos) * scale(vec3(scale_)) * glm::mat4(1.0f);
+  modelTransform = translate(pos) * scale(glm::mat4(1.0f), vec3(scale_));
 }
 
 void Render::LoadMaterial(Material materialSpec, Material materialDiff)
@@ -570,19 +584,22 @@ void Render::BindLightScene(SceneLighting& lighting)
   }
 
 
-  std::vector<LightData> lights;
-
+  
+  //lights.data()
   //pushes light data onto individual arrays from light structs
   for (int i = 0; i < lighting.activeLights; ++i)
   {
-    LightData light = lighting.lights[i]; //intentional object slicing to just get data
-    lights.push_back(light);
+    //LightData light = lighting.lights[i]; //intentional object slicing to just get data
+    lightDatas[i] = lighting.lights[i];
   }
+  /*
+  LightData light; //intentional object slicing to just get data
   for (int i = lighting.activeLights; i < lighting.maxLights; ++i)
   {
-    LightData light; //intentional object slicing to just get data
     lights.push_back(light);
   }
+  */
+  
   //****************************************//
   //load array of lights Global, Material
   //get block index
@@ -600,7 +617,7 @@ void Render::BindLightScene(SceneLighting& lighting)
 
     int size = sizeof(LightData);
 
-    memcpy(uboBuffer[0], lights.data(), uboSize);
+    memcpy(uboBuffer[0], lightDatas.data(), uboSize);
 
     glBindBuffer(GL_UNIFORM_BUFFER, uboHandle[0]);
     glBufferData(GL_UNIFORM_BUFFER, uboSize, uboBuffer[0], GL_DYNAMIC_DRAW);
@@ -731,6 +748,7 @@ void Render::Update()
   if (aspect != oldAspect)
   {
     cameraBase = Camera(vec4{0, 0, 5, 0}, vec4{0, 0, -1, 1}, vec4{0, 1, 0, 1}, PI / 2.0f, aspect, nearPlane, farPlane);
+    cameraChanged = true;
   }
 
   Camera newCameras[6]
@@ -826,10 +844,14 @@ void Render::Draw(Wireframe& object)
 
   // Uniform transformation (vertex shader)
   
-  projectionMatrix = cameraToNDC(currentCamera);
-  if (flipX == true)
-    projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
-  viewMatrix = worldToCamera(currentCamera);
+  if(cameraChanged == true)
+  {
+    projectionMatrix = cameraToNDC(currentCamera);
+    viewMatrix = worldToCamera(currentCamera);
+    cameraChanged = false;
+  }
+  //if (flipX == true)
+  //  projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
     glm::value_ptr(projectionMatrix));
@@ -850,11 +872,17 @@ void Render::Draw(Model& object)
   glUniform3f(glGetUniformLocation(programID, "camera"),
     currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
+  if (cameraChanged == true)
+  {
+    projectionMatrix = cameraToNDC(currentCamera);
 
-  projectionMatrix = cameraToNDC(currentCamera);
-  if (flipX == true)
-    projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
-  viewMatrix = worldToCamera(currentCamera);
+    if (flipX == true)
+      projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
+
+    viewMatrix = worldToCamera(currentCamera);
+    cameraChanged = false;
+  }
+
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
                      glm::value_ptr(projectionMatrix));
@@ -915,7 +943,7 @@ void Render::SetCurrentCamera(int cam)
   else
     currentCamera = cameras[cam];
 
-  
+  cameraChanged = true;
 }
 
 void Render::SetObjectShader(int shader)
