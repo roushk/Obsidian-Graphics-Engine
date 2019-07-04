@@ -141,7 +141,6 @@ public:
 
   void BindDefaultFrameBuffer();
 
-
   void BindSkybox();
 
   void BindMaterials(SceneLighting& lighting);
