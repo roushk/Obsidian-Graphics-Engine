@@ -141,11 +141,11 @@ void InputManager::Update(float dt)
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_Q)
       {
-        camera.roll(speed * 0.8f);
+        camera.roll(speed * 0.2f);
       }
       if (event.key.keysym.scancode == SDL_SCANCODE_E)
       {
-        camera.roll(-speed * 0.8f);
+        camera.roll(-speed * 0.2f);
       }
 
       

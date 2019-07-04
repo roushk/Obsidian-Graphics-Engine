@@ -302,6 +302,8 @@ void GUI::RenderFrame()
     //I and K global
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
+    ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
     ImGui::DragFloat3("Iglobal", glm::value_ptr(lighting.global.Iglobal), 0.005f, 0.0f, 1.0f);
