@@ -76,8 +76,8 @@ uniform mat4  modelMatrix;
 //model matrix
 uniform mat4  modelTransform;
 
-int height = 1;
-int width = 1;
+uniform int height = 1024;
+uniform int width = 768;
 
 out vec3 color;
 
@@ -85,7 +85,10 @@ void main()
 {
   
   //vec2 uv = fs_in.texCoords;
-  vec2 uv = vec2(gl_FragCoord.xy) / vec2(width, height);
+  vec2 uv;//= vec2(gl_FragCoord.xy) / vec2(float(width), float(height));
+  uv.x = float(gl_FragCoord.x) / float(width);
+  uv.y = float(gl_FragCoord.y) / float(height);
+
   vec3 clearcolor = vec3(0.0f);
   vec3 vertexPosition = texture(gPositionMap, uv).xyz;
   vec3 normal = texture(gNormalMap, uv).xyz;
@@ -202,19 +205,26 @@ void main()
   float S = (G.far - cameraDist) / (G.far - G.near);
 
   //fog equation
-  vec3 Ifinal = S * finalColor + (1.0f - S) * vec3(0,0,0);//G.FogColor.rgb;
-  
+  //vec3 Ifinal = S * finalColor + (1.0f - S) * vec3(0,0,0);//G.FogColor.rgb;
+  vec3 Ifinal = finalColor;
 
   // VS outputs - position and color
   //color = finalColor;
   color = finalColor;
+  //color = vertexPosition.xyz;
+  //color.r = width / height;
+  //color.g = width / width;
+  //color.rg = uv;
+  //color.b = 0;
   //color.rg = uv;
   //color.b = 0;
   //color = vec3(1,1,1);
+  /*
   if(normal == vec3(0.5f,0.5f,0.5f) && vertexPosition == vec3(0.5f,0.5f,0.5f))
- {
-   color = vec3(1,0,0);
- }
+  {
+    color = vec3(1,0,0);
+  }
+  */
   //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
 }
 
