@@ -262,6 +262,7 @@ public:
 
   GLuint shadowFBO[1];  //shadow map output FBO
   GLuint shadowTexture[1];  //depth map
+  GLenum shadowBuffers[1] { GL_COLOR_ATTACHMENT0 };
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
   float shadowScale = 4.0f;

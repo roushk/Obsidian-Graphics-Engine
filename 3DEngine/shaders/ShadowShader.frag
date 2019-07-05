@@ -22,9 +22,14 @@ in VS_OUT
 
 //out vec4 color;
 
-//layout (location = 0) out vec4 depth;  //COLOR_ATTACH 0 + emissive x
+layout (location = 0) out vec4 depth;  //COLOR_ATTACH 0 + emissive x
 
 void main()
 {
-  // gl_FragDepth = gl_FragCoord.z;
+  // gl_FragDepth = gl_FragCoord.z; //happens implicitly
+  depth.r = gl_FragCoord.z;
+  depth.g = gl_FragCoord.z * gl_FragCoord.z;
+  depth.b = gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z;
+  depth.a = gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z;
+
 }

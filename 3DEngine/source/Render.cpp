@@ -192,22 +192,18 @@ void Render::BindAndCreateShadowBuffers()
 
   glActiveTexture(GL_TEXTURE13);
   glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width * shadowScale,
-    height* shadowScale, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
+    height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
-
-
-  //glBindRenderbuffer(GL_RENDERBUFFER, shadowRBO[0]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[0]);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTexture[0], 0);
-  glDrawBuffer(GL_NONE);
-  glReadBuffer(GL_NONE);
-  //check for completeness
+
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, shadowTexture[0], 0);
+  //glDrawBuffers(1, shadowBuffers);
+
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
     std::cout << "Shadow Map Bind and Create Failed" << std::endl;
@@ -225,7 +221,10 @@ void Render::BindShadowBuffer()
   }
 
   glViewport(0, 0, height * aspect* shadowScale, height* shadowScale);
-  glClear(GL_DEPTH_BUFFER_BIT);
+  
+  glClearColor(1, 1, 1, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0,0,0,0);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
 }
