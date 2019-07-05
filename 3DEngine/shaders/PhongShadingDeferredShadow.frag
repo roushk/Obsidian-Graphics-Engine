@@ -95,9 +95,9 @@ float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
   float currentDepth = shadowFrag.z;
  
   if(currentDepth > closestDepth)
-    return 1; // depthValue;
+    return 0; // depthValue;
   else 
-    return 0; //shadowFrag.z;
+    return 1; //shadowFrag.z;
   
 }
 
