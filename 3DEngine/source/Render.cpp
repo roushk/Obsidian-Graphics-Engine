@@ -559,6 +559,7 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
   programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
   programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
+  programIDs[ssComputerBlur] = LoadComputerShader("shaders/ComputeBlur.comp");
   programID = programIDs[ssLightShader];
 }
 

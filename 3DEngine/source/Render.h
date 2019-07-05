@@ -56,6 +56,8 @@ enum shaderSetting
   ssPhongShadingDeferredShadow,
   ssPhongShadingDeferredLightSphere,
 
+  ssComputerBlur,
+
 
   ssLightShader,
   ssSkyboxShader,
