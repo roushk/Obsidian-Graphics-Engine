@@ -87,14 +87,18 @@ float readShadowMap(vec3 fragPos)
 {
   vec4 shadowFrag = shadowMatrix * vec4(fragPos,1);
   shadowFrag = shadowFrag/shadowFrag.w;
+  shadowFrag = shadowFrag * 0.5 + 0.5;
+
 
   const float bias = 0.0001;
-  float depthValue = texture( shadowMap, shadowFrag.xy ).w - bias;
+  float closestDepth = texture( shadowMap, shadowFrag.xy ).r - bias;
+  float currentDepth = shadowFrag.z;
  
-  if(shadowFrag.z > depthValue)
-    return 1;
+  if(currentDepth > closestDepth)
+    return 1; // depthValue;
   else 
-    return 0;
+    return 0; //shadowFrag.z;
+  
 }
 
 
