@@ -38,7 +38,7 @@ void main()
 
   vec3 specular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 ambient = texture(gAmbientMap, fs_in.texCoords).xyz;
-  vec3 shadow = vec3(texture(shadowMap, fs_in.texCoords).x / 10.0f);
+  vec3 shadow = vec3(texture(shadowMap, fs_in.texCoords).r);
 
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);

@@ -26,5 +26,5 @@ in VS_OUT
 
 void main()
 {
-  //gl_FragData[0] = fs_in.position;  //(only the w coordinate will be used)
+  // gl_FragDepth = gl_FragCoord.z;
 }

@@ -89,7 +89,7 @@ float readShadowMap(vec3 fragPos)
   shadowFrag = shadowFrag/shadowFrag.w;
 
   const float bias = 0.0001;
-  float depthValue = texture( shadowMap, shadowFrag.xy ).x - bias;
+  float depthValue = texture( shadowMap, shadowFrag.xy ).w - bias;
  
   if(shadowFrag.z > depthValue)
     return 1;
