@@ -17,13 +17,14 @@ End Header --------------------------------------------------------*/
 //simple pass through
 in VS_OUT
 {
-    vec4 position
+    vec4 position;
 } fs_in;
 
 //out vec4 color;
 
+//layout (location = 0) out vec4 depth;  //COLOR_ATTACH 0 + emissive x
 
 void main()
 {
-  gl_FragData[0] = fs_in.position;// (only the w coordinate will be used)
+  //gl_FragData[0] = fs_in.position;  //(only the w coordinate will be used)
 }

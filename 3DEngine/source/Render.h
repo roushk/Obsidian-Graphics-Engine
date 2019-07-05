@@ -53,6 +53,7 @@ enum shaderSetting
   ssDeferredGeometry,
   ssDeferredRendering,
   ssPhongShadingDeferred,
+  ssPhongShadingDeferredShadow,
   ssPhongShadingDeferredLightSphere,
 
 
@@ -184,7 +185,7 @@ public:
   void EndDrawing();
   void ClearColor(vec4 color);
   void SetTitle(std::string object);
-  void DrawShadow(const Model& object, const glm::vec3& objPos, const Light& light);
+  void DrawShadow(const Model& object, const Light& light);
 
   /*
   void TakePicOfFBO(int i)
@@ -263,7 +264,6 @@ public:
   GLuint shadowTexture[1];  //depth map
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
-
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 
@@ -332,6 +332,7 @@ private:
   glm::mat4 viewMatrix = glm::mat4(1.0f);
   glm::mat4 modelMatrix = glm::mat4(1.0f);
   glm::mat4 modelTransform = glm::mat4(1.0f);
+  glm::mat4 shadowMatrix = glm::mat4(1.0f);
 
   std::vector<Light> lights;
   

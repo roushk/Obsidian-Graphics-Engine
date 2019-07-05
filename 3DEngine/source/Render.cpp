@@ -17,6 +17,7 @@
 #include "Render.h"
 #include "Wireframe.h"
 #include "singleton.h"
+#include <minwindef.h>
 
 
 Render::Render()
@@ -178,31 +179,32 @@ void Render::resize(int w, int h)
 
 void Render::BindShadowTextures()
 {
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
-  glUniform1i(glGetUniformLocation(programID, "gPositionMap"), 2);
-  glBindSampler(GL_TEXTURE2, glGetUniformLocation(programID, "gPositionMap"));
+  glActiveTexture(GL_TEXTURE13);
+  glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
+  glUniform1i(glGetUniformLocation(programID, "shadowMap"), 13);
+  glBindSampler(GL_TEXTURE13, glGetUniformLocation(programID, "shadowMap"));
 }
 
 
 void Render::BindAndCreateShadowBuffers()
 {
-  GLuint numBuffers = 1;
   glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[0]);
   int width = height * aspect;
-  int shadowMapScale = 2;
 
   glActiveTexture(GL_TEXTURE13);
   glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width * shadowMapScale, 
-    height * shadowMapScale, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, 
+    height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
 
-  
+
   //glBindRenderbuffer(GL_RENDERBUFFER, shadowRBO[0]);
+  glBindFramebuffer(GL_FRAMEBUFFER, shadowFBO[0]);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowTexture[0], 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
@@ -557,6 +559,7 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferred] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferred.frag");
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
   programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
+  programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
   programID = programIDs[ssLightShader];
 }
 
@@ -929,18 +932,18 @@ void Render::Draw(Model& object)
   glUniform3f(glGetUniformLocation(programID, "camera"),
     currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
-  if (cameraChanged == true)
-  {
-    projectionMatrix = cameraToNDC(currentCamera);
+  //if (cameraChanged == true)
+  
+  projectionMatrix = cameraToNDC(currentCamera);
 
-    if (flipX == true)
-      projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
+  if (flipX == true)
+    projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
 
-    viewMatrix = worldToCamera(currentCamera);
-    cameraChanged = false;
-  }
+  viewMatrix = worldToCamera(currentCamera);
+  //cameraChanged = false;
 
-
+  glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
+    glm::value_ptr(shadowMatrix));
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
                      glm::value_ptr(projectionMatrix));
@@ -954,7 +957,8 @@ void Render::Draw(Model& object)
 
 }
 
-void Render::DrawShadow(const Model& object, const glm::vec3& objPos, const Light& light)
+//draws shadow to buffer
+void Render::DrawShadow(const Model& object, const Light& light)
 {
   glUseProgram(programID);
 
@@ -972,8 +976,18 @@ void Render::DrawShadow(const Model& object, const glm::vec3& objPos, const Ligh
     cameraChanged = false;
   }
 
-  viewMatrix = glm::lookAt(glm::vec3(light.position), objPos, vec3(0, 1, 0));
+  glm::vec3 objectLookAtVec = vec3(0, -1, 0) - vec3(light.position);
+  Camera lightCam = Camera(vec3(light.position), vec3(0,1,0), vec3(0, 1, 0), PI / 2.0f, aspect, nearPlane, farPlane);
+  
+  //  viewMatrix = glm::lookAt(glm::vec3(light.position), objectLookAtVec, vec3(0, 1, 0));
 
+  projectionMatrix = cameraToNDC(lightCam);
+  //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(0, -2, 0) , vec3(0, 1, 0));
+  shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f))) * projectionMatrix * viewMatrix;
+  //shadowMatrix = projectionMatrix * viewMatrix;
+  glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
+    glm::value_ptr(shadowMatrix));
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
     glm::value_ptr(projectionMatrix));

@@ -23,6 +23,8 @@ uniform mat4  projectionMatrix;
 uniform mat4  modelMatrix;
 //model matrix
 uniform mat4  modelTransform;
+//model matrix
+uniform mat4  shadowMatrix;
 
 // Material values
 // These values are hardcoded, but should be read from textures and passed as samplers
@@ -35,14 +37,16 @@ layout(location = 0) in vec3 modelPosition;
 // Interpolating vertex attributes over the rasterizer
 out VS_OUT
 {
-  vec4 position
+  vec4 position;
 } vs_out;
 
 
 void main()
 {
+  //projectionMatrix * viewMatrix = shadowMatrix in this shadowShader.vert
+  //  vs_out.position = projectionMatrix * viewMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
 
-  vs_out.position = projectionMatrix * viewMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
+  vs_out.position = shadowMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
   gl_Position = vs_out.position;
   
 }

@@ -19,6 +19,7 @@ uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
 uniform sampler2D gAmbientMap;
+uniform sampler2D shadowMap;
 
 uniform uint debugTexture;
 
@@ -37,7 +38,7 @@ void main()
 
   vec3 specular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 ambient = texture(gAmbientMap, fs_in.texCoords).xyz;
-
+  vec3 shadow = vec3(texture(shadowMap, fs_in.texCoords).x / 10.0f);
 
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);
@@ -64,7 +65,7 @@ void main()
   }
   else if(debugTexture == 5)
   {
-    debugColor = vec3(0,0,0);
+    debugColor = shadow;
   }
 
     

@@ -329,84 +329,88 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Far Plane", &lighting.global.far,0.01f, lighting.global.near);*/
     ImGui::PopItemWidth();
     ImGui::EndChild();
-    //Light selection
-    //*********//
-    Light& light = lighting.lights.at(currentLight);
-    std::string name;
-    float lightHeight = 0;
-    if (light.type == ltDirectional)
+    
+    if (ImGui::CollapsingHeader("Light Settings"))
     {
-      name = "Directional Light";
-      lightHeight = 110;
-    }
-    else if (light.type == ltPoint)
-    {
-      name = "Point Light";
-      lightHeight = 110;
-    }
-    else if (light.type == ltSpotlight) //spotlight
-    {
-      name = "Spot Light";
-      lightHeight = 180;
-    }
-    else
-      lightHeight = 0;
-
-
-    ImGui::BeginChild("LightSettings", {390, lightHeight + 90});
-    ImGui::Text("Light Settings");
-    ImGui::PushItemWidth(60);
-    ImGui::InputInt("Active Lights", &lighting.activeLights, 1);
-    if (lighting.maxLights < lighting.activeLights)
-      lighting.activeLights = lighting.maxLights;
-    if (lighting.activeLights < 0)
-      lighting.activeLights = 0;
-    ImGui::SameLine();
-    ImGui::PushItemWidth(100);
-    ImGui::Combo("Lights", &currentLight, names.data(), lighting.activeLights);
-    ImGui::PushItemWidth(150);
-    currentLightType = light.type;
-
-    ImGui::Combo("Type", &currentLightType, types.data(), types.size());
-    light.type = currentLightType;
-
-    ImGui::PopItemWidth();
-
-    if (light.type != ltNone)
-    {
-      ImGui::BeginChild("Lights", {390, lightHeight});
-      ImGui::Text(name.c_str());
-      ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
-      ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
-      ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
-    }
-    if (light.type == ltSpotlight || light.type == ltDirectional)
-      ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
-    if (light.type == ltSpotlight || light.type == ltPoint)
-      ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
-    if (light.type == ltSpotlight)
-    {
-      ImGui::PushItemWidth(50);
-      ImGui::DragFloat("Outer Radius", &light.outerRadius, 0.005f, 0.0f, PI);
-      ImGui::SameLine();
-      ImGui::DragFloat("Inner Radius", &light.innerRadius, 0.005f, 0.0f, PI);
-      ImGui::DragFloat("Falloff Value", &light.falloffValue, 0.005f, 0.0f, 1.0f);
-      if (light.outerRadius > light.innerRadius)
+      //Light selection
+      //*********//
+      Light& light = lighting.lights.at(currentLight);
+      std::string name;
+      float lightHeight = 0;
+      if (light.type == ltDirectional)
       {
-        light.innerRadius = light.outerRadius;
+        name = "Directional Light";
+        lightHeight = 110;
       }
+      else if (light.type == ltPoint)
+      {
+        name = "Point Light";
+        lightHeight = 110;
+      }
+      else if (light.type == ltSpotlight) //spotlight
+      {
+        name = "Spot Light";
+        lightHeight = 180;
+      }
+      else
+        lightHeight = 0;
+
+
+      ImGui::BeginChild("LightSettings", { 390, lightHeight + 90 });
+      ImGui::Text("Light Settings");
+      ImGui::PushItemWidth(60);
+      ImGui::InputInt("Active Lights", &lighting.activeLights, 1);
+      if (lighting.maxLights < lighting.activeLights)
+        lighting.activeLights = lighting.maxLights;
+      if (lighting.activeLights < 0)
+        lighting.activeLights = 0;
+      ImGui::SameLine();
+      ImGui::PushItemWidth(100);
+      ImGui::Combo("Lights", &currentLight, names.data(), lighting.activeLights);
+      ImGui::PushItemWidth(150);
+      currentLightType = light.type;
+
+      ImGui::Combo("Type", &currentLightType, types.data(), types.size());
+      light.type = currentLightType;
 
       ImGui::PopItemWidth();
-    }
+
+      if (light.type != ltNone)
+      {
+        ImGui::BeginChild("Lights", { 390, lightHeight });
+        ImGui::Text(name.c_str());
+        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
+      }
+      if (light.type == ltSpotlight || light.type == ltDirectional)
+        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
+      if (light.type == ltSpotlight || light.type == ltPoint)
+        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
+      if (light.type == ltSpotlight)
+      {
+        ImGui::PushItemWidth(50);
+        ImGui::DragFloat("Outer Radius", &light.outerRadius, 0.005f, 0.0f, PI);
+        ImGui::SameLine();
+        ImGui::DragFloat("Inner Radius", &light.innerRadius, 0.005f, 0.0f, PI);
+        ImGui::DragFloat("Falloff Value", &light.falloffValue, 0.005f, 0.0f, 1.0f);
+        if (light.outerRadius > light.innerRadius)
+        {
+          light.innerRadius = light.outerRadius;
+        }
+
+        ImGui::PopItemWidth();
+      }
 
 
-    static unsigned i = 0;
-    //Toggle Lights on/off
-    if (light.type != ltNone)
+      static unsigned i = 0;
+      //Toggle Lights on/off
+      if (light.type != ltNone)
+        ImGui::EndChild();
+
+      ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
       ImGui::EndChild();
-
-    ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
-    ImGui::EndChild();
+    }
     //*********//
 
     buttonLeftDown = ImGui::ArrowButton("Left", ImGuiDir_Left);
@@ -426,7 +430,7 @@ void GUI::RenderFrame()
 
     ImGui::Text("Current GBuffer To Display");
     ImGui::Text("0 = View Pos, 1 = Normal, 2 = Diffuse");
-    ImGui::Text("3 = Specular, 4 = Ambient, 5 = Emissive");
+    ImGui::Text("3 = Specular, 4 = Ambient, 5 = Shadow Map");
     ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 5);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
