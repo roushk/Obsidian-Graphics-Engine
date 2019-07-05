@@ -83,14 +83,14 @@ uniform mat4  shadowMatrix;
 out vec3 color;
 
 
-float readShadowMap(vec3 fragPos)
+float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
   vec4 shadowFrag = shadowMatrix * vec4(fragPos,1);
   shadowFrag = shadowFrag/shadowFrag.w;
   shadowFrag = shadowFrag * 0.5 + 0.5;
 
 
-  const float bias = 0.0001;
+  float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0000001);  
   float closestDepth = texture( shadowMap, shadowFrag.xy ).r - bias;
   float currentDepth = shadowFrag.z;
  
@@ -203,7 +203,7 @@ void main()
 
     float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
 
-    float shadow = readShadowMap(vertexPosition.xyz);  //use view vector 
+    float shadow = readShadowMap(vertexPosition.xyz, vertexNormal, L);  //use view vector 
 
     // Final color
     finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular) * shadow));
@@ -215,7 +215,7 @@ void main()
     //color = LA.lights[i].LightPosition.xyz;
     //color = vertexPosition.xyz;
     //color = vertexPosition.xyz;
-    color = vec3(shadow);
+    //color = vec3(shadow);
 
   }
 
@@ -232,8 +232,7 @@ void main()
   // VS outputs - position and color
   //color = finalColor;
   
-  //color = Ifinal;
-  //color = normalize(LA.lights[0].LightPosition.xyz - vertexPosition.xyz);//LA.lights[0].LightPosition.xyz;
+  color = Ifinal;
 }
 
 //In fragment shader:

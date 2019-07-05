@@ -264,6 +264,7 @@ public:
   GLuint shadowTexture[1];  //depth map
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
+  float shadowScale = 4.0f;
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 

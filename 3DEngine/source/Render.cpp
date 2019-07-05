@@ -192,8 +192,8 @@ void Render::BindAndCreateShadowBuffers()
 
   glActiveTexture(GL_TEXTURE13);
   glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, 
-    height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width * shadowScale,
+    height* shadowScale, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -224,7 +224,7 @@ void Render::BindShadowBuffer()
     std::cout << "Shadow Map buffer bind Failed" << std::endl;
   }
 
-  glViewport(0, 0, height * aspect, height);
+  glViewport(0, 0, height * aspect* shadowScale, height* shadowScale);
   glClear(GL_DEPTH_BUFFER_BIT);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
