@@ -10,13 +10,22 @@ layout (r32f) uniform readonly image2D src; // src image as single channel 32bit
 layout (r32f) uniform writeonly image2D dst; // dst image as single channel 32bit float writeonly
 
 shared float v[128+101]; // Variable shared with other threads in the 128x1 thread group
-
 void main()
 {
+  
+  int w = 101;
+  
   ivec2 gpos = ivec2(gl_GlobalInvocationID.xy); // Combo of groupID, groupSize and localID
-  uint i = gl_LocalInvocationID.x; // Local thread id in the 128x1 thread groups128x1
-  v[i] = imageLoad(src, gpos+...); // read an image pixel at an ivec2(.,.) position
-  if (i<2*w) v[i+128] = imageLoad(src, gpos+...); // read extra 2*w pixels
+  
+  uint i = gl_LocalInvocationID.x; // Local thread id in the 128x1 thread groups128x1+...);
+  
+  v[i] = imageLoad(src, gpos + vec2(-w,0)); // read an image pixel at an ivec2(.,.) position
+  
+  if (i<2*w)
+    v[i+128] = imageLoad(src, gpos + vec2(128 - w,0)); // read extra 2*w pixels
+
   barrier(); // Wait for all threads to catchup before reading v[]
-  imageStore(dst, gpos, ...); // Write to destination image
+  
+  imageStore(dst, gpos, sum); // Write to destination image
 }
+
