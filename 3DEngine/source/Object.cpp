@@ -122,7 +122,7 @@ Model ObjectReader::load_model(const std::string& path)
   const auto scene = importer.ReadFile(path.c_str(),
     /*aiProcessPreset_TargetRealtime_Quality | */
     //aiProcess_OptimizeMeshes |
-    //aiProcess_GenSmoothNormals |
+    aiProcess_GenSmoothNormals |
     //aiProcess_GenNormals |
     //aiProcess_JoinIdenticalVertices |
     aiProcess_GenUVCoords |

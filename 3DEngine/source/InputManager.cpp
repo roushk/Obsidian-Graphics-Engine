@@ -5,6 +5,8 @@
 InputManager::InputManager()
 {
   name = "Input Manager";
+  lastX = mousePosition.x;
+  lastY = mousePosition.y;
 }
 
 InputManager::~InputManager()
@@ -14,6 +16,14 @@ InputManager::~InputManager()
 
 void InputManager::Update(float dt)
 {
+  //stops camera mouse from jumping after unclicking right clock
+  //this is caused by the input not being calculated with each type all at once and
+  //instead buffers the clicks in different order and causes the toggle camera
+  //update thing to be called twice. The solution to this is to make a real
+  //input manager but this works for now...
+  bool updatedThisLoop = false;
+
+
   auto& render = pattern::get<Render>();
   auto& input = pattern::get<InputManager>();
   auto& gui = pattern::get<GUI>();
@@ -172,9 +182,11 @@ void InputManager::Update(float dt)
       /*SDL_MouseButtonEvent*/
     case SDL_MOUSEBUTTONDOWN:
     {
-      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED)
+      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED
+         && updatedThisLoop == false)
       //&& event.button.type == SDL_MOUSEBUTTONDOWN)
       {
+        updatedThisLoop = true;
         if (toggleCamera == false)
         {
           toggleCamera = true;
@@ -185,11 +197,10 @@ void InputManager::Update(float dt)
           toggleCamera = false;
           SDL_SetRelativeMouseMode(SDL_bool(false));
 
-          glm::vec2 windowPos = render.windowPosition;
           glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
-          SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
-            windowPos.y + windowRes.y / 2);
+          SDL_WarpMouseGlobal(render.windowPosition.x + windowRes.x / 2,
+            render.windowPosition.y + windowRes.y / 2);
         }
 
       }
@@ -238,14 +249,7 @@ void InputManager::Update(float dt)
     }
   }
 
-  /*
-  if (firstMouse)
-  {
-    lastX = mousePosition.x;
-    lastY = mousePosition.y;
-    firstMouse = false;
-  }
-  */
+  
 
   float xoffset = mousePosition.x - lastX;
   float yoffset = lastY - mousePosition.y;
@@ -254,45 +258,18 @@ void InputManager::Update(float dt)
 
   if (toggleCamera)
   {
-    render.cameraChanged = true;
+    //render.cameraChanged = true;
 
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    /*
-    yaw += xoffset;
-    pitch += yoffset;
-
-    if (pitch > 89.0f)
-      pitch = 89.0f;
-    if (pitch < -89.0f)
-      pitch = -89.0f;
-    glm::vec3 back;
-    back.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    back.y = sin(glm::radians(pitch));
-    back.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    //mainCamera.cameraRight
-    //mainCamera.cameraUp
-    camera.right_vector = -glm::normalize(back);
-    camera.back_vector =
-      -glm::normalize(glm::cross(camera.up_vector, camera.back_vector));
-    */
     camera.pitch(yoffset);
     camera.yaw(xoffset);
 
-
-    //utils::update_camera("mainCamera", mainCamera);
-    //utils::set_camera(registryKey);
-
-    glm::vec2 windowPos = render.windowPosition;
     glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
-    SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
-      windowPos.y + windowRes.y / 2);
-    /*
-    SDL_WarpMouseInWindow(
-      pattern::get<utils::Window>().get_window_ptr(),
-      windowRes.x / 2, windowRes.y / 2);
-     */
+    SDL_WarpMouseGlobal(render.windowPosition.x + windowRes.x / 2,
+      render.windowPosition.y + windowRes.y / 2);
+
   }
 }
