@@ -241,7 +241,7 @@ public:
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
-  Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,1 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
+  Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,0 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
   Camera cameras[6]
   {
     //same order as textures posx, negx, posy, negy, posz, negz
@@ -303,7 +303,14 @@ public:
   float transmissionCoefficient = 1.0f;
   float highlightTightness = 0.5f;
 
-  glm::vec2 position{ 0,0 };
+  glm::vec2 windowPosition{ 0,0 };  //window position
+
+
+
+
+
+  int windowX = 0;
+  int windowY = 0;
 
 private:
   //objectPos is used for the eye point of the reflection cameras
@@ -347,6 +354,7 @@ private:
   GLubyte* uboBuffer[2];
   unsigned debugTexture = 0;
 
+  
 
 };
 #endif

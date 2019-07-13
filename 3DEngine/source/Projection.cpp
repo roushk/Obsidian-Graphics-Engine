@@ -4,6 +4,7 @@
 
 glm::mat4 cameraToWorld(const Camera& cam)
 {
+  /*
   glm::mat4 Mc(1.0f);
   glm::vec3 U = cam.right();
   glm::vec3 V = cam.up();
@@ -15,16 +16,20 @@ glm::mat4 cameraToWorld(const Camera& cam)
   Mc[2] = glm::vec4(glm::vec3(N), 0);
   Mc[3] = glm::vec4(glm::vec3(E), 1);
   return Mc;
+  */
+  return inverse(glm::lookAt(cam.eye(), cam.eye() + -cam.back_vector, cam.up_vector));
 }
 
 
 glm::mat4 worldToCamera(const Camera& cam)
 {
-  return inverse(cameraToWorld(cam));
+  return glm::lookAt(cam.eye(), cam.eye() + -cam.back_vector, cam.up_vector);
+  //return inverse(cameraToWorld(cam));
 }
 
-glm::mat4 cameraToNDC(const Camera& cam)
+glm::mat4 cameraToNDC(Camera& cam)
 {
+  /*
   glm::mat4 M(1.0f);
   //W,H,D
   glm::vec3 v = cam.viewportGeometry();
@@ -36,8 +41,12 @@ glm::mat4 cameraToNDC(const Camera& cam)
      (N + F) / (N - F) , 
      (N * 2 * F) / (N - F));
   M[3] = glm::vec4(0,0,-1,0); 
+  */
+  auto& render = pattern::get<Render>();
+  auto& input =  pattern::get<InputManager>();
 
-  return transpose(M);  //glm is column not row 
+  return glm::perspective(cam.zoomScale, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+  //return transpose(M);  //glm is column not row 
 
 }
 

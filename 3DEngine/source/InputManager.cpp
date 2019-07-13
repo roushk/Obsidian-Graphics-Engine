@@ -20,11 +20,14 @@ void InputManager::Update(float dt)
   auto& reader = pattern::get<ObjectReader>();
   auto& camera = render.currentCamera;
 
+  //update window size
+  SDL_GetWindowSize(render.gWindow, &render.windowX, &render.windowY);
 
-  int windowX = 0;
-  int windowY = 0;
-  SDL_GetWindowPosition(render.gWindow, &windowX, &windowY);
-  render.position = glm::vec2(windowX, windowY);
+  //update window position
+  int windowXPos = 0;
+  int windowYPos = 0;
+  SDL_GetWindowPosition(render.gWindow, &windowXPos, &windowYPos);
+  render.windowPosition = glm::vec2(windowXPos, windowYPos);
   
   auto& object = pattern::get<Model>();
 
@@ -84,7 +87,7 @@ void InputManager::Update(float dt)
     default:
       //default event
       break;
-      //if you press the close button the game shutsdown the engine
+      //if you press the close button the game shuts down the engine
     case SDL_QUIT:
     {
       stop = true;
@@ -169,8 +172,8 @@ void InputManager::Update(float dt)
       /*SDL_MouseButtonEvent*/
     case SDL_MOUSEBUTTONDOWN:
     {
-      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED
-      && event.button.type == SDL_MOUSEBUTTONDOWN)
+      if (event.button.button == SDL_BUTTON_RIGHT && event.button.state == SDL_PRESSED)
+      //&& event.button.type == SDL_MOUSEBUTTONDOWN)
       {
         if (toggleCamera == false)
         {
@@ -182,7 +185,7 @@ void InputManager::Update(float dt)
           toggleCamera = false;
           SDL_SetRelativeMouseMode(SDL_bool(false));
 
-          glm::vec2 windowPos = render.position;
+          glm::vec2 windowPos = render.windowPosition;
           glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
           SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
@@ -229,19 +232,20 @@ void InputManager::Update(float dt)
 
       //mouseScreenCoords = glm::vec2((-screenSize.x / 2.0f + event.motion.x) * aspect, screenSize.y / 2.0f + -event.motion.y);
       offset += glm::vec2(event.motion.xrel, event.motion.yrel);
-      mousePosition = glm::vec2{ event.motion.x, event.motion.y };
+      mousePosition = glm::vec2{ event.motion.x, event.motion.y } + offset;
     }
     break;
     }
   }
 
-
+  /*
   if (firstMouse)
   {
     lastX = mousePosition.x;
     lastY = mousePosition.y;
     firstMouse = false;
   }
+  */
 
   float xoffset = mousePosition.x - lastX;
   float yoffset = lastY - mousePosition.y;
@@ -255,8 +259,6 @@ void InputManager::Update(float dt)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    yaw = xoffset;
-    pitch = yoffset;
     /*
     yaw += xoffset;
     pitch += yoffset;
@@ -275,14 +277,14 @@ void InputManager::Update(float dt)
     camera.back_vector =
       -glm::normalize(glm::cross(camera.up_vector, camera.back_vector));
     */
-    camera.pitch(pitch);
-    camera.yaw(-yaw);
+    camera.pitch(yoffset);
+    camera.yaw(xoffset);
 
 
     //utils::update_camera("mainCamera", mainCamera);
     //utils::set_camera(registryKey);
 
-    glm::vec2 windowPos = render.position;
+    glm::vec2 windowPos = render.windowPosition;
     glm::vec2 windowRes = glm::vec2(render.height*render.aspect, render.height);
 
     SDL_WarpMouseGlobal(windowPos.x + windowRes.x / 2,
