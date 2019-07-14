@@ -165,7 +165,7 @@ void Render::GenFrameBuffers()
   glGenTextures(1, shadowTexture);
 
   //glGenFramebuffers(1, blurShadowFBO);
-  glGenTextures(1, blurShadowTexture);
+  glGenTextures(2, blurShadowTexture);
 
 }
 
@@ -238,8 +238,17 @@ void Render::BindAndCreateBlurShadowBuffers()
 {
   int width = height * aspect;
 
-  glActiveTexture(GL_TEXTURE14);
   glBindTexture(GL_TEXTURE_2D, blurShadowTexture[0]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
+    height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
     height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
 
@@ -280,7 +289,10 @@ void Render::BlurShadowLoadData()
   glBufferData(GL_UNIFORM_BUFFER, sizeof(weights), weights, GL_STATIC_DRAW);
 
 
-  //image binding != texture binding
+}
+
+void Render::BlurShadowLoadHorizontal()
+{
 
   //same as the shadow texture
   glBindImageTexture(0, shadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
@@ -290,13 +302,30 @@ void Render::BlurShadowLoadData()
   glUniform1i(glGetUniformLocation(programID, "dst"), 1);
 }
 
+void Render::BlurShadowLoadVertical()
+{
+
+  //same as the shadow texture
+  glBindImageTexture(0, blurShadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "src"), 0);
+
+  glBindImageTexture(1, blurShadowTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 1);
+}
+
 void Render::BlurShadowLoadDebug()
 {
 
   glActiveTexture(GL_TEXTURE14);
   glBindTexture(GL_TEXTURE_2D, blurShadowTexture[0]);
-  glUniform1i(glGetUniformLocation(programID, "blurShadowMap"), 14);
-  glBindSampler(GL_TEXTURE14, glGetUniformLocation(programID, "blurShadowMap"));
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMapHorizontal"), 14);
+  glBindSampler(GL_TEXTURE14, glGetUniformLocation(programID, "blurShadowMapHorizontal"));
+
+
+  glActiveTexture(GL_TEXTURE15);
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMapVertical"), 15);
+  glBindSampler(GL_TEXTURE15, glGetUniformLocation(programID, "blurShadowMapVertical"));
 
 }
 
@@ -649,7 +678,9 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
   programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
   programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
-  programIDs[ssComputeBlur] = LoadComputerShader("shaders/ComputeBlur.comp");
+  programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
+  programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
+
   programID = programIDs[ssLightShader];
 }
 

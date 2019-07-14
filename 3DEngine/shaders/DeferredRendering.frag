@@ -20,7 +20,8 @@ uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
 uniform sampler2D gAmbientMap;
 uniform sampler2D shadowMap;
-uniform sampler2D blurShadowMap;
+uniform sampler2D blurShadowMapHorizontal;
+uniform sampler2D blurShadowMapVertical;
 uniform sampler2D momentShadowMap;
 
 
@@ -42,7 +43,8 @@ void main()
   vec3 specular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 ambient = texture(gAmbientMap, fs_in.texCoords).xyz;
   vec3 shadow = vec3(texture(shadowMap, fs_in.texCoords).r);
-  vec3 blurShadow = texture(blurShadowMap, fs_in.texCoords).rgb;
+  vec3 blurShadowH = texture(blurShadowMapHorizontal, fs_in.texCoords).rgb;
+  vec3 blurShadowV = texture(blurShadowMapVertical, fs_in.texCoords).rgb;
   vec3 momentShadow = vec3(texture(momentShadowMap, fs_in.texCoords).rgb);
  
   //normal = normalize(normal);
@@ -70,15 +72,15 @@ void main()
   }
   else if(debugTexture == 5)
   {
-    debugColor = blurShadow;
+    debugColor = blurShadowH;
   }
   else if(debugTexture == 6)
   {
-    debugColor = momentShadow;
+    debugColor = blurShadowV;
   }
   else if(debugTexture == 7)
   {
-    debugColor = ambient;
+    debugColor = momentShadow;
   }
   else if(debugTexture == 8)
   {
