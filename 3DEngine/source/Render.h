@@ -56,7 +56,7 @@ enum shaderSetting
   ssPhongShadingDeferredShadow,
   ssPhongShadingDeferredLightSphere,
 
-  ssComputerBlur,
+  ssComputeBlur,
 
 
   ssLightShader,
@@ -74,7 +74,8 @@ enum renderSetting
 enum BindingPoint
 {
   bpGlobal,
-  bpLights
+  bpLights,
+  bpShadowblur
 };
 
 enum UVModel
@@ -147,6 +148,15 @@ public:
   void BindShadowTextures();
   void BindAndCreateShadowBuffers();
   void BindShadowBuffer();
+
+  //blur shadow FBO stuff
+  void BindAndCreateBlurShadowBuffers();
+  void BlurShadowLoadData();
+  void BlurShadowLoadDebug(); //debug is for displaying the map in debug render
+  void CreateBlurShadowData();
+
+  //void BindBlurShadowTextures();
+  //void BindBlurShadowBuffer();
 
   void BindDefaultFrameBuffer();
   void BindSkybox();
@@ -265,9 +275,22 @@ public:
   GLuint shadowFBO[1];  //shadow map output FBO
   GLuint shadowTexture[1];  //depth map
   GLenum shadowBuffers[1] { GL_COLOR_ATTACHMENT0 };
+
+
+  //GLuint blurShadowFBO[1];  //shadow map output FBO
+  GLuint blurShadowTexture[1];  //depth map
+  GLenum blurShadowBuffers[1]{ GL_COLOR_ATTACHMENT0 };
+  GLuint shadowBlurUBOHandle[1];
+
+
+  static const int maxWeights = 41;
+  float weights[maxWeights];
+
+
+
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
-  float shadowScale = 4.0f;
+  float shadowScale = 4.0f; //shadow resolution
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 
