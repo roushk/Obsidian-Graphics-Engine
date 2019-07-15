@@ -113,12 +113,12 @@ vec2 quadraticSolver(float a, float b, float c)
 {
   //deal with divide by zero
   if(a == 0 )
-    return vec2(0,0);
+    return vec2(1,1);
 
   //return in shadow
   if((b*b - 4 * a * c) == 0)
   {
-    return vec2(1,0);
+    return vec2(1,1);
   }
   
   float pos = (-b + sqrt(b*b - 4 * a * c) / (2 * a));
@@ -145,7 +145,7 @@ float readShadowMapMSM(vec3 fragPos)
 
   //float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0000001);  
   vec4 b = texture(blurShadowMap, shadowFrag.xy );// - vec4(bias);
-  float max_depth = 20.0f;
+  float max_depth = 2.0f;
   vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
   vec3 A = vec3(1,bPrime.x, bPrime.y);
   vec3 B = vec3(bPrime.x,bPrime.y, bPrime.z);
@@ -162,7 +162,7 @@ float readShadowMapMSM(vec3 fragPos)
 
   //c.z * (z^2) + c.y * z + c.x = 0;
   //ax^2 + bx + c = 0
-  vec2 z = quadraticSolver(c3,c2,c1);
+  vec2 z = quadraticSolver(c1,c2,c3);
 
   float z2 = min(z.x,z.y);
   float z3 = max(z.x,z.y);
