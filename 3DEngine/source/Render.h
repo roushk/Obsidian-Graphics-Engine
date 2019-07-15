@@ -58,6 +58,7 @@ enum shaderSetting
 
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
+  ssPhongShadingDeferredShadowMSM,
 
   ssLightShader,
   ssSkyboxShader,
@@ -156,6 +157,8 @@ public:
   void BlurShadowLoadVertical();
   void BlurShadowLoadDebug(); //debug is for displaying the map in debug render
   void CreateBlurShadowData();
+  void BlurShadowLoadFinalMap();
+
 
   //void BindBlurShadowTextures();
   //void BindBlurShadowBuffer();
@@ -385,3 +388,9 @@ private:
 };
 #endif
 
+//TODO
+/*
+  - Abstract texture loading so that it loads from slot 0 to whatever
+    instead of setting the GL_TEXTURE# per thing
+
+ */

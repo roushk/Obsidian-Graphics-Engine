@@ -281,6 +281,15 @@ void Render::CreateBlurShadowData()
   }
 }
 
+void Render::BlurShadowLoadFinalMap()
+{
+  glActiveTexture(GL_TEXTURE14);
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMap"), 14);
+  glBindSampler(GL_TEXTURE14, glGetUniformLocation(programID, "blurShadowMap"));
+
+}
+
 void Render::BlurShadowLoadData()
 {
   glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "blurKernel"), bpShadowblur);
@@ -680,7 +689,7 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
-
+  programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
   programID = programIDs[ssLightShader];
 }
 

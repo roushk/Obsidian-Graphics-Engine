@@ -15,12 +15,12 @@ shared vec4 sharedVar[128 + (blurFactor * 2) + 1]; // Variable shared with other
 void main()
 {
   ivec2 gpos = ivec2(gl_GlobalInvocationID.xy); // Combo of groupID, groupSize and localID
-  uint invocID = gl_LocalInvocationID.x; // Local thread id in the 128x1 thread groups128x1
+  uint invocID = gl_LocalInvocationID.y; // Local thread id in the 128x1 thread groups128x1
 
   sharedVar[invocID] = imageLoad(src, gpos + ivec2(0, - blurFactor)); // read an image pixel at an ivec2(.,.) position
 
   if (invocID < 2.0f * blurFactor)
-    sharedVar[invocID + 128] = imageLoad(src, 0,gpos + ivec2(128 - blurFactor)); // read extra 2*w pixels
+    sharedVar[invocID + 128] = imageLoad(src, gpos + ivec2(0,128 - blurFactor)); // read extra 2*w pixels
 
   barrier(); // Wait for all threads to catchup before reading sharedVar[]
   

@@ -35,6 +35,7 @@ public:
   static bool debugDrawMode;
   static bool copyDepth;
   static bool showLightSpheres;
+  static bool MSMShadow;
 private:
   SceneLighting& lighting;
   ObjectReader& reader;
