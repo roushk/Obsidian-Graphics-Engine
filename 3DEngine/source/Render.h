@@ -381,7 +381,6 @@ private:
 
   GLuint uboHandle[2];
   GLubyte* uboBuffer[2];
-  unsigned debugTexture = 0;
 
   
 

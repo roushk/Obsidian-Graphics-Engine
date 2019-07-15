@@ -113,23 +113,23 @@ vec2 quadraticSolver(float a, float b, float c)
 {
   //deal with divide by zero
   if(a == 0 )
-    return vec2(1,1);
+    return vec2(-1,-1);
 
   //return in shadow
-  if((b*b - 4 * a * c) == 0)
+  if((b*b - (4 * a * c))== 0)
   {
-    return vec2(1,1);
+    return vec2(-1,-1);
   }
   
-  float pos = (-b + sqrt(b*b - 4 * a * c) / (2 * a));
-  float neg = (-b - sqrt(b*b - 4 * a * c) / (2 * a));
+  float pos = (-b + sqrt(b*b - (4 * a * c)) / (2 * a));
+  float neg = (-b - sqrt(b*b - (4 * a * c)) / (2 * a));
   
   return vec2(pos,neg);
 }
 
 
 //returns the shadow intensity
-float readShadowMapMSM(vec3 fragPos)
+float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
 
   /*( A,  B, C ) * c = Z
@@ -139,14 +139,21 @@ float readShadowMapMSM(vec3 fragPos)
   */
   vec4 shadowFrag = shadowMatrix * vec4(fragPos,1);
   shadowFrag = shadowFrag/shadowFrag.w;
-  //shadowFrag = shadowFrag * 0.5 + 0.5;  //for some reason i have to do this twice, not sure why
+  shadowFrag = shadowFrag * 0.5 + 0.5;  //for some reason i have to do this twice, not sure why
 
+  //zf is the depth of the fragment
   float zf = shadowFrag.z;
 
+  
   //float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0000001);  
-  vec4 b = texture(blurShadowMap, shadowFrag.xy );// - vec4(bias);
-  float max_depth = 2.0f;
+  //vec4 b = texture(blurShadowMap, shadowFrag.xy) - vec4(bias);
+
+  //b is the blurred output fot z -> z^4
+  vec4 b = texture(blurShadowMap, shadowFrag.xy );
+  float max_depth = 12.0f;
+
   vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
+
   vec3 A = vec3(1,bPrime.x, bPrime.y);
   vec3 B = vec3(bPrime.x,bPrime.y, bPrime.z);
   vec3 C = vec3(bPrime.y, bPrime.z, bPrime.w); 
@@ -162,26 +169,50 @@ float readShadowMapMSM(vec3 fragPos)
 
   //c.z * (z^2) + c.y * z + c.x = 0;
   //ax^2 + bx + c = 0
-  vec2 z = quadraticSolver(c1,c2,c3);
 
-  float z2 = min(z.x,z.y);
-  float z3 = max(z.x,z.y);
+  if(c1 == 0 )
+    return 0.0f;
+
+  //return in shadow
+  if((c2*c2 - (4 * c1 * c3)) == 0)
+  {
+    return 0.0f;
+  }
+  
+  //z
+  float pos = (-c2 + sqrt(c2 * c2 - (4 * c1 * c3)) / (2 * c1));
+  float neg = (-c2 - sqrt(c2 * c2 - (4 * c1 * c3)) / (2 * c1));
+  
+  float z2 = min(pos,neg);
+  float z3 = max(pos,neg);
   float G = 0;
+
+  //return bPrime.x;
+
+  //if(z2 > 0.001f) return 0.0f;
+  //return 1.0f;
 
   if(zf <= z2)  //not in shadow 
   {
-    G = 0;
+    G = 1;
+    //return 0;
   }
   else if(zf <= z3) //in shadow somewhere
   {
-    G = ((zf*z3) - bPrime.x * (zf + z3) + bPrime.y)/((z3 - z2)*(zf-z2));
+    
+    G = ((zf*z3) - ( ( bPrime.x * (zf + z3) ) + bPrime.y) ) /
+      ( (z3 - z2) * (zf - z2) );
+    //return G;
   }
   else  //in shadow somewhere
   {
-    G = 1.0f - ( ((z2*z3) - bPrime.x * (z2 + z3) + bPrime.y)/((zf - z2)*(zf-z3)) );
+    //is returning 0
+    G = 1.0f - ( ((z2*z3) - ( (bPrime.x * (z2 + z3)) + bPrime.y) ) / ((zf - z2) * (zf-z3)) );
+    //return G; 
   }
-  return zf;
-  return G;
+  //return 0;
+  //return zf;
+  return 1 - G;
 }
 
 
@@ -286,7 +317,7 @@ void main()
     float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
 
     //float shadow = readShadowMap(vertexPosition.xyz, vertexNormal, L);  //use view vector 
-    float shadow = readShadowMapMSM(vertexPosition.xyz);  //use view vector 
+    float shadow = readShadowMapMSM(vertexPosition.xyz, vertexNormal, L);  //use view vector 
 
 
     // Final color
