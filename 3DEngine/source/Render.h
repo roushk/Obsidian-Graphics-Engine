@@ -289,14 +289,14 @@ public:
   GLuint shadowBlurUBOHandle[1];
 
 
-  static const int maxWeights = 41;
-  float weights[maxWeights];
+  static const int blurValue = 20;
+  float weights[blurValue * 2 + 1];
 
 
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
-  float shadowScale = 4.0f; //shadow resolution
+  float shadowScale = 2.0f; //shadow resolution
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 

@@ -108,24 +108,6 @@ float det3(vec3 a, vec3 b, vec3 c) // Determinant of a 3x3 passed in as three co
  { return a.x*(b.y*c.z-b.z*c.y) + a.y*(b.z*c.x-b.x*c.z) + a.z*(b.x*c.y-b.y*c.x); }
 
 
-//.x = pos solution, .y = neg solution
-vec2 quadraticSolver(float a, float b, float c)
-{
-  //deal with divide by zero
-  if(a == 0 )
-    return vec2(-1,-1);
-
-  //return in shadow
-  if((b*b - (4 * a * c))== 0)
-  {
-    return vec2(-1,-1);
-  }
-  
-  float pos = (-b + sqrt(b*b - (4 * a * c)) / (2 * a));
-  float neg = (-b - sqrt(b*b - (4 * a * c)) / (2 * a));
-  
-  return vec2(pos,neg);
-}
 
 
 //returns the shadow intensity
@@ -190,7 +172,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   //if(z2 > 0.001f) return 0.0f;
   //return 1.0f;
 
-  if(zf <= z2 )  //center of shadow
+  if(zf <= z2)  //center of shadow
   {
     G = 0;
     //return 0;

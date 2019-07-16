@@ -84,7 +84,7 @@ void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
   io.IniFilename = NULL; //disable imgui.ini
 
   ImGui_ImplSDL2_InitForOpenGL(window, context);
-   ImGui_ImplOpenGL3_Init("#version 430");
+  ImGui_ImplOpenGL3_Init("#version 430");
 
   // Setup style
   //SetStyle();
@@ -302,7 +302,11 @@ void GUI::RenderFrame()
     //I and K global
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
-    ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
+    if(EnableLocalLights)
+    {
+      ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    }
 
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");

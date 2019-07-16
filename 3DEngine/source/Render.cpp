@@ -261,7 +261,7 @@ void Render::BindAndCreateBlurShadowBuffers()
 
 void Render::CreateBlurShadowData()
 {
-  int w = 20;
+  int w = blurValue;
   float s = w / 2;
 
   float totalWeight = 0;
@@ -275,7 +275,7 @@ void Render::CreateBlurShadowData()
 
 
   //normalizes weights
-  for (unsigned i = 0; i < maxWeights; ++i)
+  for (unsigned i = 0; i < blurValue * 2 + 1; ++i)
   {
     weights[i] /= totalWeight;
   }
@@ -283,10 +283,10 @@ void Render::CreateBlurShadowData()
 
 void Render::BlurShadowLoadFinalMap()
 {
-  glActiveTexture(GL_TEXTURE14);
+  glActiveTexture(GL_TEXTURE15);
   glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
-  glUniform1i(glGetUniformLocation(programID, "blurShadowMap"), 14);
-  glBindSampler(GL_TEXTURE14, glGetUniformLocation(programID, "blurShadowMap"));
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMap"), 15);
+  glBindSampler(GL_TEXTURE15, glGetUniformLocation(programID, "blurShadowMap"));
 
 }
 
@@ -1107,15 +1107,10 @@ void Render::DrawShadow(const Model& object, const Light& light)
     cameraChanged = false;
   }
 
-  glm::vec3 objectLookAtVec = vec3(0, -1, 0) - vec3(light.position);
-  //Camera lightCam = Camera(vec3(light.position), objectLookAtVec, vec3(0, 1, 0), glm::radians(90.0f), aspect, nearPlane, farPlane);
-  
-  //  viewMatrix = glm::lookAt(glm::vec3(light.position), objectLookAtVec, vec3(0, 1, 0));
-
   //projectionMatrix = cameraToNDC(lightCam);
   projectionMatrix = perspectiveFov<float>(radians(70.0f), height * aspect, height, nearPlane, farPlane);
   //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(0, -2, 0) - glm::vec3(light.position), vec3(0, 1, 0));
+  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(2.0f, 0, 0) , vec3(0, 1, 0));
   shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f))) * projectionMatrix * viewMatrix;
   //shadowMatrix = projectionMatrix * viewMatrix;
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,

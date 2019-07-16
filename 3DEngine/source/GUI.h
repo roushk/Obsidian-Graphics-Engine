@@ -36,6 +36,7 @@ public:
   static bool copyDepth;
   static bool showLightSpheres;
   static bool MSMShadow;
+  static bool EnableLocalLights;
 private:
   SceneLighting& lighting;
   ObjectReader& reader;
