@@ -150,7 +150,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
   //b is the blurred output fot z -> z^4
   vec4 b = texture(blurShadowMap, shadowFrag.xy );
-  float max_depth = 60.0f;
+  float max_depth = 80.0f;
 
   vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
 
@@ -178,11 +178,11 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   
   //z
   //c1 and c3 were flipped...
-  float pos = (-c2 + sqrt(c2 * c2 - (4 * c3 * c1)) / (2 * c3));
-  float neg = (-c2 - sqrt(c2 * c2 - (4 * c3 * c1)) / (2 * c3));
+  float pos = (-c2 + sqrt(c2 * c2 - (4 * c3 * c1))) / (2 * c3);
+  float neg = (-c2 - sqrt(c2 * c2 - (4 * c3 * c1))) / (2 * c3);
   
   float z2 = min(pos,neg);
-  float z3 = max(pos,neg) ;
+  float z3 = max(pos,neg);
   float G = 0;
 
   //return bPrime.x;
@@ -192,7 +192,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
   if(zf <= z2 )  //center of shadow
   {
-    G = 1;
+    G = 0;
     //return 0;
   }
   else if(zf <= z3) //in shadow somewhere
@@ -211,7 +211,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   }
   //return 0;
   //return zf;
-  return G;
+  return 1 - G;
 }
 
 
@@ -330,7 +330,7 @@ void main()
     //color = vertexPosition.xyz;
     //color = vertexPosition.xyz;
     //color = vec3( 1.0f - shadow);
-    color = vec3(shadow);
+    //color = vec3(shadow);
 
   }
 
@@ -347,7 +347,7 @@ void main()
   // VS outputs - position and color
   //color = finalColor;
   
-  //color = Ifinal;
+  color = Ifinal;
 }
 
 //In fragment shader:
