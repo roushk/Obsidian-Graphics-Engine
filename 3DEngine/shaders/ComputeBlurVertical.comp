@@ -10,8 +10,7 @@ layout (rgba32f) uniform readonly image2D src; // src image as single channel 32
 
 layout (rgba32f) uniform writeonly image2D dst; // dst image as single channel 32bit float writeonly
 
-shared vec4 sharedVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group
-
+shared vec4 sharedVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 void main()
 {
   ivec2 gpos = ivec2(gl_GlobalInvocationID.xy); // Combo of groupID, groupSize and localID
