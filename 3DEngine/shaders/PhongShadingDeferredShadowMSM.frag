@@ -146,11 +146,11 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
   
   //float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0000001);  
-  //vec4 b = texture(blurShadowMap, shadowFrag.xy) - vec4(bias);
+  //vec4 b = texture(blurShadowMap, shadowFrag.xy) - vec4(0.01f);
 
   //b is the blurred output fot z -> z^4
   vec4 b = texture(blurShadowMap, shadowFrag.xy );
-  float max_depth = 12.0f;
+  float max_depth = 60.0f;
 
   vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
 
@@ -170,21 +170,19 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   //c.z * (z^2) + c.y * z + c.x = 0;
   //ax^2 + bx + c = 0
 
-  if(c1 == 0 )
-    return 0.0f;
-
   //return in shadow
-  if((c2*c2 - (4 * c1 * c3)) == 0)
+  if((c3 == 0 ) || ((c2*c2 - (4 * c3 * c1)) == 0))
   {
-    return 0.0f;
+    return 1.0f;
   }
   
   //z
-  float pos = (-c2 + sqrt(c2 * c2 - (4 * c1 * c3)) / (2 * c1));
-  float neg = (-c2 - sqrt(c2 * c2 - (4 * c1 * c3)) / (2 * c1));
+  //c1 and c3 were flipped...
+  float pos = (-c2 + sqrt(c2 * c2 - (4 * c3 * c1)) / (2 * c3));
+  float neg = (-c2 - sqrt(c2 * c2 - (4 * c3 * c1)) / (2 * c3));
   
   float z2 = min(pos,neg);
-  float z3 = max(pos,neg);
+  float z3 = max(pos,neg) ;
   float G = 0;
 
   //return bPrime.x;
@@ -192,7 +190,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   //if(z2 > 0.001f) return 0.0f;
   //return 1.0f;
 
-  if(zf <= z2)  //not in shadow 
+  if(zf <= z2 )  //center of shadow
   {
     G = 1;
     //return 0;
@@ -200,8 +198,9 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   else if(zf <= z3) //in shadow somewhere
   {
     
-    G = ((zf*z3) - ( ( bPrime.x * (zf + z3) ) + bPrime.y) ) /
-      ( (z3 - z2) * (zf - z2) );
+    G = (((zf*z3) - ( ( bPrime.x * (zf + z3) ) + bPrime.y) ) /
+      ( (z3 - z2) * (zf - z2) ));
+      //G = 1;
     //return G;
   }
   else  //in shadow somewhere
@@ -212,7 +211,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   }
   //return 0;
   //return zf;
-  return 1 - G;
+  return G;
 }
 
 
@@ -321,7 +320,7 @@ void main()
 
 
     // Final color
-    //finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular) * shadow));
+    finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular) * shadow));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
 
