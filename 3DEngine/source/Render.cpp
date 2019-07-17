@@ -690,6 +690,8 @@ void Render::CreateShaders()
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
+  programIDs[SSBRDDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+
   programID = programIDs[ssLightShader];
 }
 
@@ -698,6 +700,10 @@ void Render::CreateBuffers()
   glGenBuffers(5, vertexbuffers);
 }
 
+void Render::LoadRoughness(float roughness)
+{
+  glUniform1f(glGetUniformLocation(programID, "materialAlpha"), roughness);
+}
 void Render::LoadDiffuseForLight(Light& light, float scale)
 {
   glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(scale * glm::normalize(light.diffuse)));

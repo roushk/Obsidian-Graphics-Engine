@@ -37,6 +37,8 @@ public:
   static bool showLightSpheres;
   static bool MSMShadow;
   static bool EnableLocalLights;
+  static bool overwriteParams;
+
 private:
   SceneLighting& lighting;
   ObjectReader& reader;

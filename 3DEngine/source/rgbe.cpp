@@ -2,6 +2,7 @@
  * WHILE THE AUTHORS HAVE TRIED TO ENSURE THE PROGRAM WORKS CORRECTLY,
  * IT IS STRICTLY USE AT YOUR OWN RISK.  */
 
+#define  _CRT_SECURE_NO_WARNINGS
 #include "rgbe.h"
 #include <math.h>
 #include <stdlib.h>

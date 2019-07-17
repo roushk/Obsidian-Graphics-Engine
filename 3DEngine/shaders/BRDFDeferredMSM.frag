@@ -17,6 +17,7 @@ End Header --------------------------------------------------------*/
 uniform vec3 camera;
 
 const int maxLights = 8;
+
 // Uniform blocks
 //layout(packed) 
 layout(binding = 1)uniform Global
@@ -81,10 +82,16 @@ uniform mat4  modelTransform;
 //shadow matrix
 uniform mat4  shadowMatrix;
 
+const float PI = 3.1415926535897932384626433832795;
+
+
+
+const float MSMalpha = 0.001f; //1 x 10^-3
+
+uniform float materialAlpha;
+
+
 out vec3 color;
-
-const float alpha = 0.001f; //1 x 10^-3
-
 
 float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
@@ -134,7 +141,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   vec4 b = texture(blurShadowMap, shadowFrag.xy );
   float max_depth = 80.0f;
 
-  vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
+  vec4 bPrime = (1 - MSMalpha) * b + MSMalpha * vec4(max_depth / 2.0f);
 
   vec3 A = vec3(1,bPrime.x, bPrime.y);
   vec3 B = vec3(bPrime.x,bPrime.y, bPrime.z);
@@ -199,14 +206,15 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
 void main()
 {
-  
+  //set variables
+
   vec3 clearcolor = vec3(0.0f);
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
 
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
-  vec3 Kambient = vec3(0.1f,0.1f,0.1f); //texture(gAmbientMap, fs_in.texCoords).xyz;
+  vec3 Kambient = texture(gAmbientMap, fs_in.texCoords).xyz; //vec3(0.1f,0.1f,0.1f); 
 
   float ns = 32.0f; //texture(gSpecularMap, fs_in.texCoords).a;
   //Kspecular *= 0.5f;
@@ -218,23 +226,9 @@ void main()
   Kemissive.b = 0; //texture(gDiffuseMap, fs_in.texCoords).a;
   
 
+  
   vec3 cameraPos = camera.xyz;
   vec3 vertexNormal = normal.xyz;
-
-
-  
-  //light position is .xyz of [3]
-  //vec3 light = invShadowMatrix[3].xyz;
-  
-  /*
-    if(viewPos == clearcolor && normal == clearcolor )
-    {
-      color = vec3(0.2f,0.2f,0.2f);//discard;
-      return;
-    }
-  */
-  //eyeVec = eye - worldPos;
-  //V = cameraPos - vertexPosition.xyz; = cam - V = viewPos
   vec3 V = normalize(cameraPos - vertexPosition.xyz);
   //*************************************************************************************************//
   // Emissive
@@ -243,6 +237,7 @@ void main()
   //*************************************************************************************************//
   // Global
   vec3 finalColor = vec3(0,0,0);  //G.Kglobal * G.Iglobal.rgb + Iemissive;
+
 
   for( int i = 0; i < G.activeLights ; ++i )/*G.activeLights*/
   {
@@ -268,7 +263,7 @@ void main()
     //float NdotL = max( dot(vec4(vertexNormal,1.0f), vec4(L, 1.0f) ), 0.0f ); //L is normalized and vertNormal is normalized
     float NdotL = max( dot(vertexNormal, L), 0.0f ); //L is normalized and vertNormal is normalized
 
-    vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
+    //vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
     
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
@@ -289,7 +284,7 @@ void main()
     //*************************************************************************************************//
     // Specular (complete the implementation)
     
-    vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(V,ReflectVec), 0), ns); //Is Ks (R dot V)^ns
+    //vec3 Ispecular = LA.lights[i].LightSpecular.rgb * Kspecular * pow(max(dot(V,ReflectVec), 0), ns); //Is Ks (R dot V)^ns
  
 
     // Attenutation terms (complete the implementation)
@@ -301,8 +296,33 @@ void main()
     float shadow = readShadowMapMSM(vertexPosition.xyz, vertexNormal, L);  //use view vector 
 
 
-    // Final color
-    finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular) * shadow));
+    //H = (L + V) / ||(L + V)||
+    //H = normalize(L+V);
+    vec3 H = normalize(L + V);
+
+    //Roughness Parameter D
+    //materialAlpha 0 = rough -> inf = mirror
+    //D(H) = ( (alpha  + 2) / (2*PI) ) * (dot(N,H) ^ alpha)
+
+    float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H), materialAlpha));
+
+    //Frensel Term F
+    //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
+    //F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
+    vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+
+
+    //G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
+
+    float G = 1.0f / ( dot(L,H) * dot(L,H) ); 
+
+    //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
+    //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
+    vec3 BRDF = (KdiffuseColor / PI ) + ( (D * F * G) / (4.0f) );
+
+
+  //BRDF * light Brightness * Shadow
+    finalColor += (att * Iambient) + (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
 
@@ -332,9 +352,26 @@ void main()
   color = Ifinal;
 }
 
-//In fragment shader:
-//Setup the uniforms for the application to pass in lighting properties and other settings.
-//Use the values of the appropriate “in” variables in the Phong equation, if
-//applicable. Note that these “in” variables MUST match the “out”
-//variables from the vertex shader.
-//Implement the Phong Model equations explained in class.
+/*
+
+BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
+
+H = (L + V) / ||(L + V)||
+H = normalize(L+V);
+
+Roughness Parameter D
+alpha 0 = rough -> inf = mirror
+D(H) = ( (alpha  + 2) / (2*PI) ) * (dot(N,H) ^ alpha)
+
+Frensel Term F
+Ks + ( (w - Ks) * (1- dot(L,H))^5 )
+F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
+
+G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
+
+
+
+
+
+
+*/

@@ -59,7 +59,7 @@ enum shaderSetting
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
   ssPhongShadingDeferredShadowMSM,
-
+  SSBRDDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
   ssMaxShaders
@@ -177,6 +177,7 @@ public:
   void LoadDiffuseForLight(Light& light, float scale = 1.0f);
   void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
 
+  void LoadRoughness(float roughness);
   void SetCurrentShader(int shader);
 
   //loads data for every light as well as data for the global scene
@@ -335,7 +336,7 @@ public:
   glm::vec2 windowPosition{ 0,0 };  //window position
 
 
-
+  float materialRoughness = 1.0f;
 
 
   int windowX = 0;
