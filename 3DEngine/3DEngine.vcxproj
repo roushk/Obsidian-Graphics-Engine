@@ -145,6 +145,7 @@
     </ClCompile>
     <ClCompile Include="source\Projection.cpp" />
     <ClCompile Include="source\Render.cpp" />
+    <ClCompile Include="source\rgbe.cpp" />
     <ClCompile Include="source\rttr\constructor.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
@@ -686,6 +687,7 @@
     <ClInclude Include="source\random.h" />
     <ClInclude Include="source\Remap.h" />
     <ClInclude Include="source\Render.h" />
+    <ClInclude Include="source\rgbe.h" />
     <ClInclude Include="source\rttr\access_levels.h" />
     <ClInclude Include="source\rttr\argument.h" />
     <ClInclude Include="source\rttr\array_range.h" />
