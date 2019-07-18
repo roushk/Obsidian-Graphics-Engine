@@ -489,9 +489,9 @@ void Render:: BindAndCreateGBuffers()
 
   //Bind depth buffer
   glBindRenderbuffer(GL_RENDERBUFFER, GBufferDepthBuffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, GBufferDepthBuffer);
-
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, GBufferDepthBuffer);
+  
   //check for completeness
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
@@ -735,7 +735,7 @@ void Render::LoadModel(Model& object)
 
 void Render::ClearScreen()
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void Render::CreateShaders()
@@ -994,8 +994,10 @@ void Render::CopyDepthBuffer()
   glBindFramebuffer(GL_READ_FRAMEBUFFER, Gbuffer);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
   glBlitFramebuffer(
-    0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST
-  );
+    0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+  glBlitFramebuffer(
+    0, 0, width, height, 0, 0, width, height, GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+
 }
 
 void Render::BufferRefractionData()
@@ -1261,7 +1263,7 @@ GLuint Render::LoadHDRimage(std::string filename)
 
 
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-    GL_UNSIGNED_BYTE, image.data());
+    GL_FLOAT, image.data());
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
