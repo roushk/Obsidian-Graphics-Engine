@@ -84,8 +84,6 @@ uniform mat4  shadowMatrix;
 
 const float PI = 3.1415926535897932384626433832795;
 
-
-
 const float MSMalpha = 0.001f; //1 x 10^-3
 
 uniform float materialAlpha;
@@ -318,7 +316,8 @@ void main()
 
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
-    vec3 BRDF = (KdiffuseColor / PI ) + ( (D * F * G) / (4.0f) );
+    float irradience = 1.0f;
+    vec3 BRDF = (KdiffuseColor / PI ) * irradience + ( (D * F * G) / (4.0f) );
 
 
   //BRDF * light Brightness * Shadow

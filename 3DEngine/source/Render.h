@@ -59,9 +59,10 @@ enum shaderSetting
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
   ssPhongShadingDeferredShadowMSM,
-  SSBRDDeferredMSM,
+  ssBRDDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
+  ssSkydome,
   ssMaxShaders
 };
 
@@ -133,6 +134,8 @@ public:
   void LoadMaterial(Material materialSpec, Material materialDiff);
   void LoadSkybox(std::vector<std::string>& skyboxNames);
 
+  void LoadSkydome();
+  void BindSkydome();
   //Gbuffers
   void GenGBuffer();  //also gens shadow buffer
   void BindGBufferTextures();
@@ -205,6 +208,8 @@ public:
   void SetTitle(std::string object);
   void DrawShadow(const Model& object, const Light& light);
 
+
+  GLuint LoadHDRimage(std::string filename);
   /*
   void TakePicOfFBO(int i)
   {
@@ -236,9 +241,14 @@ public:
 
 
   GLuint skyboxTextureID[6];  //texture ID's for the skybox
-
   GLuint specularMaterialID;
   GLuint diffuseMaterialID;
+
+  //skydome
+  GLuint skydomeID[13];
+  GLuint skydomeIDIRR[13];
+
+
   int currentUVModel = 0;
   unsigned setting = rsNone;
 

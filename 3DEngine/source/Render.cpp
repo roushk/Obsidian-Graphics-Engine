@@ -1,5 +1,6 @@
 #include <pch.h>
 #define PI 3.14159265359f
+#define _CRT_SECURE_NO_WARNINGS
 
 // Include standard headers
 //#include <stdio.h>
@@ -18,6 +19,8 @@
 #include "Wireframe.h"
 #include "singleton.h"
 #include <minwindef.h>
+#include "rgbe.h"
+#include "loadfile.h"
 
 
 Render::Render()
@@ -155,6 +158,79 @@ void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
   }
 }
 
+
+void Render::LoadSkydome()
+{
+
+  std::string filename = "skydomeFilenames.txt";
+  std::string file = load_file(filename);
+
+  //append new line to end of file
+  file.push_back('\n');
+  std::vector < std::string> objects;
+
+  //is -1 because the first filename does not have a 
+  size_t findPos = 0;
+  size_t lastPos = file.find_last_of('\n');
+  do
+  {
+    unsigned i = 1;
+
+    //while still filename
+    while (file.size() > findPos + i + 1 && file[findPos + i] != '\n')
+    {
+      ++i;
+    }
+
+    //push back filename
+    //only push back file if its greater than size of 3 (for suffix *.obj)
+    if (i > 4)
+      objects.push_back(file.substr(findPos, i));
+    file.erase(findPos, i);
+
+    findPos = file.find_first_of('\n');
+    if (findPos != std::string::npos)
+    {
+      file.erase(findPos, 1);
+    }
+    else
+    {
+      break;
+    }
+
+    //if (file.size() == 0 || findPos == std::string::npos)
+     // break;
+  } while (findPos != std::string::npos && findPos != lastPos);
+
+  //load objects into loader
+  for (unsigned i = 0; i < objects.size(); i += 2)
+  {
+
+    skydomeID[i / 2] = LoadHDRimage(objects[i]);
+    skydomeIDIRR[i / 2] = LoadHDRimage(objects[i + 1]);
+
+  }
+
+}
+
+void Render::BindSkydome()
+{
+  glUseProgram(programID);
+
+  //Loads skydome
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, skydomeID[0]);
+  glUniform1i(glGetUniformLocation(programID, "skydomeTexture"), 2);
+  glBindSampler(GL_TEXTURE2, glGetUniformLocation(programID, "skydomeTexture"));
+
+  //Loads skydome irradiance map
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D, skydomeIDIRR[0]);
+  glUniform1i(glGetUniformLocation(programID, "skydomeIRR"), 3);
+  glBindSampler(GL_TEXTURE3, glGetUniformLocation(programID, "skydomeIRR"));
+
+}
+
 void Render::GenFrameBuffers()
 {
   glGenFramebuffers(6, FrameBuffers);
@@ -227,7 +303,7 @@ void Render::BindShadowBuffer()
   
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0,0,0,0);
+  glClearColor(0.5, 0.5, 0.5, 1);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
 }
@@ -352,7 +428,6 @@ void Render::BindBlurShadowBuffer()
 
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0, 0, 0, 0);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
 }
@@ -690,7 +765,8 @@ void Render::CreateShaders()
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
-  programIDs[SSBRDDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+  programIDs[ssBRDDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+  programIDs[ssSkydome] = LoadShaders("shaders/SkyDome.vert", "shaders/SkyDome.frag");
 
   programID = programIDs[ssLightShader];
 }
@@ -1132,6 +1208,66 @@ void Render::DrawShadow(const Model& object, const Light& light)
 
   glDrawElements(GL_TRIANGLES, object.indices.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
 
+}
+
+//returns textureID
+GLuint Render::LoadHDRimage(std::string filename)
+{
+  std::string inName = "IBL/" + filename;
+
+  std::cout << "in: " << inName << std::endl;
+
+  // Read the input file:  expect a *.hdr image
+  int width, height;
+  rgbe_header_info info;
+  char errbuf[100] = { 0 };
+  FILE* fp = fopen(inName.c_str(), "rb");
+  int rc = RGBE_ReadHeader(fp, &width, &height, &info, errbuf);
+  if (rc != RGBE_RETURN_SUCCESS) {
+    printf("RGBE read error: %s\n", errbuf);
+    exit(-1);
+  }
+  printf("%dx%d\n", width, height);
+
+  std::vector<float> image(3 * width*height, 0.0);
+  rc = RGBE_ReadPixels_RLE(fp, &image[0], width, height, errbuf);
+  if (rc != RGBE_RETURN_SUCCESS) {
+    printf("RGBE read error: %s\n", errbuf);
+    exit(-1);
+  }
+  fclose(fp);
+
+  // Gamma correct the image to linear color space.  Use gamma=2.2
+  // if you have no specific gamma information. Skip this step if
+  // you know image is already in linear space.
+
+  // This is included to demonstrate the magic of OpenMP: This
+  // pragma turns the following loop into a multi-threaded loop,
+  // making use of all the cores your machine may have.
+#pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
+  for (int j = 0; j < height; j++) {
+    for (int i = 0; i < width; i++) {
+      int p = (j*width + i);
+      for (int c = 0; c < 3; c++) {
+        image[3 * p + c] *= pow(image[3 * p + c], 1.8);
+      }
+    }
+  }
+
+  GLuint newTexture;
+  glGenTextures(1, &newTexture);
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, newTexture);
+
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+    GL_UNSIGNED_BYTE, image.data());
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  return newTexture;
 }
 
 void Render::EndDrawing()

@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #ifndef _H_RGBE
 #define _H_RGBE
 

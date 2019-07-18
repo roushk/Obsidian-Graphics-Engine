@@ -1,0 +1,6 @@
+14-Hamarikyu_Bridge_B_3k.hdr
+14-Hamarikyu_Bridge_B_3k.irr.hdr
+Arches_E_PineTree_3k.hdr
+Arches_E_PineTree_3k.irr.hdr
+Barce_Rooftop_C_3k.hdr
+Barce_Rooftop_C_3k.irr.hdr
