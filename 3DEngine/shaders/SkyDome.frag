@@ -26,7 +26,8 @@ const float PI = 3.1415926535897932384626433832795;
 //projectionMatrix * viewMatrix * modelMatrix *
 void main()
 {
-  
+
+ //had to flip y and z because I use a Y up  
   vec2 uv = vec2((0.5f - ( atan(normal.z, normal.x) / ( 2.0f * PI))), acos(normal.y) / PI);
 
   color = texture(skydomeTexture, uv).rgb;
