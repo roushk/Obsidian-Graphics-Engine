@@ -38,6 +38,7 @@ inline void GetError()
   ///////////////////////////////////////////////////
 }
 
+
 enum shaderSetting
 {
   ssReflectionMap,
@@ -73,11 +74,12 @@ enum renderSetting
   rsVertNormal
 };
 
-enum BindingPoint
+enum BindingPoint //UBO
 {
   bpGlobal,
   bpLights,
-  bpShadowblur
+  bpShadowblur,
+  bpHammersley
 };
 
 enum UVModel
@@ -209,7 +211,7 @@ public:
   void DrawShadow(const Model& object, const Light& light);
 
 
-  GLuint LoadHDRimage(std::string filename);
+  GLuint LoadHDRimage(std::string filename, bool irr = false);
   /*
   void TakePicOfFBO(int i)
   {
@@ -261,9 +263,11 @@ public:
   void SetCurrentCamera(int cam);
 
   void SetObjectShader(int shader);
-
+  
   void LoadObjectShader();
+  void HammersleyCreateData();
 
+  void HammersleyLoadData();
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
@@ -298,6 +302,16 @@ public:
   GLuint blurShadowTexture[2];  //depth map
   GLenum blurShadowBuffers[1]{ GL_COLOR_ATTACHMENT0 };
   GLuint shadowBlurUBOHandle[1];
+
+
+  GLuint HammersleyUBOHandle[1];
+  static const int HammersleyConst = 20;
+
+  struct HammersleyBlock {
+    float N = HammersleyConst;
+    float hammersley[2 * HammersleyConst];
+  };
+  HammersleyBlock hammersleyBlock;
 
 
   static const int blurValue = 20;
@@ -391,7 +405,7 @@ private:
   vec3 ambientLight = vec3(0, 0, 0);
 
   GLuint uboHandle[2];
-  GLubyte* uboBuffer[2];
+  GLubyte* uboBuffer[2] = { NULL };
 
   
 

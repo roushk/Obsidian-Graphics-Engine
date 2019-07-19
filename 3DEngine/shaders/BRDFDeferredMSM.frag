@@ -48,6 +48,13 @@ struct LightArray
   float falloffValue;
 };
 
+uniform HammersleyBlock 
+{
+  float N;
+  float hammersley[2*100]; 
+};
+
+
 layout(std140, binding = 1) uniform LightBlock
 {
 
@@ -62,6 +69,9 @@ uniform sampler2D gSpecularMap;
 uniform sampler2D gAmbientMap;
 uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMap;
+uniform sampler2D skydomeTexture;
+uniform sampler2D skydomeIRR;
+
 
 in VS_OUT
 {
@@ -201,6 +211,29 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   return 1 - G;
 }
 
+vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
+{
+  //roughness = min(1,roughness);
+  float a = roughness*roughness;
+
+  float phi = 2.0 * PI * Xi.x;
+  float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
+  float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
+
+  // from spherical coordinates to cartesian coordinates
+  vec3 H;
+  H.x = cos(phi) * sinTheta;
+  H.y = sin(phi) * sinTheta;
+  H.z = cosTheta;
+
+  // from tangent-space vector to world-space sample vector
+  vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
+  vec3 tangent   = normalize(cross(up, N));
+  vec3 bitangent = cross(N, tangent);
+
+  vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
+  return normalize(sampleVec);
+} 
 
 void main()
 {
@@ -210,7 +243,6 @@ void main()
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
-
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = texture(gAmbientMap, fs_in.texCoords).xyz; //vec3(0.1f,0.1f,0.1f); 
 
@@ -236,6 +268,16 @@ void main()
   // Global
   vec3 finalColor = vec3(0,0,0);  //G.Kglobal * G.Iglobal.rgb + Iemissive;
 
+
+  const float PI = 3.1415926535897932384626433832795;
+
+ //had to flip y and z because I use a Y up  
+  vec2 uv = vec2((0.5f - ( atan(vertexNormal.z, vertexNormal.x) / ( 2.0f * PI))), acos(vertexNormal.y) / PI);
+
+  vec3 skydomeTex = texture(skydomeTexture, uv).rgb;
+  vec3 skydomeTexIRR = texture(skydomeIRR, uv).rgb;
+
+  //color = vec3(1,0,0);
 
   for( int i = 0; i < G.activeLights ; ++i )/*G.activeLights*/
   {
@@ -294,6 +336,37 @@ void main()
     float shadow = readShadowMapMSM(vertexPosition.xyz, vertexNormal, L);  //use view vector 
 
 
+
+    vec2 skewDistrib[40];
+    for(uint i = 0; i < 40; ++i)
+    {
+      skewDistrib[i / 2].x = hammersley[i];
+      skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (N + 1.0f))))/PI;
+    }
+
+    vec3 totalhammersleyColor = vec3(0);
+    float totalWeight = 0;
+
+    for(uint i = 0; i < 20; ++i)
+    {
+      //totalhammersleyColor += ImportanceSampleGGX(skewDistrib[i], vertexNormal, materialAlpha);
+      vec3 newH  = ImportanceSampleGGX(skewDistrib[i], vertexNormal, materialAlpha);
+      vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
+      vec3 A = normalize(cross(vec3(0,1,0),R));
+      vec3 B = normalize(cross(R,A));
+
+      vec3 wK = normalize(L.x * A + L.y * B + L.z * R);
+            
+      vec2 uv = vec2((0.5f - ( atan(newL.z, newL.x) / ( 2.0f * PI))), acos(newL.y) / PI);
+
+      totalhammersleyColor += texture(skydomeTexture, uv).rgb * NdotL;
+      totalWeight      += NdotL;
+    
+    }
+    totalhammersleyColor = totalhammersleyColor / totalWeight;
+
+
+    //Choose N Random Directions according to 
     //H = (L + V) / ||(L + V)||
     //H = normalize(L+V);
     vec3 H = normalize(L + V);
@@ -307,8 +380,9 @@ void main()
     //Frensel Term F
     //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
     //F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
-    vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
-
+    //replace specular with sampling method
+    vec3 F =  Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+    //vec3 F = totalhammersleyColor;
 
     //G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
 
@@ -316,11 +390,12 @@ void main()
 
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
-    float irradience = 1.0f;
-    vec3 BRDF = (KdiffuseColor / PI ) * irradience + ( (D * F * G) / (4.0f) );
+    totalhammersleyColor = max(totalhammersleyColor, vec3(0));
+    //skydomeTex = irradience map is working (Very hard to see)
+    vec3 BRDF = totalhammersleyColor + (KdiffuseColor / PI ) * skydomeTexIRR + ((D * F * G) / (4.0f));
 
 
-  //BRDF * light Brightness * Shadow
+    //BRDF * light Brightness * Shadow
     finalColor += (att * Iambient) + (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
@@ -332,7 +407,7 @@ void main()
     //color = vertexPosition.xyz;
     //color = vec3( 1.0f - shadow);
     //color = vec3(shadow);
-
+    //color = totalhammersleyColor;
   }
 
   
@@ -349,28 +424,6 @@ void main()
   //color = finalColor;
   
   color = Ifinal;
+  //color = skydomeTexIRR;
+  //color = skydomeTex;
 }
-
-/*
-
-BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
-
-H = (L + V) / ||(L + V)||
-H = normalize(L+V);
-
-Roughness Parameter D
-alpha 0 = rough -> inf = mirror
-D(H) = ( (alpha  + 2) / (2*PI) ) * (dot(N,H) ^ alpha)
-
-Frensel Term F
-Ks + ( (w - Ks) * (1- dot(L,H))^5 )
-F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
-
-G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
-
-
-
-
-
-
-*/

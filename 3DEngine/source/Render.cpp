@@ -218,16 +218,16 @@ void Render::BindSkydome()
   glUseProgram(programID);
 
   //Loads skydome
-  glActiveTexture(GL_TEXTURE2);
+  glActiveTexture(GL_TEXTURE7);
   glBindTexture(GL_TEXTURE_2D, skydomeID[0]);
-  glUniform1i(glGetUniformLocation(programID, "skydomeTexture"), 2);
-  glBindSampler(GL_TEXTURE2, glGetUniformLocation(programID, "skydomeTexture"));
+  glUniform1i(glGetUniformLocation(programID, "skydomeTexture"), 7);
+  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "skydomeTexture"));
 
   //Loads skydome irradiance map
-  glActiveTexture(GL_TEXTURE3);
+  glActiveTexture(GL_TEXTURE8);
   glBindTexture(GL_TEXTURE_2D, skydomeIDIRR[0]);
-  glUniform1i(glGetUniformLocation(programID, "skydomeIRR"), 3);
-  glBindSampler(GL_TEXTURE3, glGetUniformLocation(programID, "skydomeIRR"));
+  glUniform1i(glGetUniformLocation(programID, "skydomeIRR"), 8);
+  glBindSampler(GL_TEXTURE8, glGetUniformLocation(programID, "skydomeIRR"));
 
 }
 
@@ -366,6 +366,15 @@ void Render::BlurShadowLoadFinalMap()
 
 }
 
+void Render::HammersleyLoadData()
+{
+  glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "HammersleyBlock"), bpHammersley);
+
+  glBindBufferBase(GL_UNIFORM_BUFFER, bpHammersley, HammersleyUBOHandle[0]);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(hammersleyBlock), &hammersleyBlock, GL_STATIC_DRAW);
+
+
+}
 void Render::BlurShadowLoadData()
 {
   glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "blurKernel"), bpShadowblur);
@@ -439,7 +448,7 @@ void Render:: BindAndCreateGBuffers()
   int width = height * aspect;
 
   //Per GBuffer View Pos Out
-  glActiveTexture(GL_TEXTURE8);
+  glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -448,7 +457,7 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer NormalOut
-  glActiveTexture(GL_TEXTURE9);
+  glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[1]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -458,7 +467,7 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer DiffuseOut
-  glActiveTexture(GL_TEXTURE10);
+  glActiveTexture(GL_TEXTURE4);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[2]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -467,7 +476,7 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer SpecularOut
-  glActiveTexture(GL_TEXTURE11);
+  glActiveTexture(GL_TEXTURE5);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[3]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -476,7 +485,7 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer AmbientOut
-  glActiveTexture(GL_TEXTURE12);
+  glActiveTexture(GL_TEXTURE6);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -905,6 +914,7 @@ void Render::CreateUBOBufferObjects()
 {
   glGenBuffers(2, uboHandle);
   glGenBuffers(2, shadowBlurUBOHandle);
+  glGenBuffers(1, HammersleyUBOHandle);
   uboBuffer[0] = (GLubyte*)malloc(sizeof(LightData) * 8);
 }
 
@@ -1213,7 +1223,7 @@ void Render::DrawShadow(const Model& object, const Light& light)
 }
 
 //returns textureID
-GLuint Render::LoadHDRimage(std::string filename)
+GLuint Render::LoadHDRimage(std::string filename, bool irr)
 {
   std::string inName = "IBL/" + filename;
 
@@ -1242,10 +1252,11 @@ GLuint Render::LoadHDRimage(std::string filename)
   // Gamma correct the image to linear color space.  Use gamma=2.2
   // if you have no specific gamma information. Skip this step if
   // you know image is already in linear space.
-
+  /*
   // This is included to demonstrate the magic of OpenMP: This
   // pragma turns the following loop into a multi-threaded loop,
   // making use of all the cores your machine may have.
+  //this gamma corrects
 #pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
   for (int j = 0; j < height; j++) {
     for (int i = 0; i < width; i++) {
@@ -1255,7 +1266,7 @@ GLuint Render::LoadHDRimage(std::string filename)
       }
     }
   }
-
+  */
   GLuint newTexture;
   glGenTextures(1, &newTexture);
   glActiveTexture(GL_TEXTURE2);
@@ -1265,8 +1276,8 @@ GLuint Render::LoadHDRimage(std::string filename)
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
     GL_FLOAT, image.data());
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   return newTexture;
@@ -1330,5 +1341,26 @@ void Render::SetObjectShader(int shader)
 void Render::LoadObjectShader()
 {
   SetCurrentShader(objectShader);
+}
+
+void Render::HammersleyCreateData()
+{
+  
+  hammersleyBlock.N = HammersleyConst; // N=20 ... 40 or whatever …
+  int kk;
+  int pos = 0;
+  for (int k = 0; k < HammersleyConst; k++) 
+  {
+    kk = k;
+    float u = 0.0f;
+    for (float p = 0.5f; kk; p *= 0.5f, kk >>= 1)
+    {
+      if (kk & 1)
+        u += p;
+    }
+    float v = (k + 0.5) / HammersleyConst;
+    hammersleyBlock.hammersley[pos++] = u;
+    hammersleyBlock.hammersley[pos++] = v;
+  }
 };
 
