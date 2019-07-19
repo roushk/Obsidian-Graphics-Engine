@@ -306,7 +306,7 @@ public:
 
 
   GLuint HammersleyUBOHandle[1];
-  static const int HammersleyConst = 20;
+  static const int HammersleyConst = 20;  //samples count
 
   struct HammersleyBlock {
     float N = HammersleyConst;

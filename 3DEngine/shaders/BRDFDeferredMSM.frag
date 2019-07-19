@@ -316,13 +316,13 @@ void main()
     vec3 H_IBL = normalize(wK + V);
 
     float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
-    float level = 0.5f * log2(768.0f*1024.0f / totalSamples) - 0.5f * log2(DH_IBL / 4.0f);
+    float level = 0.5f * log2(768.0f*1024.0f / totalSamples) - 0.5f * log2(DH_IBL / 4.0f);  //2048.0f*1024.0f
     vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
     specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
     //h o = halfway between light and view
     //p(wK) = D(H)
-    vec3 D_IBL = specular;// * ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
-    TEST_VALUE += D_IBL;//vec3(DH_IBL / 10.0f);
+    vec3 D_IBL = specular;  // * ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
+    TEST_VALUE += D_IBL;    //vec3(DH_IBL / 10.0f);
     
     //F(wK, H)
     vec3 F_IBL = Kspecular + ((1 - Kspecular) * pow((1 - dot(wK,H_IBL)),5) );
@@ -332,14 +332,15 @@ void main()
     
     float NdotL_IBL = dot(wK, H_IBL);
 
-    vec3 diffuse = texture(skydomeIRR, uv_IBL).rgb;
-    vec3 BRDF_IBL = (KdiffuseColor / PI ) * diffuse + NdotL_IBL * ((D_IBL * F_IBL * G_IBL) / (4.0f));
+    vec3 BRDF_IBL = NdotL_IBL * ((D_IBL * F_IBL * G_IBL) / (4.0f));
 
     totalWeight += NdotL_IBL;
     IBL += BRDF_IBL;
+    //TEST_VALUE = vec3(level / 100);
   }
-  TEST_VALUE /= totalWeight;
+  //TEST_VALUE;// /= totalWeight;
   IBL /= totalSamples;
+  IBL += (KdiffuseColor / PI ) * skydomeTexIRR;
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
 
 
