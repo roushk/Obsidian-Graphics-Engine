@@ -338,33 +338,41 @@ void main()
 
 
     vec2 skewDistrib[40];
+    vec3 skewDirVec[40];
     for(uint i = 0; i < 40; ++i)
     {
       skewDistrib[i / 2].x = hammersley[i];
-      skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (N + 1.0f))))/PI;
+      skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (materialAlpha + 1.0f))))/PI;
     }
 
+    for(uint i = 0; i < 40; ++i)
+    {
+      float u = skewDistrib[i].x;
+      float v = skewDistrib[i].y;
+      skewDirVec[i].x = cos(2 * PI * (0.5 - u)) * sin(PI * v);
+      skewDirVec[i].y = sin(2 * PI * (0.5 - u)) * sin(PI * v);
+      skewDirVec[i].z = cos(PI * v);
+
+    }
     vec3 totalhammersleyColor = vec3(0);
     float totalWeight = 0;
 
-    for(uint i = 0; i < 20; ++i)
+    vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
+    vec3 A = normalize(cross(vec3(0,1,0),R)); //tangent 
+    vec3 B = normalize(cross(R,A));           //bitangent
+    for(uint i = 0; i < 40; ++i)
     {
-      //totalhammersleyColor += ImportanceSampleGGX(skewDistrib[i], vertexNormal, materialAlpha);
-      vec3 newH  = ImportanceSampleGGX(skewDistrib[i], vertexNormal, materialAlpha);
-      vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
-      vec3 A = normalize(cross(vec3(0,1,0),R));
-      vec3 B = normalize(cross(R,A));
+      vec3 wK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
 
-      vec3 wK = normalize(L.x * A + L.y * B + L.z * R);
-            
-      vec2 uv = vec2((0.5f - ( atan(newL.z, newL.x) / ( 2.0f * PI))), acos(newL.y) / PI);
+      float NdotL2 = dot(wK, vertexNormal);
+      vec2 uv = vec2((0.5f - ( atan(wK.z, wK.x) / ( 2.0f * PI))), acos(wK.y) / PI);
 
-      totalhammersleyColor += texture(skydomeTexture, uv).rgb * NdotL;
-      totalWeight      += NdotL;
+      totalhammersleyColor += texture(skydomeTexture, uv).rgb ;
+      totalWeight += 1;
     
     }
-    totalhammersleyColor = totalhammersleyColor / totalWeight;
 
+    totalhammersleyColor = totalhammersleyColor / totalWeight;
 
     //Choose N Random Directions according to 
     //H = (L + V) / ||(L + V)||
@@ -375,24 +383,33 @@ void main()
     //materialAlpha 0 = rough -> inf = mirror
     //D(H) = ( (alpha  + 2) / (2*PI) ) * (dot(N,H) ^ alpha)
 
+    //float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H), materialAlpha));
     float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H), materialAlpha));
 
     //Frensel Term F
     //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
     //F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
     //replace specular with sampling method
-    vec3 F =  Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+
+    //vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+    //vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+
+    //Ks = Kd here
+    vec3 F = KdiffuseColor + ((1 - KdiffuseColor) * pow((1 - dot(L,H)),5) );
     //vec3 F = totalhammersleyColor;
 
     //G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
-
     float G = 1.0f / ( dot(L,H) * dot(L,H) ); 
 
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
-    totalhammersleyColor = max(totalhammersleyColor, vec3(0));
     //skydomeTex = irradience map is working (Very hard to see)
-    vec3 BRDF = totalhammersleyColor + (KdiffuseColor / PI ) * skydomeTexIRR + ((D * F * G) / (4.0f));
+    //vec3 specularPortion = ((D * F * G) / (4.0f));
+    
+    vec3 specularPortion = ((totalhammersleyColor * F * G) / (4.0f));
+    
+    vec3 BRDF = (KdiffuseColor / PI ) * skydomeTexIRR + specularPortion;
+
 
 
     //BRDF * light Brightness * Shadow
