@@ -98,6 +98,10 @@ const float MSMalpha = 0.001f; //1 x 10^-3
 
 uniform float materialAlpha;
 
+uniform float max_depth;
+
+const int totalSamples = 20;
+
 
 out vec3 color;
 
@@ -147,7 +151,6 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
   //b is the blurred output fot z -> z^4
   vec4 b = texture(blurShadowMap, shadowFrag.xy );
-  float max_depth = 80.0f;
 
   vec4 bPrime = (1 - MSMalpha) * b + MSMalpha * vec4(max_depth / 2.0f);
 
@@ -268,17 +271,100 @@ void main()
   // Global
   vec3 finalColor = vec3(0,0,0);  //G.Kglobal * G.Iglobal.rgb + Iemissive;
 
-
-  const float PI = 3.1415926535897932384626433832795;
-
- //had to flip y and z because I use a Y up  
+   vec3 TEST_VALUE = vec3(0);
+  //*************************************************************************************************//
+  // IBL Calculations
+  //had to flip y and z because I use a Y up  
   vec2 uv = vec2((0.5f - ( atan(vertexNormal.z, vertexNormal.x) / ( 2.0f * PI))), acos(vertexNormal.y) / PI);
 
   vec3 skydomeTex = texture(skydomeTexture, uv).rgb;
   vec3 skydomeTexIRR = texture(skydomeIRR, uv).rgb;
 
   //color = vec3(1,0,0);
+  vec2 skewDistrib[totalSamples];
+  vec3 skewDirVec[totalSamples];
+  for(uint i = 0; i < totalSamples * 2; ++i)
+  {
+    skewDistrib[i / 2].x = hammersley[i];
+    skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (materialAlpha + 1.0f))))/PI;
+  }
 
+  for(uint i = 0; i < totalSamples; ++i)
+  {
+    float u = skewDistrib[i].x;
+    float v = skewDistrib[i].y;
+    skewDirVec[i].x = cos(2 * PI * (0.5 - u)) * sin(PI * v);
+    skewDirVec[i].y = sin(2 * PI * (0.5 - u)) * sin(PI * v);
+    skewDirVec[i].z = cos(PI * v);
+
+  }
+  vec3 totalhammersleyColor = vec3(0);
+  float totalWeight = 0;
+
+  vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
+  vec3 A = normalize(cross(vec3(0,1,0),R)); //tangent 
+  vec3 B = normalize(cross(R,A));           //bitangent
+  
+  vec3 IBL = vec3(0);
+  
+  for(uint i = 0; i < totalSamples; ++i)
+  {
+    vec3 wK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
+
+    vec2 uv_IBL = vec2((0.5f - ( atan(wK.z, wK.x) / ( 2.0f * PI))), acos(wK.y) / PI);
+
+    vec3 H_IBL = normalize(wK + V);
+
+    float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
+    float level = 0.5f * log2(768.0f*1024.0f / totalSamples) - 0.5f * log2(DH_IBL / 4.0f);
+    vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
+    specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
+    //h o = halfway between light and view
+    //p(wK) = D(H)
+    vec3 D_IBL = specular;// * ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
+    TEST_VALUE += D_IBL;//vec3(DH_IBL / 10.0f);
+    
+    //F(wK, H)
+    vec3 F_IBL = Kspecular + ((1 - Kspecular) * pow((1 - dot(wK,H_IBL)),5) );
+    
+    //G(wK, V, H)
+    float G_IBL = 1.0f / ( dot(wK,H_IBL) * dot(wK,H_IBL) ); 
+    
+    float NdotL_IBL = dot(wK, H_IBL);
+
+    vec3 diffuse = texture(skydomeIRR, uv_IBL).rgb;
+    vec3 BRDF_IBL = (KdiffuseColor / PI ) * diffuse + NdotL_IBL * ((D_IBL * F_IBL * G_IBL) / (4.0f));
+
+    totalWeight += NdotL_IBL;
+    IBL += BRDF_IBL;
+  }
+  TEST_VALUE /= totalWeight;
+  IBL /= totalSamples;
+  // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
+
+
+
+  //Frensel Term F
+  //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
+  //F(L,H) = Ks + ( (1 - Ks) * (1- dot(L,H))^5 )
+  //replace specular with sampling method
+
+  //vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
+
+
+  //G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
+
+  //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,N) * dot(V,N) ))
+  //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
+  //skydomeTex = irradience map is working (Very hard to see)
+  //vec3 specularPortion = ((D * F * G) / (4.0f));
+
+      
+
+  //Your light sources may be one or more global lights PLUS the IBL environment light.
+  //final color = sum of color from all lights + IBL
+  finalColor += IBL;
+  //finalColor = TEST_VALUE;
   for( int i = 0; i < G.activeLights ; ++i )/*G.activeLights*/
   {
     //*************************************************************************************************//
@@ -334,47 +420,7 @@ void main()
 
     //float shadow = readShadowMap(vertexPosition.xyz, vertexNormal, L);  //use view vector 
     float shadow = readShadowMapMSM(vertexPosition.xyz, vertexNormal, L);  //use view vector 
-
-
-
-    vec2 skewDistrib[40];
-    vec3 skewDirVec[40];
-    for(uint i = 0; i < 40; ++i)
-    {
-      skewDistrib[i / 2].x = hammersley[i];
-      skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (materialAlpha + 1.0f))))/PI;
-    }
-
-    for(uint i = 0; i < 40; ++i)
-    {
-      float u = skewDistrib[i].x;
-      float v = skewDistrib[i].y;
-      skewDirVec[i].x = cos(2 * PI * (0.5 - u)) * sin(PI * v);
-      skewDirVec[i].y = sin(2 * PI * (0.5 - u)) * sin(PI * v);
-      skewDirVec[i].z = cos(PI * v);
-
-    }
-    vec3 totalhammersleyColor = vec3(0);
-    float totalWeight = 0;
-
-    vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
-    vec3 A = normalize(cross(vec3(0,1,0),R)); //tangent 
-    vec3 B = normalize(cross(R,A));           //bitangent
-    for(uint i = 0; i < 40; ++i)
-    {
-      vec3 wK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
-
-      float NdotL2 = dot(wK, vertexNormal);
-      vec2 uv = vec2((0.5f - ( atan(wK.z, wK.x) / ( 2.0f * PI))), acos(wK.y) / PI);
-
-      totalhammersleyColor += texture(skydomeTexture, uv).rgb ;
-      totalWeight += 1;
     
-    }
-
-    totalhammersleyColor = totalhammersleyColor / totalWeight;
-
-    //Choose N Random Directions according to 
     //H = (L + V) / ||(L + V)||
     //H = normalize(L+V);
     vec3 H = normalize(L + V);
@@ -392,11 +438,8 @@ void main()
     //replace specular with sampling method
 
     //vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
-    //vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
 
-    //Ks = Kd here
-    vec3 F = KdiffuseColor + ((1 - KdiffuseColor) * pow((1 - dot(L,H)),5) );
-    //vec3 F = totalhammersleyColor;
+    vec3 F = Kspecular + ((1 - Kspecular) * pow((1 - dot(L,H)),5) );
 
     //G(L,V,H)) / ( dot(L,N) * dot(V,N) ) = 1 / ( dot(L,H) ^ 2) = 1
     float G = 1.0f / ( dot(L,H) * dot(L,H) ); 
@@ -405,18 +448,13 @@ void main()
     //BRDF = f(L,V,N) = Kd/Pi + (D(H) * F(L,H) * G(L,V,H)) / (4 * ( dot(L,vertexNormal) * dot(V,vertexNormal) ))
     //skydomeTex = irradience map is working (Very hard to see)
     //vec3 specularPortion = ((D * F * G) / (4.0f));
-    
-    vec3 specularPortion = ((totalhammersleyColor * F * G) / (4.0f));
-    
-    vec3 BRDF = (KdiffuseColor / PI ) * skydomeTexIRR + specularPortion;
 
-
+        
+    vec3 BRDF = (KdiffuseColor / PI ) + ((D * F * G) / (4.0f));
 
     //BRDF * light Brightness * Shadow
-    finalColor += (att * Iambient) + (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
-
-
     //color = LnotNormal;
     //color = L;
     //color = LA.lights[i].LightPosition.xyz;
@@ -427,7 +465,6 @@ void main()
     //color = totalhammersleyColor;
   }
 
-  
   //calculate S for fog
   float cameraDist = length(cameraPos - vertexPosition.xyz);
 

@@ -785,6 +785,10 @@ void Render::CreateBuffers()
   glGenBuffers(5, vertexbuffers);
 }
 
+void Render::LoadMaxDepth()
+{
+  glUniform1f(glGetUniformLocation(programID, "max_depth"), max_depth);
+}
 void Render::LoadRoughness(float roughness)
 {
   glUniform1f(glGetUniformLocation(programID, "materialAlpha"), roughness);

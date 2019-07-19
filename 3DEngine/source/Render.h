@@ -268,6 +268,7 @@ public:
   void HammersleyCreateData();
 
   void HammersleyLoadData();
+  void LoadMaxDepth();
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
@@ -317,7 +318,7 @@ public:
   static const int blurValue = 20;
   float weights[blurValue * 2 + 1];
 
-
+  float max_depth = 10.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object

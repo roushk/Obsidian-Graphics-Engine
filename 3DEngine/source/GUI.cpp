@@ -306,6 +306,7 @@ void GUI::RenderFrame()
     {
       ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
     }
+    ImGui::DragFloat("max depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
 
     ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
 
