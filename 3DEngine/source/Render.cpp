@@ -1110,7 +1110,7 @@ void Render::DrawShadow(const Model& object, const Light& light)
   //projectionMatrix = cameraToNDC(lightCam);
   projectionMatrix = perspectiveFov<float>(radians(70.0f), height * aspect, height, nearPlane, farPlane);
   //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(2.0f, 0, 0) , vec3(0, 1, 0));
+  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(0.0f, 0, 0) , vec3(0, 1, 0));
   shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f))) * projectionMatrix * viewMatrix;
   //shadowMatrix = projectionMatrix * viewMatrix;
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,

@@ -132,7 +132,7 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
 
   //b is the blurred output fot z -> z^4
   vec4 b = texture(blurShadowMap, shadowFrag.xy );
-  float max_depth = 80.0f;
+  float max_depth = 10.0f;
 
   vec4 bPrime = (1 - alpha) * b + alpha * vec4(max_depth / 2.0f);
 
