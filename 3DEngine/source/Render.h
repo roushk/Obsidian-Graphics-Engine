@@ -319,6 +319,7 @@ public:
   float weights[blurValue * 2 + 1];
 
   float max_depth = 10.0f;
+  float scalarLevel = 1.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
