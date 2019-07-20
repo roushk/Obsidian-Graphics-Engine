@@ -298,11 +298,11 @@ void main()
     skewDirVec[i].z = cos(PI * v);
 
   }
-  vec3 totalhammersleyColor = vec3(0);
   float totalWeight = 0;
 
   vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
   vec3 A = normalize(cross(vec3(0,1,0),R)); //tangent 
+  //A = normalize(vec3(-R.y, R.x, 0));
   vec3 B = normalize(cross(R,A));           //bitangent
   
   vec3 IBL = vec3(0);
@@ -311,12 +311,13 @@ void main()
   {
     vec3 wK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
 
-    vec2 uv_IBL = vec2((0.5f - ( atan(wK.z, wK.x) / ( 2.0f * PI))), acos(wK.y) / PI);
+    vec2 uv_IBL = vec2((0.5f - ( atan(wK.y, wK.x) / ( 2.0f * PI))), acos(wK.z) / PI);
 
     vec3 H_IBL = normalize(wK + V);
 
+    float scalarLevel = 100.0f;
     float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
-    float level = 0.5f * log2(768.0f*1024.0f / totalSamples) - 0.5f * log2(DH_IBL / 4.0f);  //2048.0f*1024.0f
+    float level = (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (0.5f * log2(scalarLevel * DH_IBL / 4.0f));  //2048.0f*1024.0f
     vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
     specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
     //h o = halfway between light and view
@@ -330,11 +331,11 @@ void main()
     //G(wK, V, H)
     float G_IBL = 1.0f / ( dot(wK,H_IBL) * dot(wK,H_IBL) ); 
     
-    float NdotL_IBL = dot(wK, H_IBL);
+    //float NdotL_IBL = dot(wK, vertexNormal);
 
-    vec3 BRDF_IBL = NdotL_IBL * ((D_IBL * F_IBL * G_IBL) / (4.0f));
+    vec3 BRDF_IBL = ((D_IBL * F_IBL * G_IBL) / (4.0f));
 
-    totalWeight += NdotL_IBL;
+    //totalWeight += NdotL_IBL;
     IBL += BRDF_IBL;
     //TEST_VALUE = vec3(level / 100);
   }

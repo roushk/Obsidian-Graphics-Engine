@@ -1,2 +1,2 @@
-MonValley_A_LookoutPoint_2k.hdr
-MonValley_A_LookoutPoint_2k.irr.hdr
+Newport_Loft_Ref.hdr
+Newport_Loft_Ref.irr.hdr
