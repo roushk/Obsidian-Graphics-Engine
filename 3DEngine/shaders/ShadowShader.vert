@@ -44,7 +44,8 @@ out VS_OUT
 void main()
 {
   //projectionMatrix * viewMatrix = shadowMatrix in this shadowShader.vert
-  //  vs_out.position = projectionMatrix * viewMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
+  //vs_out.position = projectionMatrix * viewMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
+  //vs_out.position = shadowMatrix * projectionMatrix * viewMatrix  * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
 
   vs_out.position = shadowMatrix * modelTransform * modelMatrix * vec4(modelPosition, 1.0f);
   gl_Position = vs_out.position;

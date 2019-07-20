@@ -1106,12 +1106,32 @@ void Render::DrawShadow(const Model& object, const Light& light)
     viewMatrix = worldToCamera(currentCamera);
     cameraChanged = false;
   }
+  /*
+    projectionMatrix = cameraToNDC(currentCamera);
+
+  viewMatrix = worldToCamera(currentCamera);
+
+  vec4 newLightPos = cameraToNDC(currentCamera) * worldToCamera(currentCamera) * light.position;
+  vec4 newCenterPos = cameraToNDC(currentCamera) * worldToCamera(currentCamera) * vec4(0, -1, 0, 1);
+  vec4 newUPVec = cameraToNDC(currentCamera) * worldToCamera(currentCamera) * vec4(0, 1, 0, 0);
 
   //projectionMatrix = cameraToNDC(lightCam);
   projectionMatrix = perspectiveFov<float>(radians(70.0f), height * aspect, height, nearPlane, farPlane);
   //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+  viewMatrix = glm::lookAt(glm::vec3(newLightPos), vec3(newCenterPos) , vec3(newUPVec));
+  shadowMatrix = projectionMatrix * viewMatrix;// *cameraToNDC(currentCamera) *  worldToCamera(currentCamera);
+  
+  projectionMatrix = cameraToNDC(currentCamera);
+
+  viewMatrix = worldToCamera(currentCamera);
+
+  */
+  //projectionMatrix = cameraToNDC(lightCam);
+  projectionMatrix = perspectiveFov<float>(radians(70.0f), height * aspect, height, nearPlane, farPlane);
+  //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
   viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(0.0f, 0, 0) , vec3(0, 1, 0));
-  shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f))) * projectionMatrix * viewMatrix;
+  shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f)))  *  projectionMatrix * viewMatrix ;
+  //shadowMatrix = worldToCamera(currentCamera) * shadowMatrix;
   //shadowMatrix = projectionMatrix * viewMatrix;
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
     glm::value_ptr(shadowMatrix));

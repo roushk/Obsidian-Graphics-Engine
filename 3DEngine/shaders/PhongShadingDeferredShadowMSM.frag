@@ -90,7 +90,7 @@ float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
   vec4 shadowFrag = shadowMatrix * vec4(fragPos,1);
   shadowFrag = shadowFrag/shadowFrag.w;
-  shadowFrag = shadowFrag * 0.5 + 0.5;  //for some reason i have to do this twice, not sure why
+  shadowFrag = shadowFrag;// * 0.5 + 0.5;  //for some reason i have to do this twice, not sure why
 
 
   float bias = max(0.0001 * (1.0 - dot(normal, lightDir)), 0.0000001);  
