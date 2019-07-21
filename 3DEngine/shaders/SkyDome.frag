@@ -19,18 +19,25 @@ uniform sampler2D skydomeTexture;
 
 in vec3 normal;
 out vec3 color;
+uniform float exposure;
+uniform float contrast;
 
 //uniform mat4 undoCamRotation;
 const float PI = 3.1415926535897932384626433832795;
 
-//projectionMatrix * viewMatrix * modelMatrix *
+vec3 sRGBtoLinear(vec3 input, float exposure, float contrast)
+{
+  return pow(( (exposure * input) / (exposure * input + vec3(1,1,1)) ), vec3(contrast/2.2f));
+}
+
+
 void main()
 {
 
  //had to flip y and z because I use a Y up  
   vec2 uv = vec2((0.5f - ( atan(normal.z, normal.x) / ( 2.0f * PI))), acos(normal.y) / PI);
 
-  color = texture(skydomeTexture, uv).rgb;
+  color = sRGBtoLinear(texture(skydomeTexture, uv).rgb, exposure, contrast);
   //color = vec3(1,0,0);
 }
  

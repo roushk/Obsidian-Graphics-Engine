@@ -269,6 +269,7 @@ public:
 
   void HammersleyLoadData();
   void LoadMaxDepth();
+  void BufferToneMapping();
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
@@ -321,7 +322,7 @@ public:
   float max_depth = 10.0f;
   float scalarLevel = 1.0f;
 
-  float exposure = 1.0f;
+  float exposure = 2.0f;
   float contrast = 1.0f;
 
   //dont need color buffer only depth buffer

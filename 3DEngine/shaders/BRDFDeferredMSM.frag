@@ -326,7 +326,7 @@ void main()
     //for each omega_k calculated by each light Li(omega_k)
     //float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2( 0.5f * 2.0f DH_IBL)) );  //2048.0f*1024.0f
 
-    float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2(  DH_IBL)) );  //2048.0f*1024.0f
+    float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2(  DH_IBL / 4.0f)) );  //2048.0f*1024.0f
     
     //vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
     vec3 specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
