@@ -26,7 +26,7 @@ public:
 
   bool buttonLeftDown = false;
   bool buttonRightDown = false;
-  bool rotateLights = true;
+  bool rotateLights = false;
   vec3 position{0,0,0};
   static int currentCam;
   static int currentFBO;
@@ -35,6 +35,10 @@ public:
   static bool debugDrawMode;
   static bool copyDepth;
   static bool showLightSpheres;
+  static bool MSMShadow;
+  static bool EnableLocalLights;
+  static bool overwriteParams;
+
 private:
   SceneLighting& lighting;
   ObjectReader& reader;

@@ -122,7 +122,7 @@ Model ObjectReader::load_model(const std::string& path)
   const auto scene = importer.ReadFile(path.c_str(),
     /*aiProcessPreset_TargetRealtime_Quality | */
     //aiProcess_OptimizeMeshes |
-    //aiProcess_GenSmoothNormals |
+    aiProcess_GenSmoothNormals |
     //aiProcess_GenNormals |
     //aiProcess_JoinIdenticalVertices |
     aiProcess_GenUVCoords |
@@ -414,6 +414,7 @@ void ObjectReader::loadMultiple(const std::string& filename)
   } while (findPos != std::string::npos && findPos != lastPos);
 
   //load objects into loader
+
   for (auto& objName : objects)
   {
     load(objName);

@@ -38,6 +38,7 @@ inline void GetError()
   ///////////////////////////////////////////////////
 }
 
+
 enum shaderSetting
 {
   ssReflectionMap,
@@ -48,16 +49,21 @@ enum shaderSetting
   ssPhongShading,
   ssPhongLighting,
   ssBlinnLighting,
-
   ssWireframe,
+  ssShadowShader,
   ssDeferredGeometry,
   ssDeferredRendering,
   ssPhongShadingDeferred,
+  ssPhongShadingDeferredShadow,
   ssPhongShadingDeferredLightSphere,
 
-
+  ssComputeBlurHorizontal,
+  ssComputeBlurVertical,
+  ssPhongShadingDeferredShadowMSM,
+  ssBRDDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
+  ssSkydome,
   ssMaxShaders
 };
 
@@ -68,10 +74,12 @@ enum renderSetting
   rsVertNormal
 };
 
-enum BindingPoint
+enum BindingPoint //UBO
 {
   bpGlobal,
-  bpLights
+  bpLights,
+  bpShadowblur,
+  bpHammersley
 };
 
 enum UVModel
@@ -127,8 +135,11 @@ public:
   void SetModelOffset(vec3 pos, float scale_ = 1.0f);
   void LoadMaterial(Material materialSpec, Material materialDiff);
   void LoadSkybox(std::vector<std::string>& skyboxNames);
+
+  void LoadSkydome();
+  void BindSkydome();
   //Gbuffers
-  void GenGBuffer();
+  void GenGBuffer();  //also gens shadow buffer
   void BindGBufferTextures();
   void BindAndCreateGBuffers();
   void BindGBuffer();
@@ -139,13 +150,27 @@ public:
   void BindFrameBufferToRenderTo(unsigned i);
   void BindFrameBufferTextures();
 
+  //shadow FBO stuff
+  void BindShadowTextures();
+  void BindAndCreateShadowBuffers();
+  void BindShadowBuffer();
+
+  //blur shadow FBO stuff
+  void BindAndCreateBlurShadowBuffers();
+  void BlurShadowLoadData();
+  void BlurShadowLoadHorizontal();
+  void BlurShadowLoadVertical();
+  void BlurShadowLoadDebug(); //debug is for displaying the map in debug render
+  void CreateBlurShadowData();
+  void BlurShadowLoadFinalMap();
+
+
+  //void BindBlurShadowTextures();
+  //void BindBlurShadowBuffer();
+
   void BindDefaultFrameBuffer();
-
-
   void BindSkybox();
-
   void BindMaterials(SceneLighting& lighting);
-
   void LoadModel(Model& object); // Object object); 
   void LoadModel(Wireframe& object);
   
@@ -157,6 +182,7 @@ public:
   void LoadDiffuseForLight(Light& light, float scale = 1.0f);
   void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
 
+  void LoadRoughness(float roughness);
   void SetCurrentShader(int shader);
 
   //loads data for every light as well as data for the global scene
@@ -182,8 +208,10 @@ public:
   void EndDrawing();
   void ClearColor(vec4 color);
   void SetTitle(std::string object);
+  void DrawShadow(const Model& object, const Light& light);
 
 
+  GLuint LoadHDRimage(std::string filename, bool irr = false);
   /*
   void TakePicOfFBO(int i)
   {
@@ -215,9 +243,14 @@ public:
 
 
   GLuint skyboxTextureID[6];  //texture ID's for the skybox
-
   GLuint specularMaterialID;
   GLuint diffuseMaterialID;
+
+  //skydome
+  GLuint skydomeID[13];
+  GLuint skydomeIDIRR[13];
+
+
   int currentUVModel = 0;
   unsigned setting = rsNone;
 
@@ -230,13 +263,17 @@ public:
   void SetCurrentCamera(int cam);
 
   void SetObjectShader(int shader);
-
+  
   void LoadObjectShader();
+  void HammersleyCreateData();
 
+  void HammersleyLoadData();
+  void LoadMaxDepth();
+  void BufferToneMapping();
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
-  Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,1 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
+  Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,0 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
   Camera cameras[6]
   {
     //same order as textures posx, negx, posy, negy, posz, negz
@@ -257,7 +294,40 @@ public:
 
   GLuint FBODepthBuffers[6];
 
+  GLuint shadowFBO[1];  //shadow map output FBO
+  GLuint shadowTexture[1];  //depth map
+  GLenum shadowBuffers[1] { GL_COLOR_ATTACHMENT0 };
 
+  //shadow map -> blurShadowTexture[0] -> blurShadowTexture[1]
+  //none -> horizontal -> horizontal and vertical
+  //GLuint blurShadowFBO[1];  //shadow map output FBO
+  GLuint blurShadowTexture[2];  //depth map
+  GLenum blurShadowBuffers[1]{ GL_COLOR_ATTACHMENT0 };
+  GLuint shadowBlurUBOHandle[1];
+
+
+  GLuint HammersleyUBOHandle[1];
+  static const int HammersleyConst = 20;  //samples count
+
+  struct HammersleyBlock {
+    float N = HammersleyConst;
+    float hammersley[2 * HammersleyConst];
+  };
+  HammersleyBlock hammersleyBlock;
+
+
+  static const int blurValue = 20;
+  float weights[blurValue * 2 + 1];
+
+  float max_depth = 10.0f;
+  float scalarLevel = 1.0f;
+
+  float exposure = 2.0f;
+  float contrast = 1.0f;
+
+  //dont need color buffer only depth buffer
+  //GLuint shadowRBO[1]; //shadow render buffer object
+  float shadowScale = 2.0f; //shadow resolution
   GLenum DrawBuffers;
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 
@@ -284,8 +354,6 @@ public:
   //depth | depth        |           | R24f
 
   std::vector<LightData> lightDatas;
-  
-  
 
 
   float rotateRate = 2.0f * PI / 20.0f;
@@ -295,7 +363,14 @@ public:
   float transmissionCoefficient = 1.0f;
   float highlightTightness = 0.5f;
 
-  glm::vec2 position{ 0,0 };
+  glm::vec2 windowPosition{ 0,0 };  //window position
+
+
+  float materialRoughness = 1.0f;
+
+
+  int windowX = 0;
+  int windowY = 0;
 
 private:
   //objectPos is used for the eye point of the reflection cameras
@@ -328,6 +403,7 @@ private:
   glm::mat4 viewMatrix = glm::mat4(1.0f);
   glm::mat4 modelMatrix = glm::mat4(1.0f);
   glm::mat4 modelTransform = glm::mat4(1.0f);
+  glm::mat4 shadowMatrix = glm::mat4(1.0f);
 
   std::vector<Light> lights;
   
@@ -335,10 +411,16 @@ private:
   vec3 ambientLight = vec3(0, 0, 0);
 
   GLuint uboHandle[2];
-  GLubyte* uboBuffer[2];
-  unsigned debugTexture = 0;
+  GLubyte* uboBuffer[2] = { NULL };
 
+  
 
 };
 #endif
 
+//TODO
+/*
+  - Abstract texture loading so that it loads from slot 0 to whatever
+    instead of setting the GL_TEXTURE# per thing
+
+ */

@@ -84,7 +84,7 @@ void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
   io.IniFilename = NULL; //disable imgui.ini
 
   ImGui_ImplSDL2_InitForOpenGL(window, context);
-   ImGui_ImplOpenGL3_Init("#version 430");
+  ImGui_ImplOpenGL3_Init("#version 430");
 
   // Setup style
   //SetStyle();
@@ -165,7 +165,6 @@ void GUI::RenderFrame()
 
 
 
-    static bool overwriteParams = true;
     ImGui::Checkbox("Overwrite Params", &overwriteParams);
 
     if (overwriteParams)
@@ -184,7 +183,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 0.6f, 0.8f}, {0.1f, 1.0f, 0.5f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 1.2f, 1.6f}, {0.1f, 1.0f, 0.5f});
         }
 
         break;
@@ -302,7 +301,17 @@ void GUI::RenderFrame()
     //I and K global
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
-    ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
+    if(EnableLocalLights)
+    {
+      ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    }
+    ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
+    ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
+
+    ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
 
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
@@ -329,84 +338,88 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Far Plane", &lighting.global.far,0.01f, lighting.global.near);*/
     ImGui::PopItemWidth();
     ImGui::EndChild();
-    //Light selection
-    //*********//
-    Light& light = lighting.lights.at(currentLight);
-    std::string name;
-    float lightHeight = 0;
-    if (light.type == ltDirectional)
+    
+    if (ImGui::CollapsingHeader("Light Settings"))
     {
-      name = "Directional Light";
-      lightHeight = 110;
-    }
-    else if (light.type == ltPoint)
-    {
-      name = "Point Light";
-      lightHeight = 110;
-    }
-    else if (light.type == ltSpotlight) //spotlight
-    {
-      name = "Spot Light";
-      lightHeight = 180;
-    }
-    else
-      lightHeight = 0;
-
-
-    ImGui::BeginChild("LightSettings", {390, lightHeight + 90});
-    ImGui::Text("Light Settings");
-    ImGui::PushItemWidth(60);
-    ImGui::InputInt("Active Lights", &lighting.activeLights, 1);
-    if (lighting.maxLights < lighting.activeLights)
-      lighting.activeLights = lighting.maxLights;
-    if (lighting.activeLights < 0)
-      lighting.activeLights = 0;
-    ImGui::SameLine();
-    ImGui::PushItemWidth(100);
-    ImGui::Combo("Lights", &currentLight, names.data(), lighting.activeLights);
-    ImGui::PushItemWidth(150);
-    currentLightType = light.type;
-
-    ImGui::Combo("Type", &currentLightType, types.data(), types.size());
-    light.type = currentLightType;
-
-    ImGui::PopItemWidth();
-
-    if (light.type != ltNone)
-    {
-      ImGui::BeginChild("Lights", {390, lightHeight});
-      ImGui::Text(name.c_str());
-      ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
-      ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
-      ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
-    }
-    if (light.type == ltSpotlight || light.type == ltDirectional)
-      ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
-    if (light.type == ltSpotlight || light.type == ltPoint)
-      ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
-    if (light.type == ltSpotlight)
-    {
-      ImGui::PushItemWidth(50);
-      ImGui::DragFloat("Outer Radius", &light.outerRadius, 0.005f, 0.0f, PI);
-      ImGui::SameLine();
-      ImGui::DragFloat("Inner Radius", &light.innerRadius, 0.005f, 0.0f, PI);
-      ImGui::DragFloat("Falloff Value", &light.falloffValue, 0.005f, 0.0f, 1.0f);
-      if (light.outerRadius > light.innerRadius)
+      //Light selection
+      //*********//
+      Light& light = lighting.lights.at(currentLight);
+      std::string name;
+      float lightHeight = 0;
+      if (light.type == ltDirectional)
       {
-        light.innerRadius = light.outerRadius;
+        name = "Directional Light";
+        lightHeight = 110;
       }
+      else if (light.type == ltPoint)
+      {
+        name = "Point Light";
+        lightHeight = 110;
+      }
+      else if (light.type == ltSpotlight) //spotlight
+      {
+        name = "Spot Light";
+        lightHeight = 180;
+      }
+      else
+        lightHeight = 0;
+
+
+      ImGui::BeginChild("LightSettings", { 390, lightHeight + 90 });
+      ImGui::Text("Light Settings");
+      ImGui::PushItemWidth(60);
+      ImGui::InputInt("Active Lights", &lighting.activeLights, 1);
+      if (lighting.maxLights < lighting.activeLights)
+        lighting.activeLights = lighting.maxLights;
+      if (lighting.activeLights < 0)
+        lighting.activeLights = 0;
+      ImGui::SameLine();
+      ImGui::PushItemWidth(100);
+      ImGui::Combo("Lights", &currentLight, names.data(), lighting.activeLights);
+      ImGui::PushItemWidth(150);
+      currentLightType = light.type;
+
+      ImGui::Combo("Type", &currentLightType, types.data(), types.size());
+      light.type = currentLightType;
 
       ImGui::PopItemWidth();
-    }
+
+      if (light.type != ltNone)
+      {
+        ImGui::BeginChild("Lights", { 390, lightHeight });
+        ImGui::Text(name.c_str());
+        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
+      }
+      if (light.type == ltSpotlight || light.type == ltDirectional)
+        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
+      if (light.type == ltSpotlight || light.type == ltPoint)
+        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
+      if (light.type == ltSpotlight)
+      {
+        ImGui::PushItemWidth(50);
+        ImGui::DragFloat("Outer Radius", &light.outerRadius, 0.005f, 0.0f, PI);
+        ImGui::SameLine();
+        ImGui::DragFloat("Inner Radius", &light.innerRadius, 0.005f, 0.0f, PI);
+        ImGui::DragFloat("Falloff Value", &light.falloffValue, 0.005f, 0.0f, 1.0f);
+        if (light.outerRadius > light.innerRadius)
+        {
+          light.innerRadius = light.outerRadius;
+        }
+
+        ImGui::PopItemWidth();
+      }
 
 
-    static unsigned i = 0;
-    //Toggle Lights on/off
-    if (light.type != ltNone)
+      static unsigned i = 0;
+      //Toggle Lights on/off
+      if (light.type != ltNone)
+        ImGui::EndChild();
+
+      ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
       ImGui::EndChild();
-
-    ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
-    ImGui::EndChild();
+    }
     //*********//
 
     buttonLeftDown = ImGui::ArrowButton("Left", ImGuiDir_Left);
@@ -426,8 +439,11 @@ void GUI::RenderFrame()
 
     ImGui::Text("Current GBuffer To Display");
     ImGui::Text("0 = View Pos, 1 = Normal, 2 = Diffuse");
-    ImGui::Text("3 = Specular, 4 = Ambient, 5 = Emissive");
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 5);
+    ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
+    ImGui::Text("5 = Post-Blur Shadow (RGB = z)");
+    ImGui::Text("6 = Moment Shadow Map");
+
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 6);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios
