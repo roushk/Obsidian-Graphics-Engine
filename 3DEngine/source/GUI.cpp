@@ -165,7 +165,6 @@ void GUI::RenderFrame()
 
 
 
-    static bool overwriteParams = true;
     ImGui::Checkbox("Overwrite Params", &overwriteParams);
 
     if (overwriteParams)
@@ -184,7 +183,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 0.6f, 0.8f}, {0.1f, 1.0f, 0.5f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 1.2f, 1.6f}, {0.1f, 1.0f, 0.5f});
         }
 
         break;
@@ -307,6 +306,12 @@ void GUI::RenderFrame()
     {
       ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
     }
+    ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
+    ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
+
+    ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
 
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
