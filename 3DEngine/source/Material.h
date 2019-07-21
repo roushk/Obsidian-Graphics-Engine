@@ -34,6 +34,7 @@ class MaterialReader
 {
 public:
   bool ReadMaterial(std::string filename);
+  bool ReadMaterialPNG(std::string filename);
   Material& GetMaterial(int location);
   unsigned MaxMaterials();
 private:

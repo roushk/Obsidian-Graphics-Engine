@@ -111,6 +111,12 @@ void Model::setup_mesh()
   // tex coords
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, texCoords)));
+  // tangent
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, tangent)));
+  // bitangent
+  glEnableVertexAttribArray(4);
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof Vertex, reinterpret_cast<void*>(offsetof(Vertex, bitangent)));
 
   glBindVertexArray(0); // so other commands don't accidentally mess up our vao
 }
@@ -120,15 +126,17 @@ Model ObjectReader::load_model(const std::string& path)
   Assimp::Importer importer;
   Model newModel;
   const auto scene = importer.ReadFile(path.c_str(),
-    /*aiProcessPreset_TargetRealtime_Quality | */
+    //aiProcessPreset_TargetRealtime_Quality |
     //aiProcess_OptimizeMeshes |
-    aiProcess_GenSmoothNormals |
+    aiProcess_GenSmoothNormals |   
+    //aiProcess_CalcTangentSpace |  //cant do that cause assimp is to stupid to understand
+    //that it needs to run the gen uv coords and smooth normals BEFORE it greates the tangent space 
+    //normals....
     //aiProcess_GenNormals |
     //aiProcess_JoinIdenticalVertices |
     aiProcess_GenUVCoords |
     aiProcess_SortByPType |
     aiProcess_PreTransformVertices);
-
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     std::cout << "couldn't load model from path: " << path << std::endl;
@@ -235,6 +243,11 @@ void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
     vert.normal.x = mesh->mNormals[i].x;
     vert.normal.y = mesh->mNormals[i].y;
     vert.normal.z = mesh->mNormals[i].z;
+    //if( mesh->HasTangentsAndBitangents())
+    //{
+
+      
+    //}
     
     if (vert.pos.x > maxSize.x)
       maxSize.x = vert.pos.x;
@@ -263,7 +276,7 @@ void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
     m.indices.push_back(face.mIndices[1]);
     m.indices.push_back(face.mIndices[2]);
   }
-
+  
 
   glm::vec3 center = (maxSize + minSize) / 2.0f;
   float scale = abs(minSize.x - maxSize.x);
@@ -315,6 +328,76 @@ void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
     glm::vec2 uv = uv_calc(vert);
     m.uvPlanar.push_back(uv);
   }
+
+  // calculate tangent and bitangent manually because assimp is failing
+  //after UV coords are calculated
+  std::vector<std::vector<vec3>> tangents(m.indices.size());
+  std::vector<std::vector<vec3>> bitangents(m.indices.size());
+
+  //calculate face's bitanget/tangent
+
+
+
+  for (unsigned i = 0; i < m.indices.size() - 2; i+= 3)
+  {
+    int index1 = m.indices[i];
+    int index2 = m.indices[i + 1];
+    int index3 = m.indices[i + 2];
+
+    vec3 pos1 = m.vertices[index1].pos;
+    vec3 pos2 = m.vertices[index2].pos;
+    vec3 pos3 = m.vertices[index3].pos;
+
+    vec2 uv1 = m.uvPlanar[index1];
+    vec2 uv2 = m.uvPlanar[index2];
+    vec2 uv3 = m.uvPlanar[index3];
+
+    glm::vec3 edge1 = pos2 - pos1;
+    glm::vec3 edge2 = pos3 - pos1;
+    glm::vec2 deltaUV1 = uv2 - uv1;
+    glm::vec2 deltaUV2 = uv3 - uv1;
+
+    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+    vec3 tangent;
+    vec3 bitangent;
+
+    tangent.x= f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+    tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+    tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+    tangents[index1].push_back(normalize(tangent));
+    tangents[index2].push_back(normalize(tangent));
+    tangents[index3].push_back(normalize(tangent));
+
+    //m.vertices[i + 1].tangent = normalize(m.vertices[i].tangent);
+    //m.vertices[i + 2].tangent = normalize(m.vertices[i].tangent);
+
+    bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+    bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+    bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+    bitangents[index1].push_back(normalize(bitangent));
+    bitangents[index2].push_back(normalize(bitangent));
+    bitangents[index3].push_back(normalize(bitangent));
+  }
+
+
+  for (unsigned i = 0; i < m.indices.size(); ++i)
+  {
+    int index = m.indices[i];
+    
+    vec3 tangent = vec3(0);
+    vec3 bitangent = vec3(0);
+
+    for(unsigned j = 0; j < tangents[index].size(); ++j)
+    {
+      tangent += tangents[index][j];
+      bitangent += bitangents[index][j];
+    }
+    m.vertices[index].tangent = normalize(tangent / float(tangents[index].size()));
+    m.vertices[index].bitangent = normalize(bitangent / float(bitangents[index].size()));
+
+  }
+
 
 }
 

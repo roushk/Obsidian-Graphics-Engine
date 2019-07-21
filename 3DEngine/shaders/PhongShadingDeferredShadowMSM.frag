@@ -58,9 +58,12 @@ uniform sampler2D gPositionMap; //position map.a = emi
 uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
-uniform sampler2D gAmbientMap;
+uniform sampler2D gTangentMap;
+uniform sampler2D gBiTangentMap;
 uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMap;
+uniform sampler2D normalMap;
+uniform sampler2D heightMap;
 
 in VS_OUT
 {
@@ -196,10 +199,29 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   return 1 - G;
 }
 
+mat3 createNormalMatrix(mat4 modelMatrix, vec3 tangent, vec3 modelNormal)
+{
+
+    /*
+    vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
+   vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+   vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+   mat3 TBN = mat3(T, B, N)*/
+
+  vec3 T = normalize(vec3(vec4(tangent, 0.0f)));
+  vec3 N = normalize(vec3(vec4(modelNormal, 0.0f)));
+  T = normalize(T - dot(T, N) * N);
+  vec3 B = cross(N, T);
+
+  return mat3(T, B, N);
+}
+
 
 void main()
 {
-  
+  mat3 TBN = createNormalMatrix(modelMatrix, tangent, modelNormal);
+
+
   vec3 clearcolor = vec3(0.0f);
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;

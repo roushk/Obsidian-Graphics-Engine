@@ -172,7 +172,6 @@ public:
   void ClearScreen();
   void CreateShaders();
 
-  void CreateBuffers();
 
   void LoadDiffuseForLight(Light& light, float scale = 1.0f);
   void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
@@ -194,7 +193,6 @@ public:
   
   void LoadScreenSize();
   void Update();
-  void BindModelBuffer();
   void UpdateCamera(float dt);
   void Draw(Model& object);
   void Draw(Wireframe& object);
@@ -254,6 +252,10 @@ public:
   void LoadObjectShader();
 
 
+  void LoadNormalAndHeight();
+  void BindNormalAndHeight();
+
+
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
   Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,0 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
@@ -306,7 +308,7 @@ public:
     GL_COLOR_ATTACHMENT4,
     GL_COLOR_ATTACHMENT5 };
   GLuint Gbuffer, GBufferDepthBuffer;
-  GLuint GBufferTexture[6];
+  GLuint GBufferTexture[7];
   //material settings in GBuffer
   //USING
   //position 12 | emissive r  4
@@ -334,8 +336,10 @@ public:
 
   glm::vec2 windowPosition{ 0,0 };  //window position
 
-
-
+  //normal map
+  GLuint normalMap;
+  GLuint heightMap;
+  
 
 
   int windowX = 0;
@@ -354,15 +358,16 @@ private:
   
   
   GLfloat theta = 0.0;
-
-  GLuint vertexbuffers[5];
+ 
+  //VBO setup 
   /*
-    0 is verts
-    1 is vert normals
-    2 is faces
-    3 is face normals
-    4 is uv's
-   */
+   0 is verts
+   1 is vert normals
+   2 is texCoords
+   3 is tangent
+   4 is bitangent
+  */
+
 
   GLenum err;
 

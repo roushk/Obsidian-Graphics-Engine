@@ -435,10 +435,11 @@ void GUI::RenderFrame()
     ImGui::Text("Current GBuffer To Display");
     ImGui::Text("0 = View Pos, 1 = Normal, 2 = Diffuse");
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
-    ImGui::Text("5 = Post-Blur Shadow (RGB = z)");
-    ImGui::Text("6 = Moment Shadow Map");
+    ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
+    ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
+    ImGui::Text("7 = Tangent Map, 8 = Bitangent Map");
 
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 6);
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 8);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios

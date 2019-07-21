@@ -19,6 +19,8 @@ in VS_OUT
   vec4 position;
   vec4 normal;
   vec2 texCoords;
+  vec3 tangent;
+  vec3 bitangent;
 } fs_in;
 
 //corrolates DIRECTLY to the COLOR_ATTACHMENT
@@ -26,9 +28,10 @@ layout (location = 0) out vec4 ViewPosOut;  //COLOR_ATTACH 0 + emissive x
 layout (location = 1) out vec4 NormalOut;   //COLOR_ATTACH 1 + emissive y
 layout (location = 2) out vec4 DiffuseOut;  //COLOR_ATTACH 2 + emissive z
 layout (location = 3) out vec4 SpecularOut; //COLOR_ATTACH 3
-layout (location = 4) out vec3 AmbientOut;  //COLOR_ATTACH 4
+layout (location = 4) out vec3 tangentOut;  //COLOR_ATTACH 4
+layout (location = 5) out vec3 bitangentOut;  //COLOR_ATTACH 4
 
-layout (location = 5) out vec3 DepthOut;    //DEPTH_ATTACH 1
+layout (location = 6) out vec3 DepthOut;    //DEPTH_ATTACH 1
 
 uniform sampler2D Kdiffuse;
 uniform sampler2D Kspecular;
@@ -45,6 +48,9 @@ void main()
 
   NormalOut.rgb = normalize(fs_in.normal.xyz);
 
+  tangentOut = normalize(fs_in.tangent);
+  bitangentOut = normalize(fs_in.bitangent);
+  
   //AmbientOut.rgb = Kambient;
 
   //ViewPosOut.a = Kemissive.r;
