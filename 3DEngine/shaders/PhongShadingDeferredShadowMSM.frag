@@ -208,9 +208,9 @@ mat3 createNormalMatrix(mat4 modelMatrix, vec3 tangent, vec3 modelNormal)
    vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
    mat3 TBN = mat3(T, B, N)*/
 
-  vec3 T = normalize(vec3(vec4(tangent, 0.0f)));
-  vec3 N = normalize(vec3(vec4(modelNormal, 0.0f)));
-  T = normalize(T - dot(T, N) * N);
+  vec3 T = normalize(tangent);
+  vec3 N = normalize(modelNormal);
+ // T = normalize(T - dot(T, N) * N);
   vec3 B = cross(N, T);
 
   return mat3(T, B, N);
@@ -219,12 +219,19 @@ mat3 createNormalMatrix(mat4 modelMatrix, vec3 tangent, vec3 modelNormal)
 
 void main()
 {
-  mat3 TBN = createNormalMatrix(modelMatrix, tangent, modelNormal);
 
-
+  vec3 TEST = texture(normalMap, fs_in.texCoords).rgb;
   vec3 clearcolor = vec3(0.0f);
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
+  vec3 tangent = texture(gTangentMap, fs_in.texCoords).xyz;
+  
+  mat3 TBN = createNormalMatrix(modelMatrix, tangent, normal);
+
+  vec3 norm = texture(normalMap, fs_in.texCoords).rgb;
+  norm = normalize(norm * 2.0f - 1.0f);
+  norm = normalize(TBN * norm);
+
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
 
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
@@ -352,6 +359,8 @@ void main()
   //color = finalColor;
   
   color = Ifinal;
+  //color = norm;
+color = TEST;
 }
 
 //In fragment shader:

@@ -1136,7 +1136,7 @@ void Render::LoadNormalAndHeight()
 
   heightMap = SOIL_load_OGL_texture("materials/DisplacementMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
-  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -1147,12 +1147,12 @@ void Render::LoadNormalAndHeight()
 void Render::BindNormalAndHeight()
 {
   glActiveTexture(GL_TEXTURE8);
-  glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
   glUniform1i(glGetUniformLocation(programID, "normalMap"), 8);
   glBindSampler(GL_TEXTURE8, glGetUniformLocation(programID, "normalMap"));
 
   glActiveTexture(GL_TEXTURE9);
-  glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
   glUniform1i(glGetUniformLocation(programID, "heightMap"), 9);
   glBindSampler(GL_TEXTURE9, glGetUniformLocation(programID, "heightMap"));
 };
