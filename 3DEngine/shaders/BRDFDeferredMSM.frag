@@ -484,13 +484,12 @@ void main()
   float S = (G.far - cameraDist) / (G.far - G.near);
 
   //fog equation
-  vec3 Ifinal = finalColor;//S * finalColor + (1.0f - S) * G.FogColor.rgb;
+  //vec3 Ifinal = finalColor;//S * finalColor + (1.0f - S) * G.FogColor.rgb;
   
 
   // VS outputs - position and color
   //color = finalColor;
-  
-  color = sRGBtoLinear(Ifinal, exposure, contrast);
+  color = sRGBtoLinear(finalColor, exposure, contrast);
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;
