@@ -321,6 +321,9 @@ public:
   float max_depth = 10.0f;
   float scalarLevel = 1.0f;
 
+  float exposure = 1.0f;
+  float contrast = 1.0f;
+
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
   float shadowScale = 2.0f; //shadow resolution

@@ -789,6 +789,8 @@ void Render::LoadMaxDepth()
 {
   glUniform1f(glGetUniformLocation(programID, "max_depth"), max_depth);
   glUniform1f(glGetUniformLocation(programID, "scalarLevel"), scalarLevel);
+  glUniform1f(glGetUniformLocation(programID, "exposure"), exposure);
+  glUniform1f(glGetUniformLocation(programID, "contrast"), contrast);
 
 }
 void Render::LoadRoughness(float roughness)

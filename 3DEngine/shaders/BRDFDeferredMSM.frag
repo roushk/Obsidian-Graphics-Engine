@@ -103,6 +103,9 @@ uniform float materialAlpha;
 
 uniform float max_depth;
 uniform float scalarLevel;
+uniform float exposure;
+uniform float contrast;
+
 const int totalSamples = 20;
 
 
@@ -217,6 +220,16 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   return 1 - G;
 }
 
+//input = input color, exposure = range 0.1 to 10000, contrast is additional
+vec3 sRGBtoLinear(vec3 input, float exposure, float contrast)
+{
+  return pow(( (exposure * input) / (exposure * input + vec3(1,1,1)) ), vec3(contrast/2.2f));
+}
+
+vec3 LineartosRGB(vec3 input, float contrast)
+{
+  return pow(( (exposure * input) / (exposure * input + vec3(1,1,1)) ), vec3(1.0f/(contrast/2.2f)));
+}
 
 void main()
 {
@@ -477,7 +490,7 @@ void main()
   // VS outputs - position and color
   //color = finalColor;
   
-  color = Ifinal;
+  color = sRGBtoLinear(Ifinal, exposure, contrast);
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;
