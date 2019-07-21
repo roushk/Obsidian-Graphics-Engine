@@ -48,6 +48,9 @@ struct LightArray
   float falloffValue;
 };
 
+
+
+  //(1) choose pairs of uniformly distributed random numbers very carefully
 uniform HammersleyBlock 
 {
   float N;
@@ -214,29 +217,6 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   return 1 - G;
 }
 
-vec3 ImportanceSampleGGX(vec2 Xi, vec3 N, float roughness)
-{
-  //roughness = min(1,roughness);
-  float a = roughness*roughness;
-
-  float phi = 2.0 * PI * Xi.x;
-  float cosTheta = sqrt((1.0 - Xi.y) / (1.0 + (a*a - 1.0) * Xi.y));
-  float sinTheta = sqrt(1.0 - cosTheta*cosTheta);
-
-  // from spherical coordinates to cartesian coordinates
-  vec3 H;
-  H.x = cos(phi) * sinTheta;
-  H.y = sin(phi) * sinTheta;
-  H.z = cosTheta;
-
-  // from tangent-space vector to world-space sample vector
-  vec3 up        = abs(N.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-  vec3 tangent   = normalize(cross(up, N));
-  vec3 bitangent = cross(N, tangent);
-
-  vec3 sampleVec = tangent * H.x + bitangent * H.y + N * H.z;
-  return normalize(sampleVec);
-} 
 
 void main()
 {
@@ -271,7 +251,7 @@ void main()
   // Global
   vec3 finalColor = vec3(0,0,0);  //G.Kglobal * G.Iglobal.rgb + Iemissive;
 
-   vec3 TEST_VALUE = vec3(0);
+  vec3 TEST_VALUE = vec3(0);
   //*************************************************************************************************//
   // IBL Calculations
   //had to flip y and z because I use a Y up  
@@ -283,64 +263,83 @@ void main()
   //color = vec3(1,0,0);
   vec2 skewDistrib[totalSamples];
   vec3 skewDirVec[totalSamples];
+
+  //(2) skew the points to match the distribution
   for(uint i = 0; i < totalSamples * 2; ++i)
   {
     skewDistrib[i / 2].x = hammersley[i];
-    skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (materialAlpha + 1.0f))))/PI;
+    skewDistrib[i / 2].y = acos( pow(hammersley[i + 1], (1.0f / (materialAlpha + 1.0f)) ))/PI;
   }
 
   for(uint i = 0; i < totalSamples; ++i)
   {
     float u = skewDistrib[i].x;
     float v = skewDistrib[i].y;
+    //(3) form the direction vector L for that pair using EQN 4
     skewDirVec[i].x = cos(2 * PI * (0.5 - u)) * sin(PI * v);
     skewDirVec[i].y = sin(2 * PI * (0.5 - u)) * sin(PI * v);
     skewDirVec[i].z = cos(PI * v);
+    skewDirVec[i] = normalize(skewDirVec[i]);
 
   }
   float totalWeight = 0;
 
+  //(4) Form a rotation that takes the Z axis to the reflection direction R = 2 * (N*V)N - V
   vec3 R = (2 * dot(vertexNormal, V) * vertexNormal) - V;
-  vec3 A = normalize(cross(vec3(0,1,0),R)); //tangent 
-    A = normalize(vec3(-R.y, R.x, 0));
+  vec3 A = normalize(cross(vec3(0,0,1),R)); //tangent 
+  //A = normalize(vec3(-R.y, R.x, 0));
   vec3 B = normalize(cross(R,A));           //bitangent
-  
   vec3 IBL = vec3(0);
-  
+
+
+  //omega_k = normal + random variation
+  //Li = light brightnesss
+  //cos(theta) = N * L
   for(uint i = 0; i < totalSamples; ++i)
   {
-    vec3 wK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
+    //wk = omegak
+    //omega_k = normalize(L.x * A + L.y * B + L.z * R);
+    vec3 omegaK = normalize(skewDirVec[i].x * A + skewDirVec[i].y * B + skewDirVec[i].z * R);
 
-    vec2 uv_IBL = vec2((0.5f - ( atan(wK.z, wK.x) / ( 2.0f * PI))), acos(wK.y) / PI);
+    //get UV coordinates using eqn (4.a) for the specular map
+    vec2 uv_IBL = vec2((0.5f - ( atan(omegaK.z, omegaK.x) / ( 2.0f * PI))), acos(omegaK.y) / PI);
 
-    vec3 H_IBL = normalize(wK + V);
+    //calculate H as the halfway between light vector (omega_k) and the view vector V
+    vec3 H_IBL = normalize(omegaK + V);
 
+    //calculate D_IBl as
     float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
-    float level =    ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (0.5f * scalarLevel *log2(  DH_IBL)) );  //2048.0f*1024.0f
-    vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
-    specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
-    //h o = halfway between light and view
-    //p(wK) = D(H)
-    vec3 D_IBL = specular;  // * ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
-    TEST_VALUE += D_IBL;    //vec3(DH_IBL / 10.0f);
     
-    //F(wK, H)
-    vec3 F_IBL = Kspecular + ((1 - Kspecular) * pow((1 - dot(wK,H_IBL)),5) );
-    
-    //G(wK, V, H)
-    float G_IBL = 1.0f / ( dot(wK,H_IBL) * dot(wK,H_IBL) ); 
-    
-    //float NdotL_IBL = dot(wK, skewDirVec[i]);
+    //for each omega_k calculated by each light Li(omega_k)
+    //float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2( 0.5f * 2.0f DH_IBL)) );  //2048.0f*1024.0f
 
-    vec3 BRDF_IBL = ((D_IBL * F_IBL * G_IBL) / (4.0f)); //* NdotL_IBL;
+    float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2(  DH_IBL)) );  //2048.0f*1024.0f
+    
+    //vec3 specular = texture(skydomeTexture, uv_IBL).rgb;
+    vec3 specular = textureLod(skydomeTexture, uv_IBL, level).rgb;
+    //if(materialAlpha > 6000)
+    //  specular = texture(skydomeTexture, uv).rgb;
+
+    
+    vec3 F_IBL = Kspecular + ((1 - Kspecular) * pow((1 - dot(omegaK,H_IBL)),5) );
+    
+    //G(omegaK, V, H)
+    float G_IBL = 1.0f;//1.0f / ( dot(omegaK,H_IBL) * dot(omegaK,H_IBL) ); 
+    
+    float NdotL_IBL = dot(omegaK, vertexNormal);//skewDirVec[i]);
+
+    vec3 BRDF_IBL = ((F_IBL * G_IBL) / (4.0f)) * specular * NdotL_IBL;
 
     //totalWeight += NdotL_IBL;
     IBL += BRDF_IBL;
     //TEST_VALUE = vec3(level / 100);
   }
-  //TEST_VALUE;// /= totalWeight;
+  //TEST_VALUE /= totalWeight;
   IBL /= totalSamples;
-  IBL += (KdiffuseColor / PI ) * skydomeTexIRR;
+
+
+  vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
+  IBL += IBLDiffuse;
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
 
 
@@ -479,6 +478,8 @@ void main()
   //color = finalColor;
   
   color = Ifinal;
+  //color = IBL;
+  //color = TEST_VALUE;
   //color = skydomeTexIRR;
   //color = skydomeTex;
 }
