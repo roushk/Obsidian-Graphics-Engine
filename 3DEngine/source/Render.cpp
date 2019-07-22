@@ -63,11 +63,23 @@ Render::~Render()
   SDL_DestroyWindow(gWindow);
 }
 
+//also loads specular map
 void Render::GenGBuffer()
 {
   glGenFramebuffers(1, &Gbuffer);
   glGenTextures(7, GBufferTexture);
   glGenRenderbuffers(1, &GBufferDepthBuffer);
+
+
+  specularMaterialID = LoadTextureInto(std::string("materials/DiffuseMap.png"));
+
+
+  for(auto& texture: textureMaps)
+  {
+    texture.diffuseID = LoadTextureInto(texture.diffuse);
+    texture.normalID = LoadTextureInto(texture.normal);
+    texture.heightID = LoadTextureInto(texture.height);
+  }
 }
 
 std::string Render::GetSetting()
@@ -104,60 +116,9 @@ void Render::SetModelOffset(vec3 pos, float scale_)
   modelTransform = translate(pos) * scale(glm::mat4(1.0f), vec3(scale_));
 }
 
-void Render::LoadMaterial(Material materialSpec, Material materialDiff)
+void Render::LoadMaterial()
 {
-  glUseProgram(programID);
-
-
-
-    diffuseMaterialID = SOIL_load_OGL_texture("materials/wood.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
-  glBindTexture(GL_TEXTURE_2D, normalMap);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-  specularMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
-  glBindTexture(GL_TEXTURE_2D, heightMap);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-  /*
-  glGenTextures(1, &diffuseMaterialID);
-  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
-  //pixels are in RGB format as floats
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, materialDiff.width,
-               materialDiff.height, 0, GL_RGB, GL_FLOAT, materialDiff.pixels.data());
-
-
-  glGenTextures(1, &specularMaterialID);
-  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
-  //pixels are in RGB format as floats
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, materialSpec.width,
-               materialSpec.height, 0, GL_RGB, GL_FLOAT, materialSpec.pixels.data());
-  //glEnable(GL_TEXTURE_2D);
-  //glDisable(GL_TEXTURE_2D);
-  //glTexGenf()
-  */
+  diffuseMaterialID = textureMaps[pattern::get<GUI>().currentTextureMaps].diffuseID;
 }
 
 void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
@@ -1367,26 +1328,32 @@ void Render::LoadObjectShader()
   SetCurrentShader(objectShader);
 }
 
+GLuint Render::LoadTextureInto(std::string name)
+{
+
+  GLuint id;
+  id = SOIL_load_OGL_texture(name.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, id);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  
+  if (0 == id)
+  {
+    printf("SOIL loading error: '%s'\n", SOIL_last_result());
+  }
+  return id;
+}
+
 void Render::LoadNormalAndHeight()
 {
 
-  normalMap = SOIL_load_OGL_texture("materials/toy_box_normal.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
-  glBindTexture(GL_TEXTURE_2D, normalMap);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  normalMap = textureMaps[pattern::get<GUI>().currentTextureMaps].normalID;
+  heightMap = textureMaps[pattern::get<GUI>().currentTextureMaps].heightID;
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-  heightMap = SOIL_load_OGL_texture("materials/toy_box_height.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
-  glBindTexture(GL_TEXTURE_2D, heightMap);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Render::BindNormalAndHeight()

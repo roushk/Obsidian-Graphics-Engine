@@ -133,7 +133,7 @@ public:
   void SetModelOffsetView(const Light& light);
 
   void SetModelOffset(vec3 pos, float scale_ = 1.0f);
-  void LoadMaterial(Material materialSpec, Material materialDiff);
+  void LoadMaterial();
   void LoadSkybox(std::vector<std::string>& skyboxNames);
 
   void LoadSkydome();
@@ -275,6 +275,8 @@ public:
   void LoadMaxDepth();
   void BufferToneMapping();
 
+  GLuint LoadTextureInto(std::string name);
+
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
   Camera movingCamera;
@@ -327,8 +329,8 @@ public:
   float max_depth = 10.0f;
   float scalarLevel = 1.0f;
 
-  float exposure = 2.0f;
-  float contrast = 1.0f;
+  float exposure = 500.0f;
+  float contrast = 40.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
@@ -374,6 +376,35 @@ public:
   GLuint normalMap;
   GLuint heightMap;
   
+  struct MapsCombo
+  {
+    MapsCombo(std::string n, std::string h, std::string d)
+      :normal(n), height(h), diffuse(d) {};
+
+    std::string normal;
+    std::string height;
+    std::string diffuse;
+    GLuint normalID, heightID, diffuseID;
+  };
+
+
+  std::vector<MapsCombo> textureMaps
+  {
+    {"materials/toy_box_normal.png", "materials/toy_box_height.png","materials/wood.png"},
+    {"materials/Wall_Stone_010_normal.png", "materials/Wall_Stone_010_height.png","materials/Wall_Stone_010_basecolor.png"},
+    {"materials/Rock_033_normal.png", "materials/Rock_033_height.png","materials/Rock_033_baseColor.png"},
+    {"materials/Pebbles_009_Normal.png", "materials/Pebbles_009_Height.png","materials/Pebbles_009_Base_Color.png"},
+    {"materials/Metal_Plate_022a_Normal.png", "materials/Metal_Plate_022a_Height.png","materials/Metal_Plate_022a_Base_Color.png"},
+    
+    {"materials/TexturesCom_Rock_Lava2_1K_normal.png", "materials/TexturesCom_Rock_Lava2_1K_height.png","materials/TexturesCom_Rock_Lava2_1K_albedo.png"},
+    {"materials/TexturesCom_Rock_Lava_1K_normal.png", "materials/TexturesCom_Rock_Lava_1K_height.png","materials/TexturesCom_Rock_Lava_1K_albedo.png"},
+    {"materials/Metal_Grill_005a_Normal.png", "materials/Metal_Grill_005a_Height.png","materials/Metal_Grill_005a_Base_Color.png"},
+    {"materials/Brick_Wall_012_NORM.png", "materials/Brick_Wall_012_DISP.png","materials/Brick_Wall_012_COLOR.png"},
+
+
+    //{"materials/normal.png", "materials/height.png","materials/diffuse.png"},
+
+  };
 
   float materialRoughness = 50.0f;
 

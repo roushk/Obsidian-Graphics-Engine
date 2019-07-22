@@ -184,7 +184,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {10.0f, 10.0f, 10.0f}, {2.0f, 2.0f, 2.0f});
         }
 
         break;
@@ -300,7 +300,16 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
-    
+
+    int oldcurrentTextureMaps = currentTextureMaps;
+    ImGui::SliderInt("Current Texture", &currentTextureMaps, 0, pattern::get<Render>().textureMaps.size() - 1);
+
+    if(currentTextureMaps != oldcurrentTextureMaps)
+    {
+      pattern::get<Render>().LoadNormalAndHeight();
+      pattern::get<Render>().LoadMaterial();
+    }
+
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
 
@@ -331,7 +340,7 @@ void GUI::RenderFrame()
     ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
     ImGui::PushItemWidth(200);
     //ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
-    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
+    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.000001f, 0, 0.8f,"%.6f");
     ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
     ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
     ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);

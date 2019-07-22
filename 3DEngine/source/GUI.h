@@ -31,6 +31,7 @@ public:
   static int currentCam;
   static int currentFBO;
   static int currentGJK;
+  static int currentTextureMaps;
 
   static bool debugDrawMode;
   static bool autoCameraRotation;
