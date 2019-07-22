@@ -977,12 +977,35 @@ void Render::Update()
 
 void Render::UpdateCamera(float dt)
 {
-  vec3 pos{0, 1, 0}; //rotate around z/origin vector
+  //vec3 pos{0, 1, 0}; //rotate around Y axis
+  vec3 pos{ 0, 0, 1 }; //rotate around Z axis
 
-  eyePos = rotate(rotateRate * dt, pos) * eyePos;
-  lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  if (GUI::autoCameraRotation && updateCameraEyePosOnce == false)
+  {
+    eyePos = vec4(currentCamera.eye(), 1);
+    updateCameraEyePosOnce = true;
+  }
+
+  if(GUI::rotateCamera)
+  {
+    eyePos = rotate(rotateRate * dt, pos) * eyePos;
+  }
+
+  //if(GUI::autoCameraRotation && updateCameraEyePosOnce)
+  //{
+  //}
+
+  if (!GUI::autoCameraRotation && updateCameraEyePosOnce == true)
+  {
+    updateCameraEyePosOnce = false;
+    currentCamera.eye_point = eyePos;
+  }
+  //lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  
+  
 
   inverseCamRotate = rotate(rotateRate * dt, pos);
+  
 }
 
 void Render::Draw(Wireframe& object)
@@ -996,6 +1019,17 @@ void Render::Draw(Wireframe& object)
     projectionMatrix = cameraToNDC(currentCamera);
     viewMatrix = worldToCamera(currentCamera);
     cameraChanged = false;
+  }
+
+  if(GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(1.0f, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    vec3 backVec = lookAt - eyePos;
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(eyePos) + -backVec, vec3(0,1,0));
+
   }
   //if (flipX == true)
   //  projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
@@ -1016,6 +1050,8 @@ void Render::Draw(Model& object)
 {
   glUseProgram(programID);
 
+
+  
   glUniform3f(glGetUniformLocation(programID, "camera"),
     currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
@@ -1028,6 +1064,18 @@ void Render::Draw(Model& object)
 
   viewMatrix = worldToCamera(currentCamera);
   //cameraChanged = false;
+
+  if (GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(currentCamera.zoomScale, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    //vec3 backVec = normalize(lookAt - eyePos);
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(lookAt), vec3(0, 1, 0));
+    glUniform3f(glGetUniformLocation(programID, "camera"),
+      eyePos.x, eyePos.y, eyePos.z);
+  }
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
     glm::value_ptr(shadowMatrix));

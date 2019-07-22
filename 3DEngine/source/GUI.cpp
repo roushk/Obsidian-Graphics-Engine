@@ -184,7 +184,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f});
         }
 
         break;
@@ -300,9 +300,19 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
+    ImGui::PushItemWidth(200);
     ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
+    ImGui::PopItemWidth();
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
-    ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
+    ImGui::Checkbox("Automatic Camera", &autoCameraRotation);
+    if(autoCameraRotation)
+    {
+      ImGui::Indent(10.0f);
+      ImGui::Checkbox("Camera Rotation", &rotateCamera);
+      ImGui::Unindent(10.0f);
+
+    }
+
     ImGui::Checkbox("Normal Mapping", &NormalMapping);
     if(NormalMapping)
     {
@@ -424,6 +434,7 @@ void GUI::RenderFrame()
         ImGui::EndChild();
 
       ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
+
       ImGui::EndChild();
     }
     //*********//

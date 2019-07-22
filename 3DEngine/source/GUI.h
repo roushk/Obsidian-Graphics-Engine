@@ -33,7 +33,8 @@ public:
   static int currentGJK;
 
   static bool debugDrawMode;
-  static bool copyDepth;
+  static bool autoCameraRotation;
+  static bool rotateCamera;
   static bool showLightSpheres;
   static bool MSMShadow;
   static bool EnableLocalLights;

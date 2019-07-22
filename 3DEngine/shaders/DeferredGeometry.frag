@@ -169,7 +169,10 @@ void main()
     float newHeight = height * parallaxScale + b;
 
     //new texture coordinate is used to index into a regular texture map and any other maps applied to the surface
+    //Tn = T0 + (Hxb * Vx,y / Vz)
     vec2 newTexCoords = startingTexCoord + (newHeight * (view.xy / view.z));
+    //vec2 newTexCoords = startingTexCoord + (newHeight * (view.xy));
+
     //vec2 texCoords = ParallaxMapping(fs_in.texCoords,  viewDir);
 
     //dont change the normal map till in the deferred shader

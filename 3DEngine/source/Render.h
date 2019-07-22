@@ -255,9 +255,12 @@ public:
   void LoadNormalAndHeight();
   void BindNormalAndHeight();
 
+  //used to update the camera eye pos once when rotating the camera
+  bool updateCameraEyePosOnce = false;
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
+  Camera movingCamera;
   Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,0 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
   Camera cameras[6]
   {
@@ -348,8 +351,9 @@ public:
 private:
   //objectPos is used for the eye point of the reflection cameras
   vec3 objectPos;
-  vec4 eyePos{0, 0, 2, 0};
-  vec4 lookAt{0, 0, -1, 0 };
+  vec4 eyePos{0, 2, 5, 1};
+  vec4 lookAt{0, 0.0f, 0, 1};
+ 
 
   int currentShader = 0;
   GLuint programIDs[ssMaxShaders];
