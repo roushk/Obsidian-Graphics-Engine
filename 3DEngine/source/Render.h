@@ -38,6 +38,7 @@ inline void GetError()
   ///////////////////////////////////////////////////
 }
 
+
 enum shaderSetting
 {
   ssReflectionMap,
@@ -59,9 +60,10 @@ enum shaderSetting
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
   ssPhongShadingDeferredShadowMSM,
-
+  ssBRDDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
+  ssSkydome,
   ssMaxShaders
 };
 
@@ -72,11 +74,12 @@ enum renderSetting
   rsVertNormal
 };
 
-enum BindingPoint
+enum BindingPoint //UBO
 {
   bpGlobal,
   bpLights,
-  bpShadowblur
+  bpShadowblur,
+  bpHammersley
 };
 
 enum UVModel
@@ -133,6 +136,8 @@ public:
   void LoadMaterial(Material materialSpec, Material materialDiff);
   void LoadSkybox(std::vector<std::string>& skyboxNames);
 
+  void LoadSkydome();
+  void BindSkydome();
   //Gbuffers
   void GenGBuffer();  //also gens shadow buffer
   void BindGBufferTextures();
@@ -176,6 +181,7 @@ public:
   void LoadDiffuseForLight(Light& light, float scale = 1.0f);
   void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
 
+  void LoadRoughness(float roughness);
   void SetCurrentShader(int shader);
 
   //loads data for every light as well as data for the global scene
@@ -202,6 +208,8 @@ public:
   void SetTitle(std::string object);
   void DrawShadow(const Model& object, const Light& light);
 
+
+  GLuint LoadHDRimage(std::string filename, bool irr = false);
   /*
   void TakePicOfFBO(int i)
   {
@@ -233,9 +241,14 @@ public:
 
 
   GLuint skyboxTextureID[6];  //texture ID's for the skybox
-
   GLuint specularMaterialID;
   GLuint diffuseMaterialID;
+
+  //skydome
+  GLuint skydomeID[13];
+  GLuint skydomeIDIRR[13];
+
+
   int currentUVModel = 0;
   unsigned setting = rsNone;
 
@@ -248,8 +261,9 @@ public:
   void SetCurrentCamera(int cam);
 
   void SetObjectShader(int shader);
-
+  
   void LoadObjectShader();
+  void HammersleyCreateData();
 
 
   void LoadNormalAndHeight();
@@ -257,6 +271,9 @@ public:
 
   //used to update the camera eye pos once when rotating the camera
   bool updateCameraEyePosOnce = false;
+  void HammersleyLoadData();
+  void LoadMaxDepth();
+  void BufferToneMapping();
 
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
@@ -294,10 +311,24 @@ public:
   GLuint shadowBlurUBOHandle[1];
 
 
+  GLuint HammersleyUBOHandle[1];
+  static const int HammersleyConst = 20;  //samples count
+
+  struct HammersleyBlock {
+    float N = HammersleyConst;
+    float hammersley[2 * HammersleyConst];
+  };
+  HammersleyBlock hammersleyBlock;
+
+
   static const int blurValue = 20;
   float weights[blurValue * 2 + 1];
 
+  float max_depth = 10.0f;
+  float scalarLevel = 1.0f;
 
+  float exposure = 2.0f;
+  float contrast = 1.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
@@ -344,6 +375,8 @@ public:
   GLuint heightMap;
   
 
+  float materialRoughness = 1.0f;
+
 
   int windowX = 0;
   int windowY = 0;
@@ -389,7 +422,7 @@ private:
   vec3 ambientLight = vec3(0, 0, 0);
 
   GLuint uboHandle[2];
-  GLubyte* uboBuffer[2];
+  GLubyte* uboBuffer[2] = { NULL };
 
   
 

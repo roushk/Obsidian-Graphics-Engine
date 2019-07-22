@@ -563,6 +563,7 @@ void ObjectReader::loadMultiple(const std::string& filename)
   } while (findPos != std::string::npos && findPos != lastPos);
 
   //load objects into loader
+
   for (auto& objName : objects)
   {
     load(objName);

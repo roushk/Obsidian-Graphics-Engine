@@ -183,7 +183,7 @@ class SceneLighting
    
     //float att = min(1.0f/(G.AttParam.x + G.AttParam.y * dL + G.AttParam.z * dL * dL), 1.0f);
     //x = constant, y = linear, z = quadratic
-    vec4 AttenParam = { 1.0f,0.7f,0.1f, 1.8f};  //c1 = x, c2 = y, c3 = z
+    vec4 AttenParam = { 0.0f,0.0f,0.0f, 1.8f};  //c1 = x, c2 = y, c3 = z
     vec4 FogColor = { 0,0,0 , 1 };
     vec4 Iglobal = { 0,0,0 , 1 };
     float Kglobal = 0;

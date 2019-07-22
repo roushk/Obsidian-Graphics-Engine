@@ -54,6 +54,9 @@
     <Filter Include="Source Files\Render">
       <UniqueIdentifier>{71bbd237-d766-49d8-8cd2-1203f156dc6d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\RGBE">
+      <UniqueIdentifier>{3a20d37f-e143-4ecb-b3e7-cb520f1f6031}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\glm\detail\glm.cpp">
@@ -214,6 +217,9 @@
     </ClCompile>
     <ClCompile Include="source\imgui\imgui_impl_opengl3.cpp">
       <Filter>Libraries\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="source\rgbe.cpp">
+      <Filter>Source Files\RGBE</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -2094,6 +2100,9 @@
     </ClInclude>
     <ClInclude Include="source\Remap.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="source\rgbe.h">
+      <Filter>Source Files\RGBE</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

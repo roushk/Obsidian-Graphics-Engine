@@ -41,6 +41,8 @@ public:
   static bool ParallaxMapping;
   static bool NormalMapping;
   static float ParallaxScale;
+  static bool overwriteParams;
+
 private:
   SceneLighting& lighting;
   ObjectReader& reader;
