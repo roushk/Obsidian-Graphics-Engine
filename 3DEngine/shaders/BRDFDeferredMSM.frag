@@ -269,7 +269,9 @@ void main()
   // IBL Calculations
   //had to flip y and z because I use a Y up  
   vec2 uv = vec2((0.5f - ( atan(vertexNormal.z, vertexNormal.x) / ( 2.0f * PI))), acos(vertexNormal.y) / PI);
-
+  //uv.x = min(1.0f,max(0.0f, uv.x));
+  //uv.y = min(1.0f,max(0.0f, uv.y));
+  
   vec3 skydomeTex = texture(skydomeTexture, uv).rgb;
   vec3 skydomeTexIRR = texture(skydomeIRR, uv).rgb;
 
@@ -321,7 +323,7 @@ void main()
     vec3 H_IBL = normalize(omegaK + V);
 
     //calculate D_IBl as
-    float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H_IBL), materialAlpha));
+    float DH_IBL = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(max(dot(vertexNormal,H_IBL), 0), materialAlpha));
     
     //for each omega_k calculated by each light Li(omega_k)
     //float level = 1.0f + ( (0.5f * log2(2048.0f*1024.0f / totalSamples)) - (log2( 0.5f * 2.0f DH_IBL)) );  //2048.0f*1024.0f
@@ -339,7 +341,7 @@ void main()
     //G(omegaK, V, H)
     float G_IBL = 1.0f;//1.0f / ( dot(omegaK,H_IBL) * dot(omegaK,H_IBL) ); 
     
-    float NdotL_IBL = dot(omegaK, vertexNormal);//skewDirVec[i]);
+    float NdotL_IBL = max(dot(omegaK, vertexNormal),0);//skewDirVec[i]);
 
     vec3 BRDF_IBL = ((F_IBL * G_IBL) / (4.0f)) * specular * NdotL_IBL;
 
@@ -443,7 +445,7 @@ void main()
     //D(H) = ( (alpha  + 2) / (2*PI) ) * (dot(N,H) ^ alpha)
 
     //float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H), materialAlpha));
-    float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(dot(vertexNormal,H), materialAlpha));
+    float D = ((materialAlpha + 2.0f) / (2.0f*PI)) * (pow(max(dot(vertexNormal,H),0), materialAlpha));
 
     //Frensel Term F
     //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
@@ -490,6 +492,7 @@ void main()
   // VS outputs - position and color
   //color = finalColor;
   color = sRGBtoLinear(finalColor, exposure, contrast);
+  
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;

@@ -303,6 +303,8 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
     ImGui::PopItemWidth();
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
+    ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
+
     ImGui::Checkbox("Automatic Camera", &autoCameraRotation);
     if(autoCameraRotation)
     {

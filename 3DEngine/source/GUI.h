@@ -42,6 +42,7 @@ public:
   static bool NormalMapping;
   static float ParallaxScale;
   static bool overwriteParams;
+  static bool BRDF_IBL;
 
 private:
   SceneLighting& lighting;

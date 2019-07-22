@@ -106,7 +106,7 @@ void main()
   DiffuseOut.rgb = texture(Kdiffuse, fs_in.texCoords).rgb;
   SpecularOut.rgb = texture(Kspecular, fs_in.texCoords).rgb;
 
-  NormalOut.rgb = fs_in.normal.rgb;
+  NormalOut.rgb = normalize(fs_in.normal.rgb);
 
   if(normalMapping)
   {

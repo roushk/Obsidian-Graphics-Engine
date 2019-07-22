@@ -60,7 +60,7 @@ enum shaderSetting
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
   ssPhongShadingDeferredShadowMSM,
-  ssBRDDeferredMSM,
+  ssBRDFDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
   ssSkydome,

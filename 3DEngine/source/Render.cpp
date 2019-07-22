@@ -116,8 +116,8 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
   specularMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
@@ -125,8 +125,8 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   /*
   glGenTextures(1, &diffuseMaterialID);
   glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
@@ -785,16 +785,12 @@ void Render::CreateShaders()
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
-  programIDs[ssBRDDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+  programIDs[ssBRDFDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
   programIDs[ssSkydome] = LoadShaders("shaders/SkyDome.vert", "shaders/SkyDome.frag");
 
   programID = programIDs[ssLightShader];
 }
 
-void Render::CreateBuffers()
-{
-  glGenBuffers(5, vertexbuffers);
-}
 
 void Render::LoadMaxDepth()
 {
@@ -1297,8 +1293,8 @@ GLuint Render::LoadHDRimage(std::string filename, bool irr)
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB,
     GL_FLOAT, image.data());
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
@@ -1380,8 +1376,8 @@ void Render::LoadNormalAndHeight()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
   heightMap = SOIL_load_OGL_texture("materials/toy_box_height.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
@@ -1389,8 +1385,8 @@ void Render::LoadNormalAndHeight()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Render::BindNormalAndHeight()
@@ -1400,15 +1396,15 @@ void Render::BindNormalAndHeight()
   glUniform1i(glGetUniformLocation(programID, "parallaxMapping"), gui.ParallaxMapping);
   glUniform1f(glGetUniformLocation(programID, "parallaxScale"), gui.ParallaxScale);
 
-  glActiveTexture(GL_TEXTURE8);
-  glBindTexture(GL_TEXTURE_2D, normalMap);
-  glUniform1i(glGetUniformLocation(programID, "normalMap"), 8);
-  glBindSampler(GL_TEXTURE8, glGetUniformLocation(programID, "normalMap"));
-
   glActiveTexture(GL_TEXTURE9);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 9);
+  glBindSampler(GL_TEXTURE9, glGetUniformLocation(programID, "normalMap"));
+
+  glActiveTexture(GL_TEXTURE10);
   glBindTexture(GL_TEXTURE_2D, heightMap);
-  glUniform1i(glGetUniformLocation(programID, "heightMap"), 9);
-  glBindSampler(GL_TEXTURE9, glGetUniformLocation(programID, "heightMap"));
+  glUniform1i(glGetUniformLocation(programID, "heightMap"), 10);
+  glBindSampler(GL_TEXTURE10, glGetUniformLocation(programID, "heightMap"));
 }
 
 void Render::HammersleyCreateData()
