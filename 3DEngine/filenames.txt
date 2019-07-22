@@ -1,7 +1,5 @@
 sphere.3ds
 teapot.3ds
-angryteapot.3ds
 box.object
 torus.object
-4Sphere.object
-stanford_bunny.object
+stanford-bunny.fbx

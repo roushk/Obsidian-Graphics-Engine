@@ -144,11 +144,12 @@ void GUI::RenderFrame()
       "Mixed Params / Types (0)", "Mixed Params / Types (1)",
       "Mixed Params / Types (2)"
     };
+    /*
     ImGui::Text("Scenario Selection");
     ImGui::PushItemWidth(-1);
     ImGui::ListBox(" Scenarions", &currentScenario, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
     ImGui::PopItemWidth();
-
+    */
     const char* listbox_items2[] = {
       "Axis Aligned Bounding Box",
       "Bounding Sphere Centroid",
@@ -183,7 +184,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 1.2f, 1.6f}, {0.1f, 1.0f, 0.5f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f});
         }
 
         break;
@@ -299,27 +300,51 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
+    
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
-    ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
+    ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
+
+    ImGui::Checkbox("Automatic Camera", &autoCameraRotation);
+    if(autoCameraRotation)
+    {
+      ImGui::Indent(10.0f);
+      ImGui::Checkbox("Camera Rotation", &rotateCamera);
+      ImGui::Unindent(10.0f);
+
+    }
+
+    ImGui::Checkbox("Normal Mapping", &NormalMapping);
+    if(NormalMapping)
+    {
+      ImGui::Indent(10.0f);
+      ImGui::Checkbox("Parallax Mapping Instead", &ParallaxMapping);
+      ImGui::Unindent(10.0f);
+
+    }
     ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
     if(EnableLocalLights)
     {
+      ImGui::Indent(10.0f);
       ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+      ImGui::Unindent(10.0f);
     }
+    ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
+    ImGui::PushItemWidth(200);
+    //ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
     ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
-    ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
     ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
     ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
-
     ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
-
+    ImGui::PopItemWidth();
+    /*
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
     ImGui::DragFloat3("Iglobal", glm::value_ptr(lighting.global.Iglobal), 0.005f, 0.0f, 1.0f);
     ImGui::DragFloat("Kglobal", &lighting.global.Kglobal, 0.005f, 0.0f, 1.0f);
     ImGui::DragFloat3("FogColor", glm::value_ptr(lighting.global.FogColor), 0.005f, 0.0f, 1.0f);
     ImGui::EndChild();
-
+    */
     //Attenuation
     ImGui::BeginChild("Attenumation paramaters", {390, 40});
     ImGui::Text("Attenumation paramaters");
@@ -388,14 +413,14 @@ void GUI::RenderFrame()
       {
         ImGui::BeginChild("Lights", { 390, lightHeight });
         ImGui::Text(name.c_str());
-        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
-        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
-        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 10.0f);
+        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 10.0f);
+        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 10.0f);
       }
       if (light.type == ltSpotlight || light.type == ltDirectional)
-        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
+        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -10.0f, 10.0f);
       if (light.type == ltSpotlight || light.type == ltPoint)
-        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
+        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -10.0f, 10.0f);
       if (light.type == ltSpotlight)
       {
         ImGui::PushItemWidth(50);
@@ -417,11 +442,11 @@ void GUI::RenderFrame()
       if (light.type != ltNone)
         ImGui::EndChild();
 
-      ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
+
       ImGui::EndChild();
     }
     //*********//
-
+    /*
     buttonLeftDown = ImGui::ArrowButton("Left", ImGuiDir_Left);
 
 
@@ -430,8 +455,9 @@ void GUI::RenderFrame()
     ImGui::SameLine();
 
     buttonRightDown = ImGui::ArrowButton("Right", ImGuiDir_Right);
-    ImGui::Text("Position Of Model");
-    ImGui::DragFloat3("Position Of Model", glm::value_ptr(position), 0.005f, -3.0f, 3.0f);
+    //ImGui::Text("Position Of Model");
+    //ImGui::DragFloat3("Position Of Model", glm::value_ptr(position), 0.005f, -3.0f, 3.0f);
+    */
     ImGui::Text("Camera");
     //ImGui::DragFloat3("Eye point", glm::value_ptr(position), 0.001f, -5.0f, 5.0f);
     //ImGui::DragFloat3("Look at vec", glm::value_ptr(position), 0.001f, -5.0f, 5.0f);
@@ -440,10 +466,12 @@ void GUI::RenderFrame()
     ImGui::Text("Current GBuffer To Display");
     ImGui::Text("0 = View Pos, 1 = Normal, 2 = Diffuse");
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
-    ImGui::Text("5 = Post-Blur Shadow (RGB = z)");
-    ImGui::Text("6 = Moment Shadow Map");
+    ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
+    ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
+    ImGui::Text("7 = Tangent Map, 8 = Normal Map");
+    ImGui::Text("9 = Height Map");
 
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 6);
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 9);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios

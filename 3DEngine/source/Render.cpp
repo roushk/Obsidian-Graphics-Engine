@@ -19,6 +19,8 @@
 #include "Wireframe.h"
 #include "singleton.h"
 #include <minwindef.h>
+#include "GUI.h"
+#include "singleton.h"
 #include "rgbe.h"
 #include "loadfile.h"
 
@@ -34,7 +36,6 @@ Render::Render()
 Render::~Render()
 {
   // Cleanup VBO
-  glDeleteBuffers(5, vertexbuffers);
   glDeleteBuffers(2, uboHandle);
 
   //glDeleteVertexArrays(1, &VertexArrayID);
@@ -53,7 +54,7 @@ Render::~Render()
   glDeleteBuffers(6, FBODepthBuffers);
 
   glDeleteBuffers(1, &Gbuffer);
-  glDeleteTextures(6, GBufferTexture);
+  glDeleteTextures(7, GBufferTexture);
   glDeleteBuffers(1, &GBufferDepthBuffer);
 
 
@@ -65,7 +66,7 @@ Render::~Render()
 void Render::GenGBuffer()
 {
   glGenFramebuffers(1, &Gbuffer);
-  glGenTextures(6, GBufferTexture);
+  glGenTextures(7, GBufferTexture);
   glGenRenderbuffers(1, &GBufferDepthBuffer);
 }
 
@@ -108,6 +109,25 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   glUseProgram(programID);
 
 
+
+    diffuseMaterialID = SOIL_load_OGL_texture("materials/wood.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+  specularMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  /*
   glGenTextures(1, &diffuseMaterialID);
   glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
   //pixels are in RGB format as floats
@@ -137,6 +157,7 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   //glEnable(GL_TEXTURE_2D);
   //glDisable(GL_TEXTURE_2D);
   //glTexGenf()
+  */
 }
 
 void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
@@ -469,7 +490,7 @@ void Render:: BindAndCreateGBuffers()
   //Per GBuffer DiffuseOut
   glActiveTexture(GL_TEXTURE4);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[2]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GBufferTexture[2], 0);
@@ -484,13 +505,22 @@ void Render:: BindAndCreateGBuffers()
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GBufferTexture[3], 0);
   //End Per GBuffer
 
-  //Per GBuffer AmbientOut
+  //Per GBuffer tangent out
   glActiveTexture(GL_TEXTURE6);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GBufferTexture[4], 0);
+  //End Per GBuffer
+
+    //Per GBuffer bitangent out
+  glActiveTexture(GL_TEXTURE7);
+  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GBufferTexture[5], 0);
   //End Per GBuffer
 
 
@@ -532,8 +562,13 @@ void Render::BindGBufferTextures()
 
   glActiveTexture(GL_TEXTURE6);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
-  glUniform1i(glGetUniformLocation(programID, "gAmbientMap"), 6);
-  glBindSampler(GL_TEXTURE6, glGetUniformLocation(programID, "gAmbientMap"));
+  glUniform1i(glGetUniformLocation(programID, "gTangentMap"), 6);
+  glBindSampler(GL_TEXTURE6, glGetUniformLocation(programID, "gTangentMap"));
+
+  glActiveTexture(GL_TEXTURE7);
+  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
+  glUniform1i(glGetUniformLocation(programID, "gBitangentMap"), 7);
+  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "gBitangentMap"));
   
 }
 
@@ -686,12 +721,12 @@ void Render::BindMaterials(SceneLighting& lighting)
 
   //loads diffuse
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
+  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kdiffuse"), 0);
 
   //loads specular
   glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
+  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kspecular"), 1);
 
   //loads ambient and emissive from GUI
@@ -715,31 +750,7 @@ void Render::LoadModel(Model& object)
   glUseProgram(programID);
   glBindVertexArray(object.get_vao());
 
- /*
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-  glBufferData(GL_ARRAY_BUFFER, object.verts.size() * sizeof(vec3), object.verts.data(), GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
-  glBufferData(GL_ARRAY_BUFFER, object.vertexNormals.size() * sizeof(vec3), object.vertexNormals.data(),
-               GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexbuffers[2]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.faces.size() * sizeof(uvec3), object.faces.data(), GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[3]);
-  glBufferData(GL_ARRAY_BUFFER, object.faceNormals.size() * sizeof(vec3), object.faceNormals.data(), GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[4]);
-
-  //selcts UV model to use for texturing
-  if (currentUVModel == uvmCylindrical)
-    glBufferData(GL_ARRAY_BUFFER, object.uvCylindrical.size() * sizeof(vec2), object.uvCylindrical.data(),
-                 GL_STATIC_DRAW);
-  else if (currentUVModel == uvmSphereical)
-    glBufferData(GL_ARRAY_BUFFER, object.uvSpherical.size() * sizeof(vec2), object.uvSpherical.data(), GL_STATIC_DRAW);
-  else if (currentUVModel == uvm6Planar)
-    glBufferData(GL_ARRAY_BUFFER, object.uvPlanar.size() * sizeof(vec2), object.uvPlanar.data(), GL_STATIC_DRAW);
-    */
   }
 
 void Render::ClearScreen()
@@ -774,16 +785,12 @@ void Render::CreateShaders()
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
-  programIDs[ssBRDDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+  programIDs[ssBRDFDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
   programIDs[ssSkydome] = LoadShaders("shaders/SkyDome.vert", "shaders/SkyDome.frag");
 
   programID = programIDs[ssLightShader];
 }
 
-void Render::CreateBuffers()
-{
-  glGenBuffers(5, vertexbuffers);
-}
 
 void Render::LoadMaxDepth()
 {
@@ -1075,64 +1082,37 @@ void Render::Update()
 }
 
 
-void Render::BindModelBuffer()
-{
-  glUseProgram(programID);
-
-  // Use our shader
-
-
-  // 1st attribute buffer : vertex positions (model space)
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-  glVertexAttribPointer(
-    0, // attribute 0. MUST match the layout in the shader.
-    3, // size
-    GL_FLOAT, // type
-    GL_FALSE, // normalized?
-    0, // stride
-    (void*)0 // array buffer offset
-  );
-
-  if (currentShader != ssLightShader)
-  {
-    // 2nd attribute buffer : FACE normals (model space)
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
-    glVertexAttribPointer(
-      1, // attribute 0. MUST match the layout in the shader.
-      3, // size
-      GL_FLOAT, // type
-      GL_FALSE, // normalized?
-      0, // stride
-      (void*)0 // array buffer offset
-    );
-
-    // 3rd attribute buffer : uv coords
-  }
-  glEnableVertexAttribArray(2);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[4]);
-  glVertexAttribPointer(
-    2, // attribute 2. MUST match the layout in the shader.
-    2, // size
-    GL_FLOAT, // type
-    GL_FALSE, // normalized?
-    0, // stride
-    (void*)0 // array buffer offset
-  );
-}
-
 void Render::UpdateCamera(float dt)
 {
-  vec3 pos{0, 1, 0}; //rotate around z/origin vector
+  //vec3 pos{0, 1, 0}; //rotate around Y axis
+  vec3 pos{ 0, 0, 1 }; //rotate around Z axis
 
-  eyePos = rotate(rotateRate * dt, pos) * eyePos;
-  lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  if (GUI::autoCameraRotation && updateCameraEyePosOnce == false)
+  {
+    eyePos = vec4(currentCamera.eye(), 1);
+    updateCameraEyePosOnce = true;
+  }
+
+  if(GUI::rotateCamera)
+  {
+    eyePos = rotate(rotateRate * dt, pos) * eyePos;
+  }
+
+  //if(GUI::autoCameraRotation && updateCameraEyePosOnce)
+  //{
+  //}
+
+  if (!GUI::autoCameraRotation && updateCameraEyePosOnce == true)
+  {
+    updateCameraEyePosOnce = false;
+    currentCamera.eye_point = eyePos;
+  }
+  //lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  
+  
 
   inverseCamRotate = rotate(rotateRate * dt, pos);
+  
 }
 
 void Render::Draw(Wireframe& object)
@@ -1146,6 +1126,17 @@ void Render::Draw(Wireframe& object)
     projectionMatrix = cameraToNDC(currentCamera);
     viewMatrix = worldToCamera(currentCamera);
     cameraChanged = false;
+  }
+
+  if(GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(1.0f, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    vec3 backVec = lookAt - eyePos;
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(eyePos) + -backVec, vec3(0,1,0));
+
   }
   //if (flipX == true)
   //  projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
@@ -1166,6 +1157,8 @@ void Render::Draw(Model& object)
 {
   glUseProgram(programID);
 
+
+  
   glUniform3f(glGetUniformLocation(programID, "camera"),
     currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
@@ -1178,6 +1171,18 @@ void Render::Draw(Model& object)
 
   viewMatrix = worldToCamera(currentCamera);
   //cameraChanged = false;
+
+  if (GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(currentCamera.zoomScale, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    //vec3 backVec = normalize(lookAt - eyePos);
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(lookAt), vec3(0, 1, 0));
+    glUniform3f(glGetUniformLocation(programID, "camera"),
+      eyePos.x, eyePos.y, eyePos.z);
+  }
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
     glm::value_ptr(shadowMatrix));
@@ -1288,8 +1293,8 @@ GLuint Render::LoadHDRimage(std::string filename, bool irr)
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB,
     GL_FLOAT, image.data());
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
@@ -1360,6 +1365,46 @@ void Render::SetObjectShader(int shader)
 void Render::LoadObjectShader()
 {
   SetCurrentShader(objectShader);
+}
+
+void Render::LoadNormalAndHeight()
+{
+
+  normalMap = SOIL_load_OGL_texture("materials/toy_box_normal.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+  heightMap = SOIL_load_OGL_texture("materials/toy_box_height.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+}
+
+void Render::BindNormalAndHeight()
+{
+  auto& gui = pattern::get<GUI>();
+  glUniform1i(glGetUniformLocation(programID, "normalMapping"), gui.NormalMapping);
+  glUniform1i(glGetUniformLocation(programID, "parallaxMapping"), gui.ParallaxMapping);
+  glUniform1f(glGetUniformLocation(programID, "parallaxScale"), gui.ParallaxScale);
+
+  glActiveTexture(GL_TEXTURE9);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 9);
+  glBindSampler(GL_TEXTURE9, glGetUniformLocation(programID, "normalMap"));
+
+  glActiveTexture(GL_TEXTURE10);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
+  glUniform1i(glGetUniformLocation(programID, "heightMap"), 10);
+  glBindSampler(GL_TEXTURE10, glGetUniformLocation(programID, "heightMap"));
 }
 
 void Render::HammersleyCreateData()

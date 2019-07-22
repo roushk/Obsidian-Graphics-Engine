@@ -32,6 +32,8 @@ uniform sampler2D Kspecular;
 layout(location = 0) in vec3 modelPosition;
 layout(location = 1) in vec3 modelNormal;
 layout(location = 2) in vec2 texCoords;
+layout(location = 3) in vec3 tangent;
+layout(location = 4) in vec3 bitangent;
 //layout(location = 3) in vec3 vertexColor;
 
 // Interpolating vertex attributes over the rasterizer
@@ -40,6 +42,9 @@ out VS_OUT
   vec4 position;
   vec4 normal;
   vec2 texCoords;
+  vec3 tangent;
+  vec3 bitangent;
+
 } vs_out;
 
 // Main function - entry point
@@ -49,6 +54,8 @@ void main()
 
   //mat4(transpose(inverse(modelMatrix )))
   vs_out.normal = normalize(modelTransform * modelMatrix * vec4( modelNormal, 0.0f ));
+  vs_out.tangent = normalize(vec3(modelMatrix * vec4(tangent, 0.0f)));
+  vs_out.bitangent = normalize(vec3(modelMatrix * vec4(bitangent, 0.0f)));
 
   vs_out.texCoords = texCoords;
 

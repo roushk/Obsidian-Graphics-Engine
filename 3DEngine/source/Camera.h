@@ -32,12 +32,13 @@ class Camera {
     Camera& roll(float angle);
     Camera& leftRight(float distance);
     Camera& upDown(float distance);
+    void ResetRoll();
     glm::vec3 right_vector, up_vector, back_vector;
     float zoomScale = 1;
 
+    glm::vec3 eye_point;
   private:
     void recalcVectors();
-    glm::vec3 eye_point;
     float width, height, distance,
           near, far;
 

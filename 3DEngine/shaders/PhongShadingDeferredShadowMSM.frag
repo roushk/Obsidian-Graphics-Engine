@@ -58,9 +58,12 @@ uniform sampler2D gPositionMap; //position map.a = emi
 uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
-uniform sampler2D gAmbientMap;
+uniform sampler2D gTangentMap;
+uniform sampler2D gBitangentMap;
 uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMap;
+uniform sampler2D normalMap;
+uniform sampler2D heightMap;
 
 in VS_OUT
 {
@@ -85,6 +88,8 @@ out vec3 color;
 
 const float alpha = 0.001f; //1 x 10^-3
 
+uniform bool normalMapping;
+uniform bool parallaxMapping;
 
 float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
 {
@@ -106,8 +111,6 @@ float readShadowMap(vec3 fragPos, vec3 normal, vec3 lightDir)
 
 float det3(vec3 a, vec3 b, vec3 c) // Determinant of a 3x3 passed in as three columns
  { return a.x*(b.y*c.z-b.z*c.y) + a.y*(b.z*c.x-b.x*c.z) + a.z*(b.x*c.y-b.y*c.x); }
-
-
 
 
 //returns the shadow intensity
@@ -196,14 +199,63 @@ float readShadowMapMSM(vec3 fragPos, vec3 normal, vec3 lightDir)
   return 1 - G;
 }
 
+mat3 createNormalMatrix(mat4 modelMatrix, vec3 tangent, vec3 modelNormal)
+{
+
+  /*
+  vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
+  vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+  vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+  mat3 TBN = mat3(T, B, N)*/
+
+  vec3 T = normalize(tangent);
+  vec3 N = normalize(modelNormal);
+ // T = normalize(T - dot(T, N) * N);
+  vec3 B = cross(N, T);
+
+  return mat3(T, B, N);
+}
+
+mat3 createParallaxMatrix(vec3 tangent, vec3 bitangent, vec3 modelNormal)
+{
+
+  /*
+  vec3 T = normalize(vec3(model * vec4(aTangent,   0.0)));
+  vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+  vec3 N = normalize(vec3(model * vec4(aNormal,    0.0)));
+  mat3 TBN = mat3(T, B, N)*/
+
+  vec3 T = normalize(tangent);
+  vec3 N = normalize(modelNormal);
+  //  vec3 B = cross(N, T);
+  vec3 B = normalize(bitangent);
+
+  return mat3(T, B, N);
+}
+
 
 void main()
 {
-  
+  vec3 TESTINGVALUE = vec3(0);
+  //vec3 TEST = texture(normalMap, fs_in.texCoords).rgb;
   vec3 clearcolor = vec3(0.0f);
+  vec2 texCoords = fs_in.texCoords;//ParallaxMapping(fs_in.texCoords,  viewDir);
+
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
-  vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
+  vec3 tangent = texture(gTangentMap, fs_in.texCoords).xyz;
+  vec3 bitangent = texture(gBitangentMap, fs_in.texCoords).xyz;
+
+  //mat3 TBN = transpose(createParallaxMatrix(tangent,bitangent, normal));
+
+
+  //light, view, frag
+
+  //vec3 norm = texture(normalMap, fs_in.texCoords).rgb;
+  //norm = normalize(norm * 2.0f - 1.0f);
+  //norm = normalize(TBN * norm);
+
+  vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).rgb;
 
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = vec3(0.1f,0.1f,0.1f); //texture(gAmbientMap, fs_in.texCoords).xyz;
@@ -217,11 +269,13 @@ void main()
   Kemissive.g = 0; //texture(gNormalMap, fs_in.texCoords).a;
   Kemissive.b = 0; //texture(gDiffuseMap, fs_in.texCoords).a;
   
+  //update viewpos
 
-  vec3 cameraPos = camera.xyz;
-  vec3 vertexNormal = normal.xyz;
+  vec3 cameraPos = camera.xyz;//normalize(TBN *camera.xyz);
+   //update vertex pos
+  //vertexPosition = normalize(TBN * vertexPosition);
 
-
+  vec3 vertexNormal = normal;//normal.xyz;
   
   //light position is .xyz of [3]
   //vec3 light = invShadowMatrix[3].xyz;
@@ -236,6 +290,8 @@ void main()
   //eyeVec = eye - worldPos;
   //V = cameraPos - vertexPosition.xyz; = cam - V = viewPos
   vec3 V = normalize(cameraPos - vertexPosition.xyz);
+ 
+
   //*************************************************************************************************//
   // Emissive
   vec3 Iemissive = Kemissive; //set in GUI  //WORKS
@@ -257,7 +313,9 @@ void main()
     // L = light pos - vert pos
     //lightVec = lightPos - worldPos;
     //vec4 lightPos = LA.lights[i].LightPosition
+    //update light pos
     vec3 LnotNormal = LA.lights[i].LightPosition.xyz - vertexPosition.xyz;
+//    vec3 LnotNormal = normalize(TBN * LA.lights[i].LightPosition.xyz) - vertexPosition.xyz;
 
     vec3 L = normalize(LnotNormal);                         // L = light pos - vert pos
 
@@ -269,7 +327,7 @@ void main()
     float NdotL = max( dot(vertexNormal, L), 0.0f ); //L is normalized and vertNormal is normalized
 
     vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
-    
+    //TESTINGVALUE = LA.lights[i].LightDiffuse.rgb;
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
@@ -302,7 +360,7 @@ void main()
 
 
     // Final color
-    finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular) * shadow));
+    finalColor += (att * Iambient) + (att * Spe * ((Idiffuse + Ispecular)));
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
 
 
@@ -330,6 +388,9 @@ void main()
   //color = finalColor;
   
   color = Ifinal;
+  //color = TESTINGVALUE;
+  //color = normal;
+  //color = TEST;
 }
 
 //In fragment shader:
