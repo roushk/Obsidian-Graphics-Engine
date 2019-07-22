@@ -38,6 +38,8 @@ public:
   static bool MSMShadow;
   static bool EnableLocalLights;
   static bool ParallaxMapping;
+  static bool NormalMapping;
+  static float ParallaxScale;
 private:
   SceneLighting& lighting;
   ObjectReader& reader;

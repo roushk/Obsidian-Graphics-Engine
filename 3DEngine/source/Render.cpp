@@ -18,6 +18,8 @@
 #include "Wireframe.h"
 #include "singleton.h"
 #include <minwindef.h>
+#include "GUI.h"
+#include "singleton.h"
 
 
 Render::Render()
@@ -105,7 +107,7 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
 
 
 
-    diffuseMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    diffuseMaterialID = SOIL_load_OGL_texture("materials/wood.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
   glBindTexture(GL_TEXTURE_2D, normalMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -114,7 +116,7 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  specularMaterialID = SOIL_load_OGL_texture("materials/SpecularMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+  specularMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
   glBindTexture(GL_TEXTURE_2D, heightMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -481,8 +483,8 @@ void Render::BindGBufferTextures()
 
   glActiveTexture(GL_TEXTURE7);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
-  glUniform1i(glGetUniformLocation(programID, "gBiTangentMap"), 7);
-  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "gBiTangentMap"));
+  glUniform1i(glGetUniformLocation(programID, "gBitangentMap"), 7);
+  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "gBitangentMap"));
   
 }
 
@@ -1145,7 +1147,7 @@ void Render::LoadObjectShader()
 void Render::LoadNormalAndHeight()
 {
 
-  normalMap = SOIL_load_OGL_texture("materials/NormalMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+  normalMap = SOIL_load_OGL_texture("materials/toy_box_normal.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
   glBindTexture(GL_TEXTURE_2D, normalMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1154,7 +1156,7 @@ void Render::LoadNormalAndHeight()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  heightMap = SOIL_load_OGL_texture("materials/DisplacementMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+  heightMap = SOIL_load_OGL_texture("materials/toy_box_height.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
     SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
   glBindTexture(GL_TEXTURE_2D, heightMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1166,6 +1168,11 @@ void Render::LoadNormalAndHeight()
 
 void Render::BindNormalAndHeight()
 {
+  auto& gui = pattern::get<GUI>();
+  glUniform1i(glGetUniformLocation(programID, "normalMapping"), gui.NormalMapping);
+  glUniform1i(glGetUniformLocation(programID, "parallaxMapping"), gui.ParallaxMapping);
+  glUniform1f(glGetUniformLocation(programID, "parallaxScale"), gui.ParallaxScale);
+
   glActiveTexture(GL_TEXTURE8);
   glBindTexture(GL_TEXTURE_2D, normalMap);
   glUniform1i(glGetUniformLocation(programID, "normalMap"), 8);

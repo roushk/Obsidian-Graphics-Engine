@@ -24,6 +24,8 @@ void InputManager::Update(float dt)
   bool updatedThisLoop = false;
 
 
+
+
   auto& render = pattern::get<Render>();
   auto& input = pattern::get<InputManager>();
   auto& gui = pattern::get<GUI>();
@@ -85,7 +87,7 @@ void InputManager::Update(float dt)
   }
   */
  
-  const float speed = 20.0f * dt;
+  const float speed = 3.0f * dt;
 
   SDL_Event event;
   //while event queue is not empty pop off and deal with
@@ -128,54 +130,138 @@ void InputManager::Update(float dt)
       float cameraAccelSpeed = 10.0f;
       
       
-      if (event.key.keysym.scancode == SDL_SCANCODE_W)
+      if (event.key.keysym.scancode == SDL_SCANCODE_W 
+        && event.key.state == SDL_PRESSED)
       {
-        camera.forward(speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_A)
-      {
-        camera.leftRight(speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_S)
-      {
-        camera.forward(-speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_D)
-      {
-        camera.leftRight(-speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT)
-      {
-        camera.upDown(-speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL)
-      {
-        camera.upDown(speed * 2.0f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_Q)
-      {
-        camera.roll(speed * 0.2f);
-        render.cameraChanged = true;
-      }
-      if (event.key.keysym.scancode == SDL_SCANCODE_E)
-      {
-        camera.roll(-speed * 0.2f);
-        render.cameraChanged = true;
+        cameraMovement.forward = true;
       }
 
       
+      
+      if (event.key.keysym.scancode == SDL_SCANCODE_A
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.left = true;
+
+      }
+      
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_S
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.backward = true;
+      }
+
+     
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_D
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.right = true;
+
+      }
+
+
+
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.up = true;
+
+      }
+
+
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.down = true;
+
+      }
+
+
+
+     
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_Q
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.rollLeft = true;
+
+      }
+
+
+
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_E
+        && event.key.state == SDL_PRESSED)
+      {
+        cameraMovement.rollRight = true;
+      }
+
+
+
       
       //engine.GetSystem<Render>()->cameraPos =
       //  glm::translate(engine.GetSystem<Render>()->cameraPos, glm::vec3(cameraPos, 0));
     }
     break;
     case SDL_KEYUP:
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_F
+        && event.key.state == SDL_RELEASED)
+      {
+        camera.ResetRoll();
+        render.cameraChanged = true;
+
+      }
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_W
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.forward = false;
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_A
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.left = false;
+      }
+
+      if (event.key.keysym.scancode == SDL_SCANCODE_S
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.backward = false;
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_D
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.right = false;
+
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.up = false;
+
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.down = false;
+
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_Q
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.rollLeft = false;
+
+      }
+      if (event.key.keysym.scancode == SDL_SCANCODE_E
+        && event.key.state == SDL_RELEASED)
+      {
+        cameraMovement.rollRight = false;
+      }
 
       break;
 
@@ -271,5 +357,52 @@ void InputManager::Update(float dt)
     SDL_WarpMouseGlobal(render.windowPosition.x + windowRes.x / 2,
       render.windowPosition.y + windowRes.y / 2);
 
+  }
+
+
+
+
+
+
+
+  if (cameraMovement.forward)
+  {
+    camera.forward(speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.left)
+  {
+    camera.leftRight(speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.backward)
+  {
+    camera.forward(-speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.right)
+  {
+    camera.leftRight(-speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.up)
+  {
+    camera.upDown(-speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.down)
+  {
+    camera.upDown(speed);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.rollLeft)
+  {
+    camera.roll(speed * 0.2f);
+    render.cameraChanged = true;
+  }
+  if (cameraMovement.rollRight)
+  {
+    camera.roll(-speed * 0.2f);
+    render.cameraChanged = true;
   }
 }

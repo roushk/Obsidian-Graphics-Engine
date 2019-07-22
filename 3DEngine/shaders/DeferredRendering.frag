@@ -19,7 +19,7 @@ uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
 uniform sampler2D gTangentMap;
-uniform sampler2D gBiTangentMap;
+uniform sampler2D gBitangentMap;
 
 uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMapHorizontal;
@@ -51,7 +51,11 @@ void main()
   vec3 momentShadow = vec3(texture(momentShadowMap, fs_in.texCoords).rgb);
  
   vec3 tangent = vec3(texture(gTangentMap, fs_in.texCoords).rgb);
-  vec3 bitangent = vec3(texture(gBiTangentMap, fs_in.texCoords).rgb);
+  vec3 bitangent = vec3(texture(gBitangentMap, fs_in.texCoords).rgb);
+
+  vec3 height = vec3(texture(heightMap, fs_in.texCoords).rgb);
+  vec3 normalmapped = vec3(texture(normalMap, fs_in.texCoords).rgb);
+
 
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);
@@ -90,8 +94,13 @@ void main()
   }
   else if(debugTexture == 8)
   {
-    debugColor = bitangent;
+    debugColor = normalmapped;
   }
+  else if(debugTexture == 9)
+  {
+    debugColor = height;
+  }
+
 
     
 

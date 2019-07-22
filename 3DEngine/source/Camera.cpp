@@ -124,6 +124,16 @@ Camera& Camera::pitch(float angle)
   return *this;
 }
 
+void Camera::ResetRoll()
+{
+  //invert current roll
+  right_vector = rotate(-rollAngle, glm::vec3(back_vector)) * glm::vec4(right_vector, 1);
+  //up_vector(θback_vector)up_vector
+  up_vector = rotate(-rollAngle, glm::vec3(back_vector)) * glm::vec4(up_vector, 1);
+  //set roll to 0
+  rollAngle = 0.0f;
+}
+
 Camera& Camera::roll(float angle)
 {
   rollAngle += angle;

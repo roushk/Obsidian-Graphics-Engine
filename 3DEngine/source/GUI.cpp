@@ -300,13 +300,23 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
+    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
-    ImGui::Checkbox("Parallax Mapping Enabled", &ParallaxMapping);
+    ImGui::Checkbox("Normal Mapping", &NormalMapping);
+    if(NormalMapping)
+    {
+      ImGui::Indent(10.0f);
+      ImGui::Checkbox("Parallax Mapping Instead", &ParallaxMapping);
+      ImGui::Unindent(10.0f);
+
+    }
     ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
     if(EnableLocalLights)
     {
+      ImGui::Indent(10.0f);
       ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+      ImGui::Unindent(10.0f);
     }
 
     ImGui::BeginChild("Global Color", {390, 90});
@@ -439,9 +449,10 @@ void GUI::RenderFrame()
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
     ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
     ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
-    ImGui::Text("7 = Tangent Map, 8 = Bitangent Map");
+    ImGui::Text("7 = Tangent Map, 8 = Normal Map");
+    ImGui::Text("9 = Height Map");
 
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 8);
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 9);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios
