@@ -144,11 +144,12 @@ void GUI::RenderFrame()
       "Mixed Params / Types (0)", "Mixed Params / Types (1)",
       "Mixed Params / Types (2)"
     };
+    /*
     ImGui::Text("Scenario Selection");
     ImGui::PushItemWidth(-1);
     ImGui::ListBox(" Scenarions", &currentScenario, listbox_items, IM_ARRAYSIZE(listbox_items), 3);
     ImGui::PopItemWidth();
-
+    */
     const char* listbox_items2[] = {
       "Axis Aligned Bounding Box",
       "Bounding Sphere Centroid",
@@ -299,9 +300,7 @@ void GUI::RenderFrame()
     ImGui::PopItemWidth();
     */
     //I and K global
-    ImGui::PushItemWidth(200);
-    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
-    ImGui::PopItemWidth();
+    
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
 
@@ -329,20 +328,23 @@ void GUI::RenderFrame()
       ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
       ImGui::Unindent(10.0f);
     }
+    ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
+    ImGui::PushItemWidth(200);
+    //ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
+    ImGui::DragFloat("Parallax Scale", &ParallaxScale, 0.001f, 0, 2.0f);
     ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
-    ImGui::DragFloat("Scalar Level", &render.scalarLevel, 0.05f, 0.0f, 200.0f);
     ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
     ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
-
     ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
-
+    ImGui::PopItemWidth();
+    /*
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
     ImGui::DragFloat3("Iglobal", glm::value_ptr(lighting.global.Iglobal), 0.005f, 0.0f, 1.0f);
     ImGui::DragFloat("Kglobal", &lighting.global.Kglobal, 0.005f, 0.0f, 1.0f);
     ImGui::DragFloat3("FogColor", glm::value_ptr(lighting.global.FogColor), 0.005f, 0.0f, 1.0f);
     ImGui::EndChild();
-
+    */
     //Attenuation
     ImGui::BeginChild("Attenumation paramaters", {390, 40});
     ImGui::Text("Attenumation paramaters");
@@ -411,14 +413,14 @@ void GUI::RenderFrame()
       {
         ImGui::BeginChild("Lights", { 390, lightHeight });
         ImGui::Text(name.c_str());
-        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 1.0f);
-        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 1.0f);
-        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 1.0f);
+        ImGui::DragFloat3("Ambient", glm::value_ptr(light.ambient), 0.005f, 0.0f, 10.0f);
+        ImGui::DragFloat3("Diffuse", glm::value_ptr(light.diffuse), 0.005f, 0.0f, 10.0f);
+        ImGui::DragFloat3("Specular", glm::value_ptr(light.specular), 0.005f, 0.0f, 10.0f);
       }
       if (light.type == ltSpotlight || light.type == ltDirectional)
-        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -1.0f, 1.0f);
+        ImGui::DragFloat3("Direction", glm::value_ptr(light.direction), 0.005f, -10.0f, 10.0f);
       if (light.type == ltSpotlight || light.type == ltPoint)
-        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -3.0f, 3.0f);
+        ImGui::DragFloat3("Position", glm::value_ptr(light.position), 0.01f, -10.0f, 10.0f);
       if (light.type == ltSpotlight)
       {
         ImGui::PushItemWidth(50);
@@ -440,7 +442,6 @@ void GUI::RenderFrame()
       if (light.type != ltNone)
         ImGui::EndChild();
 
-      ImGui::Checkbox("Start/Stop Light Rotation", &rotateLights);
 
       ImGui::EndChild();
     }

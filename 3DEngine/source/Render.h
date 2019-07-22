@@ -375,7 +375,7 @@ public:
   GLuint heightMap;
   
 
-  float materialRoughness = 1.0f;
+  float materialRoughness = 50.0f;
 
 
   int windowX = 0;
