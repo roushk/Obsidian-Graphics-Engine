@@ -219,7 +219,7 @@ mat3 createNormalMatrix(mat4 modelMatrix, vec3 tangent, vec3 modelNormal)
 
 void main()
 {
-
+  vec3 TESTINGVALUE = vec3(0);
   //vec3 TEST = texture(normalMap, fs_in.texCoords).rgb;
   vec3 clearcolor = vec3(0.0f);
   vec3 vertexPosition = texture(gPositionMap, fs_in.texCoords).xyz;
@@ -232,7 +232,7 @@ void main()
   //norm = normalize(norm * 2.0f - 1.0f);
   //norm = normalize(TBN * norm);
 
-  vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
+  vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).rgb;
 
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = vec3(0.1f,0.1f,0.1f); //texture(gAmbientMap, fs_in.texCoords).xyz;
@@ -296,7 +296,7 @@ void main()
     float NdotL = max( dot(vertexNormal, L), 0.0f ); //L is normalized and vertNormal is normalized
 
     vec3 Idiffuse = LA.lights[i].LightDiffuse.rgb * KdiffuseColor * NdotL;
-    
+    //TESTINGVALUE = LA.lights[i].LightDiffuse.rgb;
     //Light Direction * matrix
     //vec4 LightDir = vec4(normalize(LA.lights[i].LightDirection.rgb),1.0f);
 
@@ -357,6 +357,7 @@ void main()
   //color = finalColor;
   
   color = Ifinal;
+  //color = TESTINGVALUE;
   //color = normal;
   //color = TEST;
 }

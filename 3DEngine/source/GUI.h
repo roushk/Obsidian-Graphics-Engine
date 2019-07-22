@@ -26,7 +26,7 @@ public:
 
   bool buttonLeftDown = false;
   bool buttonRightDown = false;
-  bool rotateLights = false;
+  static bool rotateLights;
   vec3 position{0,0,0};
   static int currentCam;
   static int currentFBO;
@@ -37,6 +37,7 @@ public:
   static bool showLightSpheres;
   static bool MSMShadow;
   static bool EnableLocalLights;
+  static bool ParallaxMapping;
 private:
   SceneLighting& lighting;
   ObjectReader& reader;

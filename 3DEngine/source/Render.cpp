@@ -104,6 +104,25 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   glUseProgram(programID);
 
 
+
+    diffuseMaterialID = SOIL_load_OGL_texture("materials/DiffuseMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  specularMaterialID = SOIL_load_OGL_texture("materials/SpecularMap.png", SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  /*
   glGenTextures(1, &diffuseMaterialID);
   glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
   //pixels are in RGB format as floats
@@ -133,6 +152,7 @@ void Render::LoadMaterial(Material materialSpec, Material materialDiff)
   //glEnable(GL_TEXTURE_2D);
   //glDisable(GL_TEXTURE_2D);
   //glTexGenf()
+  */
 }
 
 void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
@@ -384,7 +404,7 @@ void Render:: BindAndCreateGBuffers()
   //Per GBuffer DiffuseOut
   glActiveTexture(GL_TEXTURE4);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[2]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GBufferTexture[2], 0);
@@ -615,12 +635,12 @@ void Render::BindMaterials(SceneLighting& lighting)
 
   //loads diffuse
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
+  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kdiffuse"), 0);
 
   //loads specular
   glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
+  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kspecular"), 1);
 
   //loads ambient and emissive from GUI

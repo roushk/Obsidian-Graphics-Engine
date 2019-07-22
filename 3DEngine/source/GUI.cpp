@@ -184,7 +184,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 0.6f, 0.8f}, {0.1f, 1.0f, 0.5f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f});
         }
 
         break;
@@ -302,6 +302,7 @@ void GUI::RenderFrame()
     //I and K global
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
+    ImGui::Checkbox("Parallax Mapping Enabled", &ParallaxMapping);
     ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
     if(EnableLocalLights)
     {
@@ -416,7 +417,7 @@ void GUI::RenderFrame()
       ImGui::EndChild();
     }
     //*********//
-
+    /*
     buttonLeftDown = ImGui::ArrowButton("Left", ImGuiDir_Left);
 
 
@@ -425,8 +426,9 @@ void GUI::RenderFrame()
     ImGui::SameLine();
 
     buttonRightDown = ImGui::ArrowButton("Right", ImGuiDir_Right);
-    ImGui::Text("Position Of Model");
-    ImGui::DragFloat3("Position Of Model", glm::value_ptr(position), 0.005f, -3.0f, 3.0f);
+    //ImGui::Text("Position Of Model");
+    //ImGui::DragFloat3("Position Of Model", glm::value_ptr(position), 0.005f, -3.0f, 3.0f);
+    */
     ImGui::Text("Camera");
     //ImGui::DragFloat3("Eye point", glm::value_ptr(position), 0.001f, -5.0f, 5.0f);
     //ImGui::DragFloat3("Look at vec", glm::value_ptr(position), 0.001f, -5.0f, 5.0f);

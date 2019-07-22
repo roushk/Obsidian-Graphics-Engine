@@ -62,7 +62,7 @@ void main()
 {
   ViewPosOut.xyz = fs_in.position.xyz;
   
-  DiffuseOut.rgb = texture(Kdiffuse, fs_in.texCoords).xyz;
+  DiffuseOut.rgb = texture(Kdiffuse, fs_in.texCoords).rgb;
   SpecularOut.rgb = texture(Kspecular, fs_in.texCoords).xyz;
 
 
