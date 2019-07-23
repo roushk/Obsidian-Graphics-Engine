@@ -390,6 +390,8 @@ public:
 
   std::vector<MapsCombo> textureMaps
   {
+    {"materials/NormalMap.png", "materials/DisplacementMap.png","materials/DiffuseMap.png"},
+
     {"materials/toy_box_normal.png", "materials/toy_box_height.png","materials/wood.png"},
     {"materials/Wall_Stone_010_normal.png", "materials/Wall_Stone_010_height.png","materials/Wall_Stone_010_basecolor.png"},
     {"materials/Rock_033_normal.png", "materials/Rock_033_height.png","materials/Rock_033_baseColor.png"},
