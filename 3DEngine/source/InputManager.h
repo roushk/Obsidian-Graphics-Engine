@@ -16,13 +16,13 @@ public:
   glm::vec2 mousePosition{0,0};
   glm::vec2 offset{0,0};
 
-  bool firstMouse = true;
+  //bool firstMouse = true;
   int lastY, lastX;
-  float yaw, pitch;
+
 
   bool toggleCamera = false;
   bool oldPos = false;
-  float sensitivity = 0.001;
+  float sensitivity = 0.05f;
   //float sensitivity = 0.05;
 
 

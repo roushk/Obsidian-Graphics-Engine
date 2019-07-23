@@ -13,7 +13,7 @@ Camera::Camera(void)
   //90* fov
   //Pi/2 radians
   //aspect ratio = 1
-  near = 0.1f;
+  near = 1.f;
   far = 10;
   distance = near * 2;
   width = (tanf(PI/4.0f) / distance) * (distance * 2);
@@ -84,37 +84,49 @@ Camera& Camera::upDown(float distance)
 
 Camera& Camera::zoom(float factor)
 {
+  zoomScale *= factor;
   //zoom W <- BW H <-BH
   width *= factor;
   height *= factor;
   return *this;
 }
 
+void Camera::recalcVectors()
+{
+  back_vector.x = cos(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
+  back_vector.y = sin(glm::radians(pitchAngle));
+  back_vector.z = sin(glm::radians(yawAngle)) * cos(glm::radians(pitchAngle));
+  //mainCamera.cameraRight
+  //mainCamera.cameraUp
+
+  back_vector = glm::normalize(-back_vector);
+  right_vector = glm::normalize(glm::cross(up_vector, back_vector));
+  //up_vector = rotate(glm::radians(90.0f), -right_vector) * vec4(back_vector, 0);
+
+}
+
 Camera& Camera::yaw(float angle)
 {
-  //U = right_vector
-  //V = up_vector
-  //N = back_vector
-  //right_vector←R(θup_vector)right_vector 
-  right_vector = rotate(angle, glm::vec3(up_vector)) * glm::vec4(right_vector, 1);
-  //back_vector←R(θup_vector) back_vector
-  back_vector = rotate(angle, glm::vec3(up_vector)) *  glm::vec4(back_vector, 1);
+  yawAngle += angle;
+  
+  recalcVectors();
   return *this;
 
 }
 
 Camera& Camera::pitch(float angle)
 {
-  
-  //up_vector←R(θright_vector)up_vector
-  up_vector = rotate(angle, glm::vec3(right_vector)) * glm::vec4(up_vector, 1);
-  //back_vector←R(θright_vector)back_vector
-  back_vector = rotate(angle, glm::vec3(right_vector)) * glm::vec4(back_vector, 1);
+
+
+  pitchAngle += angle;
+
+  recalcVectors();
   return *this;
 }
 
 Camera& Camera::roll(float angle)
 {
+  rollAngle += angle;
   //right_vector←R(θback_vector)right_vector 
   right_vector = rotate(angle, glm::vec3(back_vector)) * glm::vec4(right_vector,1);
   //up_vector(θback_vector)up_vector

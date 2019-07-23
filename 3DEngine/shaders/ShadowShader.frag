@@ -31,5 +31,9 @@ void main()
   depth.g = gl_FragCoord.z * gl_FragCoord.z;
   depth.b = gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z;
   depth.a = gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z * gl_FragCoord.z;
+  //depth.r = (depth.r - 1.0f) / (120.0f - 1.0f)
+  //depth.g = (depth.g - 1.0f) / (120.0f - 1.0f)
+  //depth.b = (depth.b - 1.0f) / (120.0f - 1.0f)
+  //depth.a = (depth.a - 1.0f) / (120.0f - 1.0f)
 
 }

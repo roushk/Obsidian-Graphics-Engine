@@ -84,7 +84,7 @@ void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
   io.IniFilename = NULL; //disable imgui.ini
 
   ImGui_ImplSDL2_InitForOpenGL(window, context);
-   ImGui_ImplOpenGL3_Init("#version 430");
+  ImGui_ImplOpenGL3_Init("#version 430");
 
   // Setup style
   //SetStyle();
@@ -302,7 +302,11 @@ void GUI::RenderFrame()
     //I and K global
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("Copy Depth Buffer Toggle", &copyDepth);
-    ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    ImGui::Checkbox("Enable Local Lights", &EnableLocalLights);
+    if(EnableLocalLights)
+    {
+      ImGui::Checkbox("Display Light Spheres Diffuse", &showLightSpheres);
+    }
 
     ImGui::BeginChild("Global Color", {390, 90});
     ImGui::Text("Global Color");
@@ -430,8 +434,11 @@ void GUI::RenderFrame()
 
     ImGui::Text("Current GBuffer To Display");
     ImGui::Text("0 = View Pos, 1 = Normal, 2 = Diffuse");
-    ImGui::Text("3 = Specular, 4 = Ambient, 5 = Shadow Map");
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 5);
+    ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
+    ImGui::Text("5 = Post-Blur Shadow (RGB = z)");
+    ImGui::Text("6 = Moment Shadow Map");
+
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 6);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios

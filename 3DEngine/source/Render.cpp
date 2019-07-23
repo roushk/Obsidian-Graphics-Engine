@@ -163,7 +163,10 @@ void Render::GenFrameBuffers()
 
   glGenFramebuffers(1, shadowFBO);
   glGenTextures(1, shadowTexture);
-  //glGenRenderbuffers(1, shadowRBO);
+
+  //glGenFramebuffers(1, blurShadowFBO);
+  glGenTextures(2, blurShadowTexture);
+
 }
 
 
@@ -193,7 +196,7 @@ void Render::BindAndCreateShadowBuffers()
   glActiveTexture(GL_TEXTURE13);
   glBindTexture(GL_TEXTURE_2D, shadowTexture[0]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
-    height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
+    height * shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -229,6 +232,131 @@ void Render::BindShadowBuffer()
   //draw scene
 }
 
+
+
+void Render::BindAndCreateBlurShadowBuffers()
+{
+  int width = height * aspect;
+
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[0]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
+    height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width * shadowScale,
+    height* shadowScale, 0, GL_RGBA, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+}
+
+void Render::CreateBlurShadowData()
+{
+  int w = blurValue;
+  float s = w / 2;
+
+  float totalWeight = 0;
+
+  //goes from -w to w indexing i + w so that index range is 0 = > 2w + 1
+  for (int i = -w; i <= w; ++i)
+  {
+    weights[i + w] = glm::exp((-0.5f) * (i / s) * (i / s));
+    totalWeight += weights[i + w];
+  }
+
+
+  //normalizes weights
+  for (unsigned i = 0; i < blurValue * 2 + 1; ++i)
+  {
+    weights[i] /= totalWeight;
+  }
+}
+
+void Render::BlurShadowLoadFinalMap()
+{
+  glActiveTexture(GL_TEXTURE15);
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMap"), 15);
+  glBindSampler(GL_TEXTURE15, glGetUniformLocation(programID, "blurShadowMap"));
+
+}
+
+void Render::BlurShadowLoadData()
+{
+  glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "blurKernel"), bpShadowblur);
+
+  glBindBufferBase(GL_UNIFORM_BUFFER, bpShadowblur, shadowBlurUBOHandle[0]);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(weights), weights, GL_STATIC_DRAW);
+
+
+}
+
+void Render::BlurShadowLoadHorizontal()
+{
+
+  //same as the shadow texture
+  glBindImageTexture(0, shadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "src"), 0);
+
+  glBindImageTexture(1, blurShadowTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 1);
+}
+
+void Render::BlurShadowLoadVertical()
+{
+
+  //same as the shadow texture
+  glBindImageTexture(0, blurShadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "src"), 0);
+
+  glBindImageTexture(1, blurShadowTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 1);
+}
+
+void Render::BlurShadowLoadDebug()
+{
+
+  glActiveTexture(GL_TEXTURE14);
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[0]);
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMapHorizontal"), 14);
+  glBindSampler(GL_TEXTURE14, glGetUniformLocation(programID, "blurShadowMapHorizontal"));
+
+
+  glActiveTexture(GL_TEXTURE15);
+  glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "blurShadowMapVertical"), 15);
+  glBindSampler(GL_TEXTURE15, glGetUniformLocation(programID, "blurShadowMapVertical"));
+
+}
+
+/*
+void Render::BindBlurShadowBuffer()
+{
+  //bind frame buffer i 
+  glBindFramebuffer(GL_FRAMEBUFFER, blurShadowFBO[0]);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::cout << "Shadow Map buffer bind Failed" << std::endl;
+  }
+
+  glViewport(0, 0, height * aspect* shadowScale, height* shadowScale);
+
+  glClearColor(1, 1, 1, 1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0, 0, 0, 0);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //draw scene
+}
+*/
 void Render:: BindAndCreateGBuffers()
 {
   GLuint numBuffers = 5;
@@ -559,7 +687,9 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
   programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
   programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
-  programIDs[ssComputerBlur] = LoadComputerShader("shaders/ComputeBlur.comp");
+  programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
+  programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
+  programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
   programID = programIDs[ssLightShader];
 }
 
@@ -692,6 +822,7 @@ void Render::BindLightScene(SceneLighting& lighting)
 void Render::CreateUBOBufferObjects()
 {
   glGenBuffers(2, uboHandle);
+  glGenBuffers(2, shadowBlurUBOHandle);
   uboBuffer[0] = (GLubyte*)malloc(sizeof(LightData) * 8);
 }
 
@@ -976,15 +1107,10 @@ void Render::DrawShadow(const Model& object, const Light& light)
     cameraChanged = false;
   }
 
-  glm::vec3 objectLookAtVec = vec3(0, -1, 0) - vec3(light.position);
-  Camera lightCam = Camera(vec3(light.position), vec3(0,1,0), vec3(0, 1, 0), PI / 2.0f, aspect, nearPlane, farPlane);
-  
-  //  viewMatrix = glm::lookAt(glm::vec3(light.position), objectLookAtVec, vec3(0, 1, 0));
-
   //projectionMatrix = cameraToNDC(lightCam);
-  projectionMatrix = perspectiveFov<float>(radians(60.0f), height * aspect, height, nearPlane, farPlane);
+  projectionMatrix = perspectiveFov<float>(radians(70.0f), height * aspect, height, nearPlane, farPlane);
   //projectionMatrix = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
-  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(0, -2, 0) - glm::vec3(light.position), vec3(0, 1, 0));
+  viewMatrix = glm::lookAt(glm::vec3(light.position), vec3(2.0f, 0, 0) , vec3(0, 1, 0));
   shadowMatrix = (glm::translate(vec3(0.5f)) * scale(vec3(0.5f))) * projectionMatrix * viewMatrix;
   //shadowMatrix = projectionMatrix * viewMatrix;
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
