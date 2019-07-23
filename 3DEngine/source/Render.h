@@ -274,9 +274,6 @@ public:
 
   //used to update the camera eye pos once when rotating the camera
   bool updateCameraEyePosOnce = false;
-  void HammersleyLoadData();
-  void LoadMaxDepth();
-  void BufferToneMapping();
 
   GLuint LoadTextureInto(std::string name);
 
@@ -332,8 +329,8 @@ public:
   float max_depth = 10.0f;
   float scalarLevel = 1.0f;
 
-  float exposure = 500.0f;
-  float contrast = 40.0f;
+  float exposure = 1.0f;
+  float contrast = 5.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
@@ -419,7 +416,7 @@ private:
   //objectPos is used for the eye point of the reflection cameras
   vec3 objectPos;
   vec4 eyePos{0, 2, 5, 1};
-  vec4 lookAt{0, 0.0f, 0, 1};
+  vec4 lookAt{0, -0.5f, 0, 1};
  
 
   int currentShader = 0;

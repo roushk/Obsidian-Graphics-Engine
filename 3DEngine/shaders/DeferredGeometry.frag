@@ -183,6 +183,9 @@ void main()
     //vec3 norm = texture(normalMap, texCoords).rgb;
     //norm = normalize(norm * 2.0f - 1.0f);
     //NormalOut.rgb = norm;
+
+    if(newTexCoords.x > 1.0 || newTexCoords.y > 1.0 || newTexCoords.x < 0.0 || newTexCoords.y < 0.0)
+      discard;
   }
 
 

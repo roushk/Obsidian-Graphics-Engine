@@ -468,7 +468,9 @@ void main()
     vec3 BRDF = (KdiffuseColor / PI ) + ((D * F * G) / (4.0f));
 
     //BRDF * light Brightness * Shadow
-    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
+    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
     //color = LnotNormal;
     //color = L;

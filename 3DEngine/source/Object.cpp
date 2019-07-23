@@ -175,41 +175,47 @@ glm::vec2 ObjectReader::uv_calc(glm::vec3 point)
   bool ZPositive = point.z > 0 ? true : false;
 
   float largestLine = 0;
-  glm::vec2 uv{0, 0};
+  glm::vec2 uv{ 0,0 };
 
   //posx, negx, posy, negy, posz, negz
   if (XPositive && absX >= absY && absX >= absZ)
   {
+
     largestLine = absX;
     uv.x = -point.z;
     uv.y = point.y;
   }
   if (XPositive == false && absX >= absY && absX >= absZ)
   {
+
     largestLine = absX;
     uv.x = point.z;
     uv.y = point.y;
   }
   if (YPositive && absY >= absX && absY >= absZ)
   {
+
     largestLine = absY;
     uv.x = point.x;
     uv.y = -point.z;
   }
   if (YPositive == false && absY >= absX && absY >= absZ)
   {
+
     largestLine = absY;
     uv.x = point.x;
     uv.y = point.z;
   }
   if (ZPositive && absZ >= absX && absZ >= absY)
   {
+
     largestLine = absZ;
     uv.x = point.x;
     uv.y = point.y;
   }
   if (ZPositive == false && absZ >= absX && absZ >= absY)
   {
+
     largestLine = absZ;
     uv.x = -point.x;
     uv.y = point.y;
@@ -324,21 +330,13 @@ void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
       std::cout << "u or v is out of range!" << std::endl;
   }
 
-  //Planar
-  for (auto& preTransformVert : vertices)
+  for (auto & preTransformVert : vertices)
   {
     glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
     //0 = x, 1 = y, 2 = x
     glm::vec2 uv = uv_calc(vert);
     m.uvPlanar.push_back(uv);
   }
-
-
-
-
-
-
-
 
 
 
@@ -574,5 +572,5 @@ void ObjectReader::loadMultiple(const std::string& filename)
 
 Model& ObjectReader::GetObject(int objNum)
 {
-  return models[objNum];
+  return models[std::min<unsigned>(objNum, models.size() - 1)];
 }
