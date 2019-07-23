@@ -16,6 +16,7 @@ End Header --------------------------------------------------------*/
 // Output data
 
 uniform sampler2D skydomeTexture;
+uniform sampler2D skydomeIRR;
 
 in vec3 normal;
 out vec3 color;

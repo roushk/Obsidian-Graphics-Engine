@@ -226,7 +226,7 @@ vec3 sRGBtoLinear(vec3 input, float exposure, float contrast)
   return pow(( (exposure * input) / (exposure * input + vec3(1,1,1)) ), vec3(contrast/2.2f));
 }
 
-vec3 LineartosRGB(vec3 input, float contrast)
+vec3 LineartosRGB(vec3 input, float exposure, float contrast)
 {
   return pow(( (exposure * input) / (exposure * input + vec3(1,1,1)) ), vec3(1.0f/(contrast/2.2f)));
 }
@@ -273,7 +273,7 @@ void main()
   //uv.y = min(1.0f,max(0.0f, uv.y));
   
   vec3 skydomeTex = texture(skydomeTexture, uv).rgb;
-  vec3 skydomeTexIRR = texture(skydomeIRR, uv).rgb;
+  vec3 skydomeTexIRR = sRGBtoLinear(texture(skydomeIRR, uv).rgb, exposure, contrast);
 
   //color = vec3(1,0,0);
   vec2 skewDistrib[totalSamples];
@@ -468,7 +468,9 @@ void main()
     vec3 BRDF = (KdiffuseColor / PI ) + ((D * F * G) / (4.0f));
 
     //BRDF * light Brightness * Shadow
-    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
+    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
     //color = LnotNormal;
     //color = L;
