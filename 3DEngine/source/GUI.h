@@ -26,18 +26,24 @@ public:
 
   bool buttonLeftDown = false;
   bool buttonRightDown = false;
-  bool rotateLights = false;
+  static bool rotateLights;
   vec3 position{0,0,0};
   static int currentCam;
   static int currentFBO;
   static int currentGJK;
+  static int currentTextureMaps;
 
   static bool debugDrawMode;
-  static bool copyDepth;
+  static bool autoCameraRotation;
+  static bool rotateCamera;
   static bool showLightSpheres;
   static bool MSMShadow;
   static bool EnableLocalLights;
+  static bool ParallaxMapping;
+  static bool NormalMapping;
+  static float ParallaxScale;
   static bool overwriteParams;
+  static bool BRDF_IBL;
 
 private:
   SceneLighting& lighting;

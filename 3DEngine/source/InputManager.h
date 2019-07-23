@@ -22,13 +22,25 @@ public:
 
   bool toggleCamera = false;
   bool oldPos = false;
-  float sensitivity = 0.05f;
+  float sensitivity = 0.025f;
   //float sensitivity = 0.05;
 
 
   bool pressedLeft = false;
   bool pressedRight = false;
   unsigned iteratorVal = 0;
+  struct CameraMovement
+  {
+    bool forward = false;
+    bool backward = false;
+    bool up = false;
+    bool down = false;
+    bool left = false;
+    bool right = false;
+    bool rollLeft = false;
+    bool rollRight = false;
+
+  } cameraMovement;
 
 
 };

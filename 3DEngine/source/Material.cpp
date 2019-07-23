@@ -6,6 +6,8 @@ vec3 Material::getPixelRGB(int x, int y)
   return pixels.at(x + (y * width));
 }
 
+
+
 bool MaterialReader::ReadMaterial(std::string filename)
 {
   auto start = std::chrono::system_clock::now();

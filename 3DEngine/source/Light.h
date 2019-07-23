@@ -196,7 +196,7 @@ class SceneLighting
 
   }global;
   int maxLights = 8;
-  int activeLights = 0;
+  int activeLights = 1;
   std::vector<Light> lights;
 };
 

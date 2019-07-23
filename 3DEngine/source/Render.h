@@ -60,7 +60,7 @@ enum shaderSetting
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
   ssPhongShadingDeferredShadowMSM,
-  ssBRDDeferredMSM,
+  ssBRDFDeferredMSM,
   ssLightShader,
   ssSkyboxShader,
   ssSkydome,
@@ -133,7 +133,7 @@ public:
   void SetModelOffsetView(const Light& light);
 
   void SetModelOffset(vec3 pos, float scale_ = 1.0f);
-  void LoadMaterial(Material materialSpec, Material materialDiff);
+  void LoadMaterial();
   void LoadSkybox(std::vector<std::string>& skyboxNames);
 
   void LoadSkydome();
@@ -177,7 +177,6 @@ public:
   void ClearScreen();
   void CreateShaders();
 
-  void CreateBuffers();
 
   void LoadDiffuseForLight(Light& light, float scale = 1.0f);
   void LoadDiffuseForLight(glm::vec4& light, float scale = 1.0f);
@@ -200,7 +199,6 @@ public:
   
   void LoadScreenSize();
   void Update();
-  void BindModelBuffer();
   void UpdateCamera(float dt);
   void Draw(Model& object);
   void Draw(Wireframe& object);
@@ -271,8 +269,20 @@ public:
   void LoadMaxDepth();
   void BufferToneMapping();
 
+  void LoadNormalAndHeight();
+  void BindNormalAndHeight();
+
+  //used to update the camera eye pos once when rotating the camera
+  bool updateCameraEyePosOnce = false;
+  void HammersleyLoadData();
+  void LoadMaxDepth();
+  void BufferToneMapping();
+
+  GLuint LoadTextureInto(std::string name);
+
   //initial aspect is 1024.0f / 768.0f
   Camera currentCamera;
+  Camera movingCamera;
   Camera cameraBase = Camera(vec4{ 0, 0, 5, 0 }, vec4{ 0, 0, -1, 0 }, vec4{ 0,1,0,0 }, PI / 2.0f , 1024.0f / 768.0f, nearPlane, farPlane);
   Camera cameras[6]
   {
@@ -322,8 +332,8 @@ public:
   float max_depth = 10.0f;
   float scalarLevel = 1.0f;
 
-  float exposure = 2.0f;
-  float contrast = 1.0f;
+  float exposure = 500.0f;
+  float contrast = 40.0f;
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
@@ -337,7 +347,7 @@ public:
     GL_COLOR_ATTACHMENT4,
     GL_COLOR_ATTACHMENT5 };
   GLuint Gbuffer, GBufferDepthBuffer;
-  GLuint GBufferTexture[6];
+  GLuint GBufferTexture[7];
   //material settings in GBuffer
   //USING
   //position 12 | emissive r  4
@@ -365,8 +375,41 @@ public:
 
   glm::vec2 windowPosition{ 0,0 };  //window position
 
+  //normal map
+  GLuint normalMap;
+  GLuint heightMap;
+  
+  struct MapsCombo
+  {
+    MapsCombo(std::string n, std::string h, std::string d)
+      :normal(n), height(h), diffuse(d) {};
 
-  float materialRoughness = 1.0f;
+    std::string normal;
+    std::string height;
+    std::string diffuse;
+    GLuint normalID, heightID, diffuseID;
+  };
+
+
+  std::vector<MapsCombo> textureMaps
+  {
+    {"materials/toy_box_normal.png", "materials/toy_box_height.png","materials/wood.png"},
+    {"materials/Wall_Stone_010_normal.png", "materials/Wall_Stone_010_height.png","materials/Wall_Stone_010_basecolor.png"},
+    {"materials/Rock_033_normal.png", "materials/Rock_033_height.png","materials/Rock_033_baseColor.png"},
+    {"materials/Pebbles_009_Normal.png", "materials/Pebbles_009_Height.png","materials/Pebbles_009_Base_Color.png"},
+    {"materials/Metal_Plate_022a_Normal.png", "materials/Metal_Plate_022a_Height.png","materials/Metal_Plate_022a_Base_Color.png"},
+    
+    {"materials/TexturesCom_Rock_Lava2_1K_normal.png", "materials/TexturesCom_Rock_Lava2_1K_height.png","materials/TexturesCom_Rock_Lava2_1K_albedo.png"},
+    {"materials/TexturesCom_Rock_Lava_1K_normal.png", "materials/TexturesCom_Rock_Lava_1K_height.png","materials/TexturesCom_Rock_Lava_1K_albedo.png"},
+    {"materials/Metal_Grill_005a_Normal.png", "materials/Metal_Grill_005a_Height.png","materials/Metal_Grill_005a_Base_Color.png"},
+    {"materials/Brick_Wall_012_NORM.png", "materials/Brick_Wall_012_DISP.png","materials/Brick_Wall_012_COLOR.png"},
+
+
+    //{"materials/normal.png", "materials/height.png","materials/diffuse.png"},
+
+  };
+
+  float materialRoughness = 50.0f;
 
 
   int windowX = 0;
@@ -375,8 +418,9 @@ public:
 private:
   //objectPos is used for the eye point of the reflection cameras
   vec3 objectPos;
-  vec4 eyePos{0, 0, 2, 0};
-  vec4 lookAt{0, 0, -1, 0 };
+  vec4 eyePos{0, 2, 5, 1};
+  vec4 lookAt{0, 0.0f, 0, 1};
+ 
 
   int currentShader = 0;
   GLuint programIDs[ssMaxShaders];
@@ -385,15 +429,16 @@ private:
   
   
   GLfloat theta = 0.0;
-
-  GLuint vertexbuffers[5];
+ 
+  //VBO setup 
   /*
-    0 is verts
-    1 is vert normals
-    2 is faces
-    3 is face normals
-    4 is uv's
-   */
+   0 is verts
+   1 is vert normals
+   2 is texCoords
+   3 is tangent
+   4 is bitangent
+  */
+
 
   GLenum err;
 

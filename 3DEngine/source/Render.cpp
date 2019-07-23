@@ -1,5 +1,6 @@
 #include <pch.h>
 #define PI 3.14159265359f
+#define _CRT_SECURE_NO_WARNINGS
 
 // Include standard headers
 //#include <stdio.h>
@@ -18,6 +19,10 @@
 #include "Wireframe.h"
 #include "singleton.h"
 #include <minwindef.h>
+#include "GUI.h"
+#include "singleton.h"
+#include "rgbe.h"
+#include "loadfile.h"
 
 
 Render::Render()
@@ -31,7 +36,6 @@ Render::Render()
 Render::~Render()
 {
   // Cleanup VBO
-  glDeleteBuffers(5, vertexbuffers);
   glDeleteBuffers(2, uboHandle);
 
   //glDeleteVertexArrays(1, &VertexArrayID);
@@ -50,7 +54,7 @@ Render::~Render()
   glDeleteBuffers(6, FBODepthBuffers);
 
   glDeleteBuffers(1, &Gbuffer);
-  glDeleteTextures(6, GBufferTexture);
+  glDeleteTextures(7, GBufferTexture);
   glDeleteBuffers(1, &GBufferDepthBuffer);
 
 
@@ -59,11 +63,23 @@ Render::~Render()
   SDL_DestroyWindow(gWindow);
 }
 
+//also loads specular map
 void Render::GenGBuffer()
 {
   glGenFramebuffers(1, &Gbuffer);
-  glGenTextures(6, GBufferTexture);
+  glGenTextures(7, GBufferTexture);
   glGenRenderbuffers(1, &GBufferDepthBuffer);
+
+
+  specularMaterialID = LoadTextureInto(std::string("materials/DiffuseMap.png"));
+
+
+  for(auto& texture: textureMaps)
+  {
+    texture.diffuseID = LoadTextureInto(texture.diffuse);
+    texture.normalID = LoadTextureInto(texture.normal);
+    texture.heightID = LoadTextureInto(texture.height);
+  }
 }
 
 std::string Render::GetSetting()
@@ -100,40 +116,9 @@ void Render::SetModelOffset(vec3 pos, float scale_)
   modelTransform = translate(pos) * scale(glm::mat4(1.0f), vec3(scale_));
 }
 
-void Render::LoadMaterial(Material materialSpec, Material materialDiff)
+void Render::LoadMaterial()
 {
-  glUseProgram(programID);
-
-
-  glGenTextures(1, &diffuseMaterialID);
-  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
-  //pixels are in RGB format as floats
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, materialDiff.width,
-               materialDiff.height, 0, GL_RGB, GL_FLOAT, materialDiff.pixels.data());
-
-
-  glGenTextures(1, &specularMaterialID);
-  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
-  //pixels are in RGB format as floats
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, materialSpec.width,
-               materialSpec.height, 0, GL_RGB, GL_FLOAT, materialSpec.pixels.data());
-  //glEnable(GL_TEXTURE_2D);
-  //glDisable(GL_TEXTURE_2D);
-  //glTexGenf()
+  diffuseMaterialID = textureMaps[pattern::get<GUI>().currentTextureMaps].diffuseID;
 }
 
 void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
@@ -153,6 +138,79 @@ void Render::LoadSkybox(std::vector<std::string>& skyboxNames)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
+}
+
+
+void Render::LoadSkydome()
+{
+
+  std::string filename = "skydomeFilenames.txt";
+  std::string file = load_file(filename);
+
+  //append new line to end of file
+  file.push_back('\n');
+  std::vector < std::string> objects;
+
+  //is -1 because the first filename does not have a 
+  size_t findPos = 0;
+  size_t lastPos = file.find_last_of('\n');
+  do
+  {
+    unsigned i = 1;
+
+    //while still filename
+    while (file.size() > findPos + i + 1 && file[findPos + i] != '\n')
+    {
+      ++i;
+    }
+
+    //push back filename
+    //only push back file if its greater than size of 3 (for suffix *.obj)
+    if (i > 4)
+      objects.push_back(file.substr(findPos, i));
+    file.erase(findPos, i);
+
+    findPos = file.find_first_of('\n');
+    if (findPos != std::string::npos)
+    {
+      file.erase(findPos, 1);
+    }
+    else
+    {
+      break;
+    }
+
+    //if (file.size() == 0 || findPos == std::string::npos)
+     // break;
+  } while (findPos != std::string::npos && findPos != lastPos);
+
+  //load objects into loader
+  for (unsigned i = 0; i < objects.size(); i += 2)
+  {
+
+    skydomeID[i / 2] = LoadHDRimage(objects[i]);
+    skydomeIDIRR[i / 2] = LoadHDRimage(objects[i + 1]);
+
+  }
+
+}
+
+void Render::BindSkydome()
+{
+  glUseProgram(programID);
+
+  //Loads skydome
+  glActiveTexture(GL_TEXTURE7);
+  glBindTexture(GL_TEXTURE_2D, skydomeID[0]);
+  glUniform1i(glGetUniformLocation(programID, "skydomeTexture"), 7);
+  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "skydomeTexture"));
+
+  //Loads skydome irradiance map
+  glActiveTexture(GL_TEXTURE8);
+  glBindTexture(GL_TEXTURE_2D, skydomeIDIRR[0]);
+  glUniform1i(glGetUniformLocation(programID, "skydomeIRR"), 8);
+  glBindSampler(GL_TEXTURE8, glGetUniformLocation(programID, "skydomeIRR"));
+
 }
 
 void Render::GenFrameBuffers()
@@ -227,7 +285,7 @@ void Render::BindShadowBuffer()
   
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0,0,0,0);
+  glClearColor(0.5, 0.5, 0.5, 1);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
 }
@@ -290,6 +348,15 @@ void Render::BlurShadowLoadFinalMap()
 
 }
 
+void Render::HammersleyLoadData()
+{
+  glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "HammersleyBlock"), bpHammersley);
+
+  glBindBufferBase(GL_UNIFORM_BUFFER, bpHammersley, HammersleyUBOHandle[0]);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(hammersleyBlock), &hammersleyBlock, GL_STATIC_DRAW);
+
+
+}
 void Render::BlurShadowLoadData()
 {
   glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "blurKernel"), bpShadowblur);
@@ -352,7 +419,6 @@ void Render::BindBlurShadowBuffer()
 
   glClearColor(1, 1, 1, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(0, 0, 0, 0);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
 }
@@ -364,7 +430,7 @@ void Render:: BindAndCreateGBuffers()
   int width = height * aspect;
 
   //Per GBuffer View Pos Out
-  glActiveTexture(GL_TEXTURE8);
+  glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -373,7 +439,7 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer NormalOut
-  glActiveTexture(GL_TEXTURE9);
+  glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[1]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -383,16 +449,16 @@ void Render:: BindAndCreateGBuffers()
   //End Per GBuffer
 
   //Per GBuffer DiffuseOut
-  glActiveTexture(GL_TEXTURE10);
+  glActiveTexture(GL_TEXTURE4);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[2]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GBufferTexture[2], 0);
   //End Per GBuffer
 
   //Per GBuffer SpecularOut
-  glActiveTexture(GL_TEXTURE11);
+  glActiveTexture(GL_TEXTURE5);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[3]);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -400,13 +466,22 @@ void Render:: BindAndCreateGBuffers()
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GBufferTexture[3], 0);
   //End Per GBuffer
 
-  //Per GBuffer AmbientOut
-  glActiveTexture(GL_TEXTURE12);
+  //Per GBuffer tangent out
+  glActiveTexture(GL_TEXTURE6);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GBufferTexture[4], 0);
+  //End Per GBuffer
+
+    //Per GBuffer bitangent out
+  glActiveTexture(GL_TEXTURE7);
+  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GBufferTexture[5], 0);
   //End Per GBuffer
 
 
@@ -414,9 +489,9 @@ void Render:: BindAndCreateGBuffers()
 
   //Bind depth buffer
   glBindRenderbuffer(GL_RENDERBUFFER, GBufferDepthBuffer);
-  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
-  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, GBufferDepthBuffer);
-
+  glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
+  glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, GBufferDepthBuffer);
+  
   //check for completeness
   if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
@@ -448,8 +523,13 @@ void Render::BindGBufferTextures()
 
   glActiveTexture(GL_TEXTURE6);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[4]);
-  glUniform1i(glGetUniformLocation(programID, "gAmbientMap"), 6);
-  glBindSampler(GL_TEXTURE6, glGetUniformLocation(programID, "gAmbientMap"));
+  glUniform1i(glGetUniformLocation(programID, "gTangentMap"), 6);
+  glBindSampler(GL_TEXTURE6, glGetUniformLocation(programID, "gTangentMap"));
+
+  glActiveTexture(GL_TEXTURE7);
+  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
+  glUniform1i(glGetUniformLocation(programID, "gBitangentMap"), 7);
+  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "gBitangentMap"));
   
 }
 
@@ -602,12 +682,12 @@ void Render::BindMaterials(SceneLighting& lighting)
 
   //loads diffuse
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
+  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kdiffuse"), 0);
 
   //loads specular
   glActiveTexture(GL_TEXTURE1);
-  glBindTexture(GL_TEXTURE_2D, diffuseMaterialID);
+  glBindTexture(GL_TEXTURE_2D, specularMaterialID);
   glUniform1i(glGetUniformLocation(programID, "Kspecular"), 1);
 
   //loads ambient and emissive from GUI
@@ -631,36 +711,12 @@ void Render::LoadModel(Model& object)
   glUseProgram(programID);
   glBindVertexArray(object.get_vao());
 
- /*
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-  glBufferData(GL_ARRAY_BUFFER, object.verts.size() * sizeof(vec3), object.verts.data(), GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
-  glBufferData(GL_ARRAY_BUFFER, object.vertexNormals.size() * sizeof(vec3), object.vertexNormals.data(),
-               GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vertexbuffers[2]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.faces.size() * sizeof(uvec3), object.faces.data(), GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[3]);
-  glBufferData(GL_ARRAY_BUFFER, object.faceNormals.size() * sizeof(vec3), object.faceNormals.data(), GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[4]);
-
-  //selcts UV model to use for texturing
-  if (currentUVModel == uvmCylindrical)
-    glBufferData(GL_ARRAY_BUFFER, object.uvCylindrical.size() * sizeof(vec2), object.uvCylindrical.data(),
-                 GL_STATIC_DRAW);
-  else if (currentUVModel == uvmSphereical)
-    glBufferData(GL_ARRAY_BUFFER, object.uvSpherical.size() * sizeof(vec2), object.uvSpherical.data(), GL_STATIC_DRAW);
-  else if (currentUVModel == uvm6Planar)
-    glBufferData(GL_ARRAY_BUFFER, object.uvPlanar.size() * sizeof(vec2), object.uvPlanar.data(), GL_STATIC_DRAW);
-    */
   }
 
 void Render::ClearScreen()
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void Render::CreateShaders()
@@ -690,14 +746,29 @@ void Render::CreateShaders()
   programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
   programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
+  programIDs[ssBRDFDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
+  programIDs[ssSkydome] = LoadShaders("shaders/SkyDome.vert", "shaders/SkyDome.frag");
+
   programID = programIDs[ssLightShader];
 }
 
-void Render::CreateBuffers()
+
+void Render::LoadMaxDepth()
 {
-  glGenBuffers(5, vertexbuffers);
+  glUniform1f(glGetUniformLocation(programID, "max_depth"), max_depth);
+  glUniform1f(glGetUniformLocation(programID, "scalarLevel"), scalarLevel);
 }
 
+
+void Render::BufferToneMapping()
+{
+  glUniform1f(glGetUniformLocation(programID, "exposure"), exposure);
+  glUniform1f(glGetUniformLocation(programID, "contrast"), contrast);
+}
+void Render::LoadRoughness(float roughness)
+{
+  glUniform1f(glGetUniformLocation(programID, "materialAlpha"), roughness);
+}
 void Render::LoadDiffuseForLight(Light& light, float scale)
 {
   glUniform3fv(glGetUniformLocation(programID, "diffuse"), 1, glm::value_ptr(scale * glm::normalize(light.diffuse)));
@@ -823,6 +894,7 @@ void Render::CreateUBOBufferObjects()
 {
   glGenBuffers(2, uboHandle);
   glGenBuffers(2, shadowBlurUBOHandle);
+  glGenBuffers(1, HammersleyUBOHandle);
   uboBuffer[0] = (GLubyte*)malloc(sizeof(LightData) * 8);
 }
 
@@ -912,8 +984,10 @@ void Render::CopyDepthBuffer()
   glBindFramebuffer(GL_READ_FRAMEBUFFER, Gbuffer);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
   glBlitFramebuffer(
-    0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT, GL_NEAREST
-  );
+    0, 0, width, height, 0, 0, width, height, GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+  //glBlitFramebuffer(
+  //  0, 0, width, height, 0, 0, width, height, GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+
 }
 
 void Render::BufferRefractionData()
@@ -969,64 +1043,37 @@ void Render::Update()
 }
 
 
-void Render::BindModelBuffer()
-{
-  glUseProgram(programID);
-
-  // Use our shader
-
-
-  // 1st attribute buffer : vertex positions (model space)
-  glEnableVertexAttribArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[0]);
-  glVertexAttribPointer(
-    0, // attribute 0. MUST match the layout in the shader.
-    3, // size
-    GL_FLOAT, // type
-    GL_FALSE, // normalized?
-    0, // stride
-    (void*)0 // array buffer offset
-  );
-
-  if (currentShader != ssLightShader)
-  {
-    // 2nd attribute buffer : FACE normals (model space)
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[1]);
-    glVertexAttribPointer(
-      1, // attribute 0. MUST match the layout in the shader.
-      3, // size
-      GL_FLOAT, // type
-      GL_FALSE, // normalized?
-      0, // stride
-      (void*)0 // array buffer offset
-    );
-
-    // 3rd attribute buffer : uv coords
-  }
-  glEnableVertexAttribArray(2);
-
-  glBindBuffer(GL_ARRAY_BUFFER, vertexbuffers[4]);
-  glVertexAttribPointer(
-    2, // attribute 2. MUST match the layout in the shader.
-    2, // size
-    GL_FLOAT, // type
-    GL_FALSE, // normalized?
-    0, // stride
-    (void*)0 // array buffer offset
-  );
-}
-
 void Render::UpdateCamera(float dt)
 {
-  vec3 pos{0, 1, 0}; //rotate around z/origin vector
+  //vec3 pos{0, 1, 0}; //rotate around Y axis
+  vec3 pos{ 0, 0, 1 }; //rotate around Z axis
 
-  eyePos = rotate(rotateRate * dt, pos) * eyePos;
-  lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  if (GUI::autoCameraRotation && updateCameraEyePosOnce == false)
+  {
+    eyePos = vec4(currentCamera.eye(), 1);
+    updateCameraEyePosOnce = true;
+  }
+
+  if(GUI::rotateCamera)
+  {
+    eyePos = rotate(rotateRate * dt, pos) * eyePos;
+  }
+
+  //if(GUI::autoCameraRotation && updateCameraEyePosOnce)
+  //{
+  //}
+
+  if (!GUI::autoCameraRotation && updateCameraEyePosOnce == true)
+  {
+    updateCameraEyePosOnce = false;
+    currentCamera.eye_point = eyePos;
+  }
+  //lookAt = rotate(rotateRate * dt, pos) * lookAt;
+  
+  
 
   inverseCamRotate = rotate(rotateRate * dt, pos);
+  
 }
 
 void Render::Draw(Wireframe& object)
@@ -1040,6 +1087,17 @@ void Render::Draw(Wireframe& object)
     projectionMatrix = cameraToNDC(currentCamera);
     viewMatrix = worldToCamera(currentCamera);
     cameraChanged = false;
+  }
+
+  if(GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(1.0f, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    vec3 backVec = lookAt - eyePos;
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(eyePos) + -backVec, vec3(0,1,0));
+
   }
   //if (flipX == true)
   //  projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
@@ -1060,6 +1118,8 @@ void Render::Draw(Model& object)
 {
   glUseProgram(programID);
 
+
+  
   glUniform3f(glGetUniformLocation(programID, "camera"),
     currentCamera.eye().x, currentCamera.eye().y, currentCamera.eye().z);
   // Uniform transformation (vertex shader)
@@ -1072,6 +1132,18 @@ void Render::Draw(Model& object)
 
   viewMatrix = worldToCamera(currentCamera);
   //cameraChanged = false;
+
+  if (GUI::autoCameraRotation)
+  {
+    auto& render = pattern::get<Render>();
+    auto& input = pattern::get<InputManager>();
+
+    projectionMatrix = glm::perspective(currentCamera.zoomScale, float(render.windowX) / float(render.windowY), render.nearPlane, render.farPlane);
+    //vec3 backVec = normalize(lookAt - eyePos);
+    viewMatrix = glm::lookAt(vec3(eyePos), vec3(lookAt), vec3(0, 1, 0));
+    glUniform3f(glGetUniformLocation(programID, "camera"),
+      eyePos.x, eyePos.y, eyePos.z);
+  }
 
   glUniformMatrix4fv(glGetUniformLocation(programID, "shadowMatrix"), 1, GL_FALSE,
     glm::value_ptr(shadowMatrix));
@@ -1126,6 +1198,74 @@ void Render::DrawShadow(const Model& object, const Light& light)
 
   glDrawElements(GL_TRIANGLES, object.indices.size() * 3, GL_UNSIGNED_INT, 0); // 3 indices starting at 0 -> 1 triangle
 
+}
+
+//returns textureID
+GLuint Render::LoadHDRimage(std::string filename, bool irr)
+{
+  std::string inName = "IBL/" + filename;
+
+  std::cout << "in: " << inName << std::endl;
+
+  // Read the input file:  expect a *.hdr image
+  int width, height;
+  rgbe_header_info info;
+  char errbuf[100] = { 0 };
+  FILE* fp = fopen(inName.c_str(), "rb");
+  int rc = RGBE_ReadHeader(fp, &width, &height, &info, errbuf);
+  if (rc != RGBE_RETURN_SUCCESS) {
+    printf("RGBE read error: %s\n", errbuf);
+    exit(-1);
+  }
+  printf("%dx%d\n", width, height);
+
+  std::vector<float> image(3 * width*height, 0.0);
+  rc = RGBE_ReadPixels_RLE(fp, &image[0], width, height, errbuf);
+  if (rc != RGBE_RETURN_SUCCESS) {
+    printf("RGBE read error: %s\n", errbuf);
+    exit(-1);
+  }
+  fclose(fp);
+
+  // Gamma correct the image to linear color space.  Use gamma=2.2
+  // if you have no specific gamma information. Skip this step if
+  // you know image is already in linear space.
+  /*
+  // This is included to demonstrate the magic of OpenMP: This
+  // pragma turns the following loop into a multi-threaded loop,
+  // making use of all the cores your machine may have.
+  //this gamma corrects
+#pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
+  for (int j = 0; j < height; j++) {
+    for (int i = 0; i < width; i++) {
+      int p = (j*width + i);
+      for (int c = 0; c < 3; c++) {
+        image[3 * p + c] *= pow(image[3 * p + c], 1.8);
+      }
+    }
+  }
+  */
+  GLuint newTexture;
+  glGenTextures(1, &newTexture);
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, newTexture);
+
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB,
+    GL_FLOAT, image.data());
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, -100);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 100);
+
+  //glBindTexture(GL_TEXTURE_2D, 0);
+  //glGenerateMipmap(GL_TEXTURE_2D);
+  glGenerateTextureMipmap(newTexture);
+  return newTexture;
 }
 
 void Render::EndDrawing()
@@ -1186,6 +1326,73 @@ void Render::SetObjectShader(int shader)
 void Render::LoadObjectShader()
 {
   SetCurrentShader(objectShader);
+}
+
+GLuint Render::LoadTextureInto(std::string name)
+{
+
+  GLuint id;
+  id = SOIL_load_OGL_texture(name.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+    SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+  glBindTexture(GL_TEXTURE_2D, id);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  
+  if (0 == id)
+  {
+    printf("SOIL loading error: '%s'\n", SOIL_last_result());
+  }
+  return id;
+}
+
+void Render::LoadNormalAndHeight()
+{
+
+  normalMap = textureMaps[pattern::get<GUI>().currentTextureMaps].normalID;
+  heightMap = textureMaps[pattern::get<GUI>().currentTextureMaps].heightID;
+
+}
+
+void Render::BindNormalAndHeight()
+{
+  auto& gui = pattern::get<GUI>();
+  glUniform1i(glGetUniformLocation(programID, "normalMapping"), gui.NormalMapping);
+  glUniform1i(glGetUniformLocation(programID, "parallaxMapping"), gui.ParallaxMapping);
+  glUniform1f(glGetUniformLocation(programID, "parallaxScale"), gui.ParallaxScale);
+
+  glActiveTexture(GL_TEXTURE9);
+  glBindTexture(GL_TEXTURE_2D, normalMap);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 9);
+  glBindSampler(GL_TEXTURE9, glGetUniformLocation(programID, "normalMap"));
+
+  glActiveTexture(GL_TEXTURE10);
+  glBindTexture(GL_TEXTURE_2D, heightMap);
+  glUniform1i(glGetUniformLocation(programID, "heightMap"), 10);
+  glBindSampler(GL_TEXTURE10, glGetUniformLocation(programID, "heightMap"));
+}
+
+void Render::HammersleyCreateData()
+{
+  
+  hammersleyBlock.N = HammersleyConst; // N=20 ... 40 or whatever …
+  int kk;
+  int pos = 0;
+  for (int k = 0; k < HammersleyConst; k++) 
+  {
+    kk = k;
+    float u = 0.0f;
+    for (float p = 0.5f; kk; p *= 0.5f, kk >>= 1)
+    {
+      if (kk & 1)
+        u += p;
+    }
+    float v = (k + 0.5) / HammersleyConst;
+    hammersleyBlock.hammersley[pos++] = u;
+    hammersleyBlock.hammersley[pos++] = v;
+  }
 };
 
 

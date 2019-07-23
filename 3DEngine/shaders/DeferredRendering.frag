@@ -18,12 +18,16 @@ uniform sampler2D gPositionMap; //position map.a = emi
 uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
-uniform sampler2D gAmbientMap;
+uniform sampler2D gTangentMap;
+uniform sampler2D gBitangentMap;
+
 uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMapHorizontal;
 uniform sampler2D blurShadowMapVertical;
 uniform sampler2D momentShadowMap;
 
+uniform sampler2D normalMap;
+uniform sampler2D heightMap;
 
 uniform uint debugTexture;
 
@@ -39,14 +43,20 @@ void main()
   vec3 viewPos = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
   vec3 diffuse = texture(gDiffuseMap, fs_in.texCoords).xyz;
-
   vec3 specular = texture(gSpecularMap, fs_in.texCoords).xyz;
-  vec3 ambient = texture(gAmbientMap, fs_in.texCoords).xyz;
+
   vec3 shadow = vec3(texture(shadowMap, fs_in.texCoords).r);
   vec3 blurShadowH = texture(blurShadowMapHorizontal, fs_in.texCoords).rgb;
   vec3 blurShadowV = texture(blurShadowMapVertical, fs_in.texCoords).rgb;
   vec3 momentShadow = vec3(texture(momentShadowMap, fs_in.texCoords).rgb);
  
+  vec3 tangent = vec3(texture(gTangentMap, fs_in.texCoords).rgb);
+  vec3 bitangent = vec3(texture(gBitangentMap, fs_in.texCoords).rgb);
+
+  vec3 height = vec3(texture(heightMap, fs_in.texCoords).rgb);
+  vec3 normalmapped = vec3(texture(normalMap, fs_in.texCoords).rgb);
+
+
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);
 
@@ -80,12 +90,18 @@ void main()
   }
   else if(debugTexture == 7)
   {
-    debugColor = momentShadow;
+    debugColor = tangent;
   }
   else if(debugTexture == 8)
   {
-    debugColor = shadow;
+    debugColor = normalmapped;
   }
+  else if(debugTexture == 9)
+  {
+    debugColor = height;
+  }
+
+
     
 
   fragColor = vec4(debugColor, 1.0f);
