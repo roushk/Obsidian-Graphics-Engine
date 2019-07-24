@@ -224,6 +224,7 @@ void Render::GenFrameBuffers()
 
   //glGenFramebuffers(1, blurShadowFBO);
   glGenTextures(2, blurShadowTexture);
+  glGenTextures(2, SSAOBlurTexture);
 
 }
 
@@ -288,6 +289,31 @@ void Render::BindShadowBuffer()
   glClearColor(0.5, 0.5, 0.5, 1);
   //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   //draw scene
+}
+
+
+void Render::BindAndCreateSSAOBlurBuffers()
+{
+  int width = height * aspect;
+
+  glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[0]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width * shadowScale,
+    height* shadowScale, 0, GL_RED, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  //single depth 32 bit float
+  glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[1]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width * shadowScale,
+    height* shadowScale, 0, GL_RED, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 
@@ -357,6 +383,7 @@ void Render::HammersleyLoadData()
 
 
 }
+
 void Render::BlurShadowLoadData()
 {
   glUniformBlockBinding(programID, glGetUniformBlockIndex(programID, "blurKernel"), bpShadowblur);
@@ -389,6 +416,40 @@ void Render::BlurShadowLoadVertical()
   glUniform1i(glGetUniformLocation(programID, "dst"), 1);
 }
 
+
+void Render::SSAOBlurLoadHorizontal()
+{
+
+  //same as the shadow texture depth map
+  glBindImageTexture(0, shadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+  glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
+
+  //position map
+  glBindImageTexture(3, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "positionMap"), 3);
+
+  //dest is SSAOBlurTexture[0]
+  glBindImageTexture(4, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 4);
+}
+
+void Render::SSAOBlurLoadVertical()
+{
+
+  //same as the shadow texture
+  glBindImageTexture(4, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "depthMap"), 4);
+
+  //position map
+  glBindImageTexture(3, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "positionMap"), 3);
+
+  //dest is SSAOBlurTexture[1]
+  glBindImageTexture(5, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 5);
+}
+
+
 void Render::BlurShadowLoadDebug()
 {
 
@@ -402,6 +463,22 @@ void Render::BlurShadowLoadDebug()
   glBindTexture(GL_TEXTURE_2D, blurShadowTexture[1]);
   glUniform1i(glGetUniformLocation(programID, "blurShadowMapVertical"), 15);
   glBindSampler(GL_TEXTURE15, glGetUniformLocation(programID, "blurShadowMapVertical"));
+
+}
+
+void Render::SSAOBlurLoadDebug()
+{
+
+  glActiveTexture(GL_TEXTURE16);
+  glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[0]);
+  glUniform1i(glGetUniformLocation(programID, "SSAOBlurMapHorizontal"), 16);
+  glBindSampler(GL_TEXTURE16, glGetUniformLocation(programID, "SSAOBlurMapHorizontal"));
+
+
+  glActiveTexture(GL_TEXTURE17);
+  glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "SSAOBlurMapVertical"), 17);
+  glBindSampler(GL_TEXTURE17, glGetUniformLocation(programID, "SSAOBlurMapVertical"));
 
 }
 
@@ -743,11 +820,16 @@ void Render::CreateShaders()
   programIDs[ssPhongShadingDeferredLightSphere] = LoadShaders("shaders/DeferredRenderingLightSphere.vert", "shaders/PhongShadingDeferredLightSphere.frag");
   programIDs[ssShadowShader] = LoadShaders("shaders/ShadowShader.vert", "shaders/ShadowShader.frag");
   programIDs[ssPhongShadingDeferredShadow] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadow.frag");
-  programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
-  programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
+  
   programIDs[ssPhongShadingDeferredShadowMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/PhongShadingDeferredShadowMSM.frag");
   programIDs[ssBRDFDeferredMSM] = LoadShaders("shaders/DeferredRendering.vert", "shaders/BRDFDeferredMSM.frag");
   programIDs[ssSkydome] = LoadShaders("shaders/SkyDome.vert", "shaders/SkyDome.frag");
+  
+  programIDs[ssComputeBlurHorizontal] = LoadComputerShader("shaders/ComputeBlurHorizontal.comp");
+  programIDs[ssComputeBlurVertical] = LoadComputerShader("shaders/ComputeBlurVertical.comp");
+  
+  programIDs[ssSSAOBlurHorizontal] = LoadComputerShader("shaders/EdgeAwareBlurHorizontal.comp");
+  programIDs[ssSSAOBlurVertical] = LoadComputerShader("shaders/EdgeAwareBlurVertical.comp");
 
   programID = programIDs[ssLightShader];
 }
@@ -893,7 +975,7 @@ void Render::BindLightScene(SceneLighting& lighting)
 void Render::CreateUBOBufferObjects()
 {
   glGenBuffers(2, uboHandle);
-  glGenBuffers(2, shadowBlurUBOHandle);
+  glGenBuffers(1, shadowBlurUBOHandle);
   glGenBuffers(1, HammersleyUBOHandle);
   uboBuffer[0] = (GLubyte*)malloc(sizeof(LightData) * 8);
 }
@@ -1356,6 +1438,16 @@ void Render::LoadNormalAndHeight()
 
 }
 
+/*
+void Render::BindWidthAndHeight()
+{
+  
+  glUniform1i(glGetUniformLocation(programID, "height"), height);
+  glUniform1i(glGetUniformLocation(programID, "width"), height * aspect);
+
+
+}
+*/
 void Render::BindNormalAndHeight()
 {
   auto& gui = pattern::get<GUI>();

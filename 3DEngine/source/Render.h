@@ -59,6 +59,8 @@ enum shaderSetting
 
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
+  ssSSAOBlurHorizontal,
+  ssSSAOBlurVertical,
   ssPhongShadingDeferredShadowMSM,
   ssBRDFDeferredMSM,
   ssLightShader,
@@ -272,6 +274,15 @@ public:
   void LoadNormalAndHeight();
   void BindNormalAndHeight();
 
+  void SSAOBlurLoadVertical();
+  void SSAOBlurLoadHorizontal();
+
+  void BindAndCreateSSAOBlurBuffers();
+  void SSAOBlurLoadDebug();
+
+
+  //void BindWidthAndHeight();
+
   //used to update the camera eye pos once when rotating the camera
   bool updateCameraEyePosOnce = false;
 
@@ -309,9 +320,10 @@ public:
   //none -> horizontal -> horizontal and vertical
   //GLuint blurShadowFBO[1];  //shadow map output FBO
   GLuint blurShadowTexture[2];  //depth map
-  GLenum blurShadowBuffers[1]{ GL_COLOR_ATTACHMENT0 };
   GLuint shadowBlurUBOHandle[1];
 
+  GLuint SSAOBlurTexture[2];  //depth map
+  //use same UBO as blur for the hammersley random values
 
   GLuint HammersleyUBOHandle[1];
   static const int HammersleyConst = 20;  //samples count
@@ -322,6 +334,17 @@ public:
   };
   HammersleyBlock hammersleyBlock;
 
+  /*
+  
+    Image Bind Points
+    0 = shadow depth map
+    1 = shadow horizontal blur
+    2 = shadow horizontal and vertical blur
+    3 = position map
+    4 = SSAO horizontal blur 
+    5 = SSAO horizontal and vertical blur
+
+  */
 
   static const int blurValue = 20;
   float weights[blurValue * 2 + 1];

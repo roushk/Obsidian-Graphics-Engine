@@ -477,8 +477,10 @@ void GUI::RenderFrame()
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
     ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
     ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
-    ImGui::Text("7 = Tangent Map, 8 = Normal Map");
-    ImGui::Text("9 = Height Map");
+    ImGui::Text("7 = Post-Horizontal-Blur SSAO (RGB = z)");
+    ImGui::Text("8 = Post-Both-Blur SSAO (RGB = z)");
+    ImGui::Text("9 = Tangent Map");
+
 
     ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 9);
     //ImGui::Text("FBO to Render");

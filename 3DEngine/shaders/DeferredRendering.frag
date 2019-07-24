@@ -29,8 +29,10 @@ uniform sampler2D momentShadowMap;
 uniform sampler2D normalMap;
 uniform sampler2D heightMap;
 
-uniform uint debugTexture;
+uniform sampler2D SSAOBlurMapHorizontal;
+uniform sampler2D SSAOBlurMapVertical;
 
+uniform uint debugTexture;
 in VS_OUT
 {
   vec2 texCoords;
@@ -56,6 +58,8 @@ void main()
   vec3 height = vec3(texture(heightMap, fs_in.texCoords).rgb);
   vec3 normalmapped = vec3(texture(normalMap, fs_in.texCoords).rgb);
 
+  vec3 SSAOBlurH = vec3(texture(SSAOBlurMapHorizontal, fs_in.texCoords).r);
+  vec3 SSAOBlurV = vec3(texture(SSAOBlurMapVertical, fs_in.texCoords).r);
 
   //normal = normalize(normal);
   vec3 debugColor = vec3(0,0,0);
@@ -90,15 +94,15 @@ void main()
   }
   else if(debugTexture == 7)
   {
-    debugColor = tangent;
+    debugColor = SSAOBlurH;
   }
   else if(debugTexture == 8)
   {
-    debugColor = normalmapped;
+    debugColor = SSAOBlurV;
   }
   else if(debugTexture == 9)
   {
-    debugColor = height;
+    debugColor = tangent;
   }
 
 
