@@ -58,7 +58,7 @@ void main()
   vec3 normal = sharedNormalVar[invocID].xyz;  //N
   float depth = sharedDepthVar[invocID];    //d
 
-  for(uint i = 0; i < invocID + (blurFactor * 2); ++i)
+  for(uint i = invocID; i < invocID + (blurFactor * 2); ++i)
   {
     
     vec3 normal_i = sharedNormalVar[i].xyz; //Ni

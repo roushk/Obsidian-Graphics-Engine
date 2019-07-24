@@ -63,7 +63,7 @@ void main()
     float exponent = - ((depth_i - depth) * (depth_i - depth)) / (2.0f * SSAOScalar);
     float R = max(dot(normal,normal_i),0) * (1.0f / (sqrt(2.0f * PI * SSAOScalar))) * exp(exponent);
     
-    w += R * weights[i - invocID];
+    w += max(R * weights[i - invocID],0);
     
   }
   //blurValue.x = 1.0f;
