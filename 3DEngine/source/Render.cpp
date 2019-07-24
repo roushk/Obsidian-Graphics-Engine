@@ -425,8 +425,8 @@ void Render::SSAOBlurLoadHorizontal()
   glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
 
   //position map
-  glBindImageTexture(3, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "positionMap"), 3);
+  glBindImageTexture(3, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 3);
 
   //dest is SSAOBlurTexture[0]
   glBindImageTexture(4, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
@@ -441,8 +441,8 @@ void Render::SSAOBlurLoadVertical()
   glUniform1i(glGetUniformLocation(programID, "depthMap"), 4);
 
   //position map
-  glBindImageTexture(3, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "positionMap"), 3);
+  glBindImageTexture(3, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 3);
 
   //dest is SSAOBlurTexture[1]
   glBindImageTexture(5, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);

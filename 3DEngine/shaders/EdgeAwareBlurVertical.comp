@@ -12,14 +12,14 @@ uniform blurKernel {float weights[blurFactor * 2 + 1]; }; // Declares a uniform 
 layout (r32f) uniform readonly image2D depthMap;
 
 //uses GBufferTexture[0] as input and its in format RGBA16F
-layout (rgba16f) uniform readonly image2D positionMap;
+layout (rgba16f) uniform readonly image2D normalMap;
 
 //uses SSAOBlurTexture[1] as output and its in format R32F
 layout (r32f) uniform writeonly image2D dst;
 
 
 shared vec4 sharedDepthVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
-shared vec4 sharedPositionVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
+shared vec4 sharedNormalVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 
 
 void main()
@@ -28,13 +28,12 @@ void main()
   uint invocID = gl_LocalInvocationID.y; // Local thread id in the 128x1 thread groups128x1
 
   sharedDepthVar[invocID] = imageLoad(depthMap, gpos + ivec2(0, - blurFactor)); // read an image pixel at an ivec2(.,.) position
-  sharedPositionVar[invocID] = imageLoad(positionMap, gpos + ivec2(0, - blurFactor));
+  sharedNormalVar[invocID] = imageLoad(normalMap, gpos + ivec2(0, - blurFactor));
 
   if (invocID < 2.0f * blurFactor)
   {
     sharedDepthVar[invocID + 128] = imageLoad(depthMap, gpos + ivec2(0,128 - blurFactor)); // read extra 2*w pixels
-    sharedPositionVar[invocID + 128] = imageLoad(positionMap, gpos + ivec2(0,128 - blurFactor));
-
+    sharedNormalVar[invocID + 128] = imageLoad(normalMap, gpos + ivec2(0,128 - blurFactor));
   }
 
   barrier(); // Wait for all threads to catchup before reading sharedVar[]
