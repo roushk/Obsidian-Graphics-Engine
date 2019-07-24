@@ -421,32 +421,36 @@ void Render::SSAOBlurLoadHorizontal()
 {
 
   //same as the shadow texture depth map
-  glBindImageTexture(0, shadowTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
   glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
 
   //position map
-  glBindImageTexture(3, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "normalMap"), 3);
+  glBindImageTexture(1, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 1);
 
   //dest is SSAOBlurTexture[0]
-  glBindImageTexture(4, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "dst"), 4);
+  glBindImageTexture(2, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 2);
 }
 
 void Render::SSAOBlurLoadVertical()
 {
 
   //same as the shadow texture
-  glBindImageTexture(4, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "depthMap"), 4);
+
+  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
+
+  glBindImageTexture(1, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "EdgeAwareHorzBlur"), 1);
 
   //position map
-  glBindImageTexture(3, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "normalMap"), 3);
+  glBindImageTexture(2, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 2);
 
   //dest is SSAOBlurTexture[1]
-  glBindImageTexture(5, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "dst"), 5);
+  glBindImageTexture(3, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 3);
 }
 
 
@@ -509,7 +513,7 @@ void Render:: BindAndCreateGBuffers()
   //Per GBuffer View Pos Out
   glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[0]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GBufferTexture[0], 0);
@@ -518,7 +522,7 @@ void Render:: BindAndCreateGBuffers()
   //Per GBuffer NormalOut
   glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[1]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GBufferTexture[1], 0);
