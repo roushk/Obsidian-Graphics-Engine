@@ -429,8 +429,8 @@ void Render::SSAOBlurLoadHorizontal()
 
 
   //same as the shadow texture depth map
-  glBindImageTexture(0, SSAOTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
+  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "positionMap"), 0);
 
   //position map
   glBindImageTexture(1, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
@@ -439,6 +439,9 @@ void Render::SSAOBlurLoadHorizontal()
   //dest is SSAOBlurTexture[0]
   glBindImageTexture(2, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
   glUniform1i(glGetUniformLocation(programID, "dst"), 2);
+
+  glBindImageTexture(3, SSAOTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "SSAOMap"), 3);
 }
 
 void Render::SSAOBlurLoadVertical()
@@ -448,8 +451,8 @@ void Render::SSAOBlurLoadVertical()
     glm::value_ptr(projectionMatrix));
   glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
-  glBindImageTexture(0, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
+  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "positionMap"), 0);
 
   //position map
   glBindImageTexture(1, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
@@ -458,6 +461,9 @@ void Render::SSAOBlurLoadVertical()
   //dest is SSAOBlurTexture[1]
   glBindImageTexture(2, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
   glUniform1i(glGetUniformLocation(programID, "dst"), 2);
+
+  glBindImageTexture(3, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "SSAOMap"), 3);
 }
 
 
@@ -1159,6 +1165,21 @@ void Render::LoadSSAOValues()
   glUniform1f(glGetUniformLocation(programID, "SSAOscale"), SSAOscale);
   glUniform1f(glGetUniformLocation(programID, "SSAOrange"), SSAOrange);
 
+}
+void Render::LoadSSAOBlurValues()
+{
+  glUniform1f(glGetUniformLocation(programID, "SSAOBlurScalar"), SSAOBlurScalar);
+}
+
+void Render::SSAOLoadBlur()
+{
+  glActiveTexture(GL_TEXTURE17);
+  glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[1]);
+  glUniform1i(glGetUniformLocation(programID, "SSAOBlurMap"), 17);
+  glBindSampler(GL_TEXTURE17, glGetUniformLocation(programID, "SSAOBlurMap"));
+
+  //toggle SSAO 
+  glUniform1i(glGetUniformLocation(programID, "toggleSSAO"), pattern::get<GUI>().SSAO);  
 }
 
 

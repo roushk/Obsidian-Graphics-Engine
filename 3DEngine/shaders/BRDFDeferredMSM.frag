@@ -74,6 +74,7 @@ uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMap;
 uniform sampler2D skydomeTexture;
 uniform sampler2D skydomeIRR;
+uniform sampler2D SSAOBlurMap;
 
 
 in VS_OUT
@@ -109,6 +110,7 @@ uniform float contrast;
 
 const int totalSamples = 20;
 
+uniform bool toggleSSAO;
 
 out vec3 color;
 
@@ -242,6 +244,7 @@ void main()
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = texture(gAmbientMap, fs_in.texCoords).xyz; //vec3(0.1f,0.1f,0.1f); 
+  float SSAO = texture(SSAOBlurMap, fs_in.texCoords).r;
 
   float ns = 32.0f; //texture(gSpecularMap, fs_in.texCoords).a;
   //Kspecular *= 0.5f;
@@ -356,9 +359,14 @@ void main()
 
   vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
   IBL += IBLDiffuse;
+  
+
+  //apply SSAO to ambient terms
+  if(toggleSSAO)
+  {
+    IBL *= SSAO;
+  }
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
-
-
 
   //Frensel Term F
   //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
@@ -496,6 +504,7 @@ void main()
   //color = finalColor;
   color = sRGBtoLinear(finalColor, exposure, contrast);
   
+  color = IBL;
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;

@@ -285,6 +285,8 @@ public:
   void SSAOBindFBO();
   void SSAOLoadDebug();
   void LoadSSAOValues();
+  void LoadSSAOBlurValues();
+  void SSAOLoadBlur();
 
 
   //void BindWidthAndHeight();
@@ -417,6 +419,9 @@ public:
   float SSAOcontrast = 1.0f;
   float SSAOscale = 5.0f;
   float SSAOrange = 0.5f;
+  float SSAOBlurScalar = 0.01f;
+
+  
 
   struct MapsCombo
   {

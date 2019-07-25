@@ -312,6 +312,7 @@ void GUI::RenderFrame()
 
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
+    ImGui::Checkbox("SSAO", &SSAO);
 
     ImGui::Checkbox("Automatic Camera", &autoCameraRotation);
     if(autoCameraRotation)
@@ -348,8 +349,9 @@ void GUI::RenderFrame()
     ImGui::DragFloat("SSAO Contrast", &render.SSAOcontrast, 0.001f, 0.0f, 5.0f);
     ImGui::DragFloat("SSAO Scale", &render.SSAOscale, 0.001f, 0.0f, 5.0f);
     ImGui::DragFloat("SSAO Range", &render.SSAOrange, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Blur Scalar", &render.SSAOBlurScalar, 0.001f, 0.0f, 5.0f);
 
-
+    
     ImGui::PopItemWidth();
     /*
     ImGui::BeginChild("Global Color", {390, 90});

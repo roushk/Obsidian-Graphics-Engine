@@ -14,7 +14,7 @@ uniform blurKernel {float weights[blurFactor * 2 + 1]; }; // Declares a uniform 
 
 
 //uses SSAOBlurTexture[0] as input and its in format R32F
-layout (r32f) uniform readonly image2D depthMap;
+layout (rgba16f) uniform readonly image2D positionMap;
 
 //uses GBufferTexture[1] as input and its in format RGBA16F
 layout (rgba16f) uniform readonly image2D normalMap;
@@ -22,12 +22,17 @@ layout (rgba16f) uniform readonly image2D normalMap;
 //uses SSAOBlurTexture[1] as output and its in format R32F
 layout (r32f) uniform writeonly image2D dst;
 
+layout (r32f) uniform readonly image2D SSAOMap;
+
+
 const float PI = 3.1415926535897932384626433832795;
 
 shared float sharedDepthVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 shared vec4 sharedNormalVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
+shared float sharedSSAOVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 
-float SSAOScalar = 0.10f;
+
+uniform float SSAOBlurScalar = 0.01f;
 
 
 // This matrix holds the model-to-view transform
@@ -51,13 +56,15 @@ void main()
   ivec2 gpos = ivec2(gl_GlobalInvocationID.xy); // Combo of groupID, groupSize and localID
   uint invocID = gl_LocalInvocationID.y; // Local thread id in the 128x1 thread groups128x1
 
-  sharedDepthVar[invocID] =  worldToNDC(imageLoad(depthMap, gpos + ivec2(0, - blurFactor)).xyz).z; // read an image pixel at an ivec2(.,.) position
+  sharedDepthVar[invocID] =  worldToNDC(imageLoad(positionMap, gpos + ivec2(0, - blurFactor)).xyz).z; // read an image pixel at an ivec2(.,.) position
   sharedNormalVar[invocID] = imageLoad(normalMap, gpos + ivec2(0, - blurFactor));
+  sharedSSAOVar[invocID] = imageLoad(SSAOMap, gpos + ivec2(0, - blurFactor)).r;
 
   if (invocID < 2.0f * blurFactor)
   {
-    sharedDepthVar[invocID + 128] =  worldToNDC(imageLoad(depthMap, gpos + ivec2(0,128 - blurFactor)).xyz).z; // read extra 2*w pixels
+    sharedDepthVar[invocID + 128] =  worldToNDC(imageLoad(positionMap, gpos + ivec2(0,128 - blurFactor)).xyz).z; // read extra 2*w pixels
     sharedNormalVar[invocID + 128] = imageLoad(normalMap, gpos + ivec2(0,128 - blurFactor));
+    sharedSSAOVar[invocID + 128] = imageLoad(SSAOMap, gpos + ivec2(0,128 - blurFactor)).r;
   }
 
   barrier(); // Wait for all threads to catchup before reading sharedVar[]
@@ -65,6 +72,7 @@ void main()
   //float B = 1/(blurFactor * 2 + 1);
   //float s = blurFactor / 2;
   float w = 0;
+  float w2 = 0;
   //for i in rance -w to w so 2w + 1
   //Compute sum of weights[0 … 2w] times corresponding pixels v[i … i+2w]
   //W(xi,x) = R(xi,x) * S(xi, x)
@@ -79,15 +87,17 @@ void main()
     
     vec3 normal_i = sharedNormalVar[i].xyz; //Ni
     float depth_i = sharedDepthVar[i];      //di
+    float SSAOvalue_i = sharedSSAOVar[i];
 
-    float exponent = -((depth_i - depth) * (depth_i - depth)) / (2.0f * SSAOScalar);
-    float R = max(dot(normal,normal_i),0) * (1.0f / (sqrt(2.0f * PI * SSAOScalar))) * exp(exponent);
+    float exponent = -((depth_i - depth) * (depth_i - depth)) / (2.0f * SSAOBlurScalar);
+    float R = max(dot(normal,normal_i),0) * (1.0f / (sqrt(2.0f * PI * SSAOBlurScalar))) * exp(exponent);
     
-    w += max(R * weights[i - invocID],0);
+    w += max(R * weights[i - invocID],0) * SSAOvalue_i;  
+    w2 += max(R * weights[i - invocID],0);
     
   }
 
-  imageStore(dst, gpos, vec4(w,0,0,0)); // Write to destination image
+  imageStore(dst, gpos, vec4(w/w2,0,0,0)); // Write to destination image
   //imageStore(dst, gpos, vec4(normal,0)); // Write to destination image
 
 }

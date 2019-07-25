@@ -98,6 +98,7 @@ void main()
 {
   //set variables
 
+  //world space positon P and normal N
   vec3 position = texture(gPositionMap, fs_in.texCoords).xyz;
   vec3 normal = texture(gNormalMap, fs_in.texCoords).xyz;
 
@@ -122,7 +123,7 @@ void main()
   float y = float(gl_FragCoord.y) / height;
 
   //^ as XOR
-  float phi = (30 * xPrime ^ yPrime) + (10 * xPrime * yPrime);
+  float phi = ((30 * xPrime) ^ yPrime) + (10 * xPrime * yPrime);
   
   //P,N = point and normal at gbuffer (x,y)
   //position = P, normal = N
@@ -158,6 +159,7 @@ void main()
   }
 
   float S = 2 * PI * c / float(n) * total;
+  SSAO_OUT = S;
   SSAO_OUT = max(pow(1.0f - SSAOscale * S,SSAOcontrast),0);
   //SSAO_OUT = 1 - S;
   //SSAO_OUT = SSAOcontrast * SSAOscale;

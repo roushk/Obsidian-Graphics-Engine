@@ -44,7 +44,8 @@ public:
   static float ParallaxScale;
   static bool overwriteParams;
   static bool BRDF_IBL;
-
+  static bool SSAO;
+  
 private:
   SceneLighting& lighting;
   ObjectReader& reader;
