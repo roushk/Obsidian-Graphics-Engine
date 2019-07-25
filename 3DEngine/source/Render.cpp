@@ -625,15 +625,6 @@ void Render:: BindAndCreateGBuffers()
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GBufferTexture[4], 0);
   //End Per GBuffer
 
-    //Per GBuffer bitangent out
-  glActiveTexture(GL_TEXTURE7);
-  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GBufferTexture[5], 0);
-  //End Per GBuffer
-
 
   glDrawBuffers(numBuffers, DrawGBuffers);
 
@@ -676,10 +667,6 @@ void Render::BindGBufferTextures()
   glUniform1i(glGetUniformLocation(programID, "gTangentMap"), 6);
   glBindSampler(GL_TEXTURE6, glGetUniformLocation(programID, "gTangentMap"));
 
-  glActiveTexture(GL_TEXTURE7);
-  glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
-  glUniform1i(glGetUniformLocation(programID, "gBitangentMap"), 7);
-  glBindSampler(GL_TEXTURE7, glGetUniformLocation(programID, "gBitangentMap"));
   
 }
 

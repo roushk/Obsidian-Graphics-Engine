@@ -504,7 +504,7 @@ void main()
   //color = finalColor;
   color = sRGBtoLinear(finalColor, exposure, contrast);
   
-  color = IBL;
+  //color = IBL;
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;
