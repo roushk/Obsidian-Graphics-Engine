@@ -399,8 +399,7 @@ public:
 
   std::vector<LightData> lightDatas;
 
-  float SSAOcontrast = 1.0f;
-  float SSAOscale = 1.0f;
+
 
   float rotateRate = 2.0f * PI / 20.0f;
 
@@ -415,6 +414,10 @@ public:
   GLuint normalMap;
   GLuint heightMap;
   
+  float SSAOcontrast = 1.0f;
+  float SSAOscale = 5.0f;
+  float SSAOrange = 0.5f;
+
   struct MapsCombo
   {
     MapsCombo(std::string n, std::string h, std::string d)

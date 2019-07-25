@@ -347,6 +347,7 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Material Alpha", &render.materialRoughness, 0.005f, 0.0f, 500.0f);
     ImGui::DragFloat("SSAO Contrast", &render.SSAOcontrast, 0.001f, 0.0f, 5.0f);
     ImGui::DragFloat("SSAO Scale", &render.SSAOscale, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Range", &render.SSAOrange, 0.001f, 0.0f, 5.0f);
 
 
     ImGui::PopItemWidth();

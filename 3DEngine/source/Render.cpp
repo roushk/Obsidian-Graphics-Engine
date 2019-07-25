@@ -429,7 +429,7 @@ void Render::SSAOBlurLoadHorizontal()
 
 
   //same as the shadow texture depth map
-  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glBindImageTexture(0, SSAOTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
   glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
 
   //position map
@@ -1155,8 +1155,10 @@ void Render::LoadScreenSize()
 
 void Render::LoadSSAOValues()
 {
-  glUniform1i(glGetUniformLocation(programID, "SSAOcontrast"), SSAOcontrast);
-  glUniform1i(glGetUniformLocation(programID, "SSAOscale"), SSAOscale);
+  glUniform1f(glGetUniformLocation(programID, "SSAOcontrast"), SSAOcontrast);
+  glUniform1f(glGetUniformLocation(programID, "SSAOscale"), SSAOscale);
+  glUniform1f(glGetUniformLocation(programID, "SSAOrange"), SSAOrange);
+
 }
 
 

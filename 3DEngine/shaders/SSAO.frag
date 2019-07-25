@@ -24,11 +24,11 @@ uniform HammersleyBlock
   float hammersley[2*100]; 
 };
 
+uniform sampler2D gAmbientMap;
 uniform sampler2D gPositionMap; //position map.a = emi
 uniform sampler2D gNormalMap;
 uniform sampler2D gDiffuseMap;
 uniform sampler2D gSpecularMap;
-uniform sampler2D gAmbientMap;
 
 in VS_OUT
 {
@@ -65,13 +65,15 @@ const int totalSamples = 20;
 uniform int height;
 uniform int width;
 
+uniform float SSAOcontrast;
+uniform float SSAOscale;
+uniform float SSAOrange;
+
 out float SSAO_OUT;
 //Heaviside step function 
 //0 if negative 1 otherwize
 //used to exclude stuff outside the range
 
-uniform float SSAOcontrast;
-uniform float SSAOscale;
 
 vec3 worldToNDC(vec3 pos)
 {
@@ -101,6 +103,7 @@ void main()
 
   vec3 cameraPos = camera.xyz;
   
+  
   /*
   For a given pixel with a world space position and normal P,N (from the gbuffer), carefully
   choose (as shown in the next section) a selection of n points Pi
@@ -119,7 +122,7 @@ void main()
   float y = float(gl_FragCoord.y) / height;
 
   //^ as XOR
-  float phi = (30 * (xPrime ^ yPrime)) + 10 * xPrime * yPrime;
+  float phi = (30 * xPrime ^ yPrime) + (10 * xPrime * yPrime);
   
   //P,N = point and normal at gbuffer (x,y)
   //position = P, normal = N
@@ -127,7 +130,7 @@ void main()
   float d = worldToNDC(texture(gPositionMap, fs_in.texCoords).xyz).z;
   
   //R = world space range of influence R in meters 
-  float R = 1.0f;
+  float R = SSAOrange;
   
   float delta = 0.001f;
 
@@ -150,14 +153,14 @@ void main()
     float Di = worldToNDC(texture(gPositionMap, iPoint).xyz).z;
     vec3 wi = Pi - position;
 
-
     total += ( max(0, dot(normal, wi) - (delta * Di)) * Heaviside(R, length(wi))) 
       / max(c * c, dot(wi,wi));
   }
-  float S = 2 * PI * c / float(n) * total;
 
-  //SSAO_OUT = max(pow(1.0f - SSAOscale * S,SSAOcontrast),0);
-  SSAO_OUT = 1 - S;
+  float S = 2 * PI * c / float(n) * total;
+  SSAO_OUT = max(pow(1.0f - SSAOscale * S,SSAOcontrast),0);
+  //SSAO_OUT = 1 - S;
+  //SSAO_OUT = SSAOcontrast * SSAOscale;
   //  SSAO_OUT = gl_FragCoord.y * gl_FragCoord.x / float(height * width);
   //SSAO_OUT = y * x;
 
