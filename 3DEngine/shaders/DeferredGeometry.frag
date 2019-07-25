@@ -75,7 +75,8 @@ mat3 createParallaxMatrix(vec3 tangent, vec3 bitangent, vec3 modelNormal)
   vec3 T = normalize(tangent);
   vec3 N = normalize(modelNormal);
   //  vec3 B = cross(N, T);
-  vec3 B = normalize(bitangent);
+  T = normalize(T - dot(T, N) * N);
+  vec3 B = cross(N, T);
 
   return mat3(T, B, N);
 }
@@ -179,6 +180,12 @@ void main()
     DiffuseOut.rgb = texture(Kdiffuse, newTexCoords).rgb;
     SpecularOut.rgb = texture(Kspecular, newTexCoords).rgb;
     //NormalOut.rgb = fs_in.normal.rgb;
+
+
+    vec3 norm = texture(normalMap, newTexCoords).rgb;
+    norm = normalize(norm * 2.0f - 1.0f);
+    norm = normalize(TBN * norm);
+    NormalOut.rgb = norm;
 
     //vec3 norm = texture(normalMap, texCoords).rgb;
     //norm = normalize(norm * 2.0f - 1.0f);
