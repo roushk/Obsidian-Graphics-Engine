@@ -22,8 +22,23 @@ const float PI = 3.1415926535897932384626433832795;
 shared float sharedDepthVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 shared vec4 sharedNormalVar[128 + (blurFactor * 2) + 1]; // Variable shared with other threads in the 128x1 thread group2
 
-float SSAOScalar = 0.01f;
+float SSAOScalar = 0.10f;
 
+
+// This matrix holds the model-to-view transform
+uniform mat4  viewMatrix;
+
+// This matrix holds the projection matrix
+uniform mat4  projectionMatrix;
+
+vec3 worldToNDC(vec3 pos)
+{
+  vec4 offset = vec4(pos, 1.0);
+  offset      = projectionMatrix * viewMatrix * offset;    // from view to clip-space
+  offset.xyz /= offset.w;               // perspective divide
+  offset.xyz  = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0 
+  return offset.xyz;
+}
 
 void main()
 {
@@ -31,12 +46,12 @@ void main()
   ivec2 gpos = ivec2(gl_GlobalInvocationID.xy); // Combo of groupID, groupSize and localID
   uint invocID = gl_LocalInvocationID.x; // Local thread id in the 128x1 thread groups128x1
 
-  sharedDepthVar[invocID] = imageLoad(depthMap, gpos + ivec2(- blurFactor, 0)).a; // read an image pixel at an ivec2(.,.) position
+  sharedDepthVar[invocID] = worldToNDC(imageLoad(depthMap, gpos + ivec2(- blurFactor, 0)).xyz).z; // read an image pixel at an ivec2(.,.) position
   sharedNormalVar[invocID] = imageLoad(normalMap, gpos + ivec2(- blurFactor, 0));
 
   if (invocID < 2.0f * blurFactor)
   {
-    sharedDepthVar[invocID + 128] = imageLoad(depthMap, gpos + ivec2(128 - blurFactor,0)).a; // read extra 2*w pixels
+    sharedDepthVar[invocID + 128] = worldToNDC(imageLoad(depthMap, gpos + ivec2(128 - blurFactor,0)).xyz).z; // read extra 2*w pixels
     sharedNormalVar[invocID + 128] = imageLoad(normalMap, gpos + ivec2(128 - blurFactor,0));
   }
 
@@ -50,25 +65,29 @@ void main()
   //W(xi,x) = R(xi,x) * S(xi, x)
   //S = weights from gaussian vlur
   //R = range kernel
+  //float depth = imageLoad(depthMap, gpos).a;    //d
+  //vec3 normal = imageLoad(normalMap, gpos);     //N
 
-  vec3 normal = sharedNormalVar[invocID].xyz;  //N
-  float depth = sharedDepthVar[invocID];    //d
+  float depth = sharedDepthVar[invocID + blurFactor];       //d
+  vec3 normal = sharedNormalVar[invocID + blurFactor].xyz;
+
+
 
   for(uint i = invocID; i < invocID + (blurFactor * 2); ++i)
   {
-    
+    //range current pixel to current pixel + blurFactor * 2 - 1
     vec3 normal_i = sharedNormalVar[i].xyz; //Ni
     float depth_i = sharedDepthVar[i];      //di
 
     float exponent = - ((depth_i - depth) * (depth_i - depth)) / (2.0f * SSAOScalar);
     float R = max(dot(normal,normal_i),0) * (1.0f / (sqrt(2.0f * PI * SSAOScalar))) * exp(exponent);
     
-    w += max(R * weights[i - invocID],0);
-    
+    //range 0 to blurFactor * 2 - 1
+    w += max(R * weights[i - invocID],0);  
   }
-  //blurValue.x = 1.0f;
   
+  //blurValue.x = 1.0f;
   imageStore(dst, gpos, vec4(w,0,0,0)); // Write to destination image
-  //imageStore(dst, gpos, vec4(normal,0)); // Write to destination image
+  //imageStore(dst, gpos, vec4(depth,0,0,0)); // Write to destination image
 
 }

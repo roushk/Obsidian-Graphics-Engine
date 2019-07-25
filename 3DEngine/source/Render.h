@@ -61,6 +61,7 @@ enum shaderSetting
   ssComputeBlurVertical,
   ssSSAOBlurHorizontal,
   ssSSAOBlurVertical,
+  ssSSAO,
   ssPhongShadingDeferredShadowMSM,
   ssBRDFDeferredMSM,
   ssLightShader,
@@ -280,6 +281,11 @@ public:
   void BindAndCreateSSAOBlurBuffers();
   void SSAOBlurLoadDebug();
 
+  void SSAOCreateFBO();
+  void SSAOBindFBO();
+  void SSAOLoadDebug();
+  void LoadSSAOValues();
+
 
   //void BindWidthAndHeight();
 
@@ -323,6 +329,10 @@ public:
   GLuint shadowBlurUBOHandle[1];
 
   GLuint SSAOBlurTexture[2];  //depth map
+
+  GLuint SSAOFBO[1];  //shadow map output FBO
+  GLuint SSAOTexture[1];  //depth map
+  GLenum SSAOBuffers[1]{ GL_COLOR_ATTACHMENT0 };
   //use same UBO as blur for the hammersley random values
 
   GLuint HammersleyUBOHandle[1];
@@ -358,7 +368,9 @@ public:
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
   float shadowScale = 1.0f; //shadow resolution
+  
   GLenum DrawBuffers;
+  
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 
     GL_COLOR_ATTACHMENT1, 
@@ -366,7 +378,9 @@ public:
     GL_COLOR_ATTACHMENT3, 
     GL_COLOR_ATTACHMENT4,
     GL_COLOR_ATTACHMENT5 };
+
   GLuint Gbuffer, GBufferDepthBuffer;
+  
   GLuint GBufferTexture[7];
   //material settings in GBuffer
   //USING
@@ -385,6 +399,8 @@ public:
 
   std::vector<LightData> lightDatas;
 
+  float SSAOcontrast = 1.0f;
+  float SSAOscale = 1.0f;
 
   float rotateRate = 2.0f * PI / 20.0f;
 

@@ -224,7 +224,11 @@ void Render::GenFrameBuffers()
 
   //glGenFramebuffers(1, blurShadowFBO);
   glGenTextures(2, blurShadowTexture);
+  
+
+  glGenFramebuffers(1, SSAOFBO);
   glGenTextures(2, SSAOBlurTexture);
+  glGenTextures(1, SSAOTexture);
 
 }
 
@@ -419,6 +423,10 @@ void Render::BlurShadowLoadVertical()
 
 void Render::SSAOBlurLoadHorizontal()
 {
+  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
+    glm::value_ptr(projectionMatrix));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
 
   //same as the shadow texture depth map
   glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
@@ -435,22 +443,21 @@ void Render::SSAOBlurLoadHorizontal()
 
 void Render::SSAOBlurLoadVertical()
 {
-
   //same as the shadow texture
+  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
+    glm::value_ptr(projectionMatrix));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
-  glBindImageTexture(0, GBufferTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glBindImageTexture(0, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
   glUniform1i(glGetUniformLocation(programID, "depthMap"), 0);
 
-  glBindImageTexture(1, SSAOBlurTexture[0], 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "EdgeAwareHorzBlur"), 1);
-
   //position map
-  glBindImageTexture(2, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
-  glUniform1i(glGetUniformLocation(programID, "normalMap"), 2);
+  glBindImageTexture(1, GBufferTexture[1], 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA16F);
+  glUniform1i(glGetUniformLocation(programID, "normalMap"), 1);
 
   //dest is SSAOBlurTexture[1]
-  glBindImageTexture(3, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-  glUniform1i(glGetUniformLocation(programID, "dst"), 3);
+  glBindImageTexture(2, SSAOBlurTexture[1], 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
+  glUniform1i(glGetUniformLocation(programID, "dst"), 2);
 }
 
 
@@ -483,6 +490,62 @@ void Render::SSAOBlurLoadDebug()
   glBindTexture(GL_TEXTURE_2D, SSAOBlurTexture[1]);
   glUniform1i(glGetUniformLocation(programID, "SSAOBlurMapVertical"), 17);
   glBindSampler(GL_TEXTURE17, glGetUniformLocation(programID, "SSAOBlurMapVertical"));
+
+}
+
+void Render::SSAOCreateFBO()
+{
+
+  int width = height * aspect;
+
+  glActiveTexture(GL_TEXTURE18);
+  glBindTexture(GL_TEXTURE_2D, SSAOTexture[0]);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width * shadowScale,
+    height * shadowScale, 0, GL_RED, GL_FLOAT, 0);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glBindFramebuffer(GL_FRAMEBUFFER, SSAOFBO[0]);
+
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, SSAOTexture[0], 0);
+  glDrawBuffers(1, SSAOBuffers);
+
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::cout << "Shadow Map Bind and Create Failed" << std::endl;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+
+void Render::SSAOBindFBO()
+{
+ 
+  //bind frame buffer i 
+  glBindFramebuffer(GL_FRAMEBUFFER, SSAOFBO[0]);
+  if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    std::cout << "SSAO buffer bind Failed" << std::endl;
+  }
+
+  glViewport(0, 0, height * aspect * shadowScale, height * shadowScale);
+
+  glClearColor(1,1,1,1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClearColor(0.5, 0.5, 0.5, 1);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //draw scene
+
+}
+
+void Render::SSAOLoadDebug()
+{
+  glActiveTexture(GL_TEXTURE19);
+  glBindTexture(GL_TEXTURE_2D, SSAOTexture[0]);
+  glUniform1i(glGetUniformLocation(programID, "SSAOMap"), 19);
+  glBindSampler(GL_TEXTURE19, glGetUniformLocation(programID, "SSAOMap"));
 
 }
 
@@ -559,7 +622,7 @@ void Render:: BindAndCreateGBuffers()
     //Per GBuffer bitangent out
   glActiveTexture(GL_TEXTURE7);
   glBindTexture(GL_TEXTURE_2D, GBufferTexture[5]);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GBufferTexture[5], 0);
@@ -835,6 +898,8 @@ void Render::CreateShaders()
   programIDs[ssSSAOBlurHorizontal] = LoadComputerShader("shaders/EdgeAwareBlurHorizontal.comp");
   programIDs[ssSSAOBlurVertical] = LoadComputerShader("shaders/EdgeAwareBlurVertical.comp");
 
+  programIDs[ssSSAO] = LoadShaders("shaders/DeferredRendering.vert", "shaders/SSAO.frag");
+
   programID = programIDs[ssLightShader];
 }
 
@@ -1087,6 +1152,13 @@ void Render::LoadScreenSize()
   glUniform1i(glGetUniformLocation(programID, "height"), height);
   glUniform1i(glGetUniformLocation(programID, "width"), height * aspect);
 }
+
+void Render::LoadSSAOValues()
+{
+  glUniform1i(glGetUniformLocation(programID, "SSAOcontrast"), SSAOcontrast);
+  glUniform1i(glGetUniformLocation(programID, "SSAOscale"), SSAOscale);
+}
+
 
 void Render::Update()
 {

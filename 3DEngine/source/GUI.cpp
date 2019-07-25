@@ -344,7 +344,11 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
     ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
     ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
-    ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
+    ImGui::DragFloat("Material Alpha", &render.materialRoughness, 0.005f, 0.0f, 500.0f);
+    ImGui::DragFloat("SSAO Contrast", &render.SSAOcontrast, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Scale", &render.SSAOscale, 0.001f, 0.0f, 5.0f);
+
+
     ImGui::PopItemWidth();
     /*
     ImGui::BeginChild("Global Color", {390, 90});
@@ -477,12 +481,13 @@ void GUI::RenderFrame()
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
     ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
     ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
-    ImGui::Text("7 = Post-Horizontal-Blur SSAO (RGB = z)");
-    ImGui::Text("8 = Post-Both-Blur SSAO (RGB = z)");
-    ImGui::Text("9 = Tangent Map");
+    ImGui::Text("7 = SSAO Map (RGB = z)");
+    ImGui::Text("8 = Post-Horizontal-Blur SSAO (RGB = z)");
+    ImGui::Text("9 = Post-Both-Blur SSAO (RGB = z)");
+    ImGui::Text("10 = Tangent Map");
 
 
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 9);
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 10);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios
