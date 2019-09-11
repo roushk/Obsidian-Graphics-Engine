@@ -1166,7 +1166,8 @@ void Render::SSAOLoadBlur()
   glBindSampler(GL_TEXTURE17, glGetUniformLocation(programID, "SSAOBlurMap"));
 
   //toggle SSAO 
-  glUniform1i(glGetUniformLocation(programID, "toggleSSAO"), pattern::get<GUI>().SSAO);  
+  glUniform1i(glGetUniformLocation(programID, "toggleSSAO"), pattern::get<GUI>().SSAO);
+
 }
 
 
