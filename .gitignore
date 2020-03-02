@@ -328,3 +328,5 @@ ASALocalRun/
 
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
+/3DEngine/source/glm/out/build/x64-Debug
+/3DEngine/source/rttr/out/build/x64-Debug
