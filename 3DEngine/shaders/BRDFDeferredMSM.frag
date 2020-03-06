@@ -367,7 +367,7 @@ void main()
   //apply SSAO to ambient terms
   if(toggleSSAO)
   {
-    //IBL *= SSAO;
+    IBL *= SSAO;
   }
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
 
@@ -481,7 +481,10 @@ void main()
 
     //BRDF * light Brightness * Shadow
     //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
-    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    if(shadow <= 0)
+      shadow = 0;
+    
+    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
     //finalColor = += (att * Spe * shadow);
 
 
@@ -506,11 +509,11 @@ void main()
   
 
   // VS outputs - position and color
-  color = finalColor;
+  //color = finalColor;
 
 
   //should be 
-  //color = sRGBtoLinear(finalColor, exposure, contrast);
+  color = sRGBtoLinear(finalColor, exposure, contrast);
   
   //color = IBL;
   //color = IBL;

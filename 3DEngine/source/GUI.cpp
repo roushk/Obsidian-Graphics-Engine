@@ -184,7 +184,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {10.0f, 10.0f, 10.0f}, {2.0f, 2.0f, 2.0f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 1.0f, 1.0f}, {2.0f, 2.0f, 2.0f});
         }
 
         break;
