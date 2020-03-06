@@ -31,7 +31,7 @@ void GUI::SetStyle()
   Style.Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.0f);
   Style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
   Style.Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
-  Style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
+  //Style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
   Style.Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
   Style.Colors[ImGuiCol_Border] = ImVec4(0.30f, 0.30f, 0.33f, 0.88f);
   Style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
@@ -55,9 +55,9 @@ void GUI::SetStyle()
   Style.Colors[ImGuiCol_Header] = ImVec4(0.20f, 0.19f, 0.22f, alpha);
   Style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
-  Style.Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
-  Style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
-  Style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
+  //Style.Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
+  //Style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
+  //Style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   Style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
@@ -108,12 +108,19 @@ void GUI::RenderFrame()
    */
 
   {
+    static bool initialInit = true;
     //test window please ignore
-    ImGui::Begin("Light Settings", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Light Settings", nullptr);
     //| ImGuiWindowFlags_NoCollapse);
     ImGui::Spacing();
-    ImGui::SetWindowPos({0, 0}); //top left
-    ImGui::SetWindowSize({350, static_cast<float>(render.height)});
+    if(initialInit)
+    {
+      ImGui::SetWindowPos({0, 0}); //top left
+      ImGui::SetWindowSize({ 350, 700 });
+      initialInit = false;
+    }
+
+    
     std::vector<const char*> names = lighting.GetLightNames();
     std::vector<const char*> types = lighting.GetLightTypes();
     std::vector<const char*> models = lighting.GetLightingTypes();

@@ -126,6 +126,8 @@ using namespace std::chrono_literals;
 #include "Camera.h"
 #include "Light.h"
 
+//something was defining _WIN32 so need to undef it
+#undef _WIN32
 //#include <vector>
 //#include <GL/glew.h>
 //#include <glm/gtc/type_ptr.hpp>
