@@ -78,7 +78,7 @@ void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
   (void)io;
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_ViewportsEnable; // Enable Keyboard Controls
 
 
   io.IniFilename = NULL; //disable imgui.ini
@@ -520,9 +520,15 @@ void GUI::RenderFrame()
   //format it
 
   //***************************************************************//
+
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  ImGui::UpdatePlatformWindows();
+  ImGui::RenderPlatformWindowsDefault();
   ImGui::EndFrame();
+
+  SDL_GL_MakeCurrent(render.gWindow, render.gContext);
+
 }
 
 void GUI::Update(float dt)
