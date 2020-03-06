@@ -349,22 +349,25 @@ void main()
 
     vec3 BRDF_IBL = ((F_IBL * G_IBL) / (4.0f)) * specular * NdotL_IBL;
 
-    //totalWeight += NdotL_IBL;
+    totalWeight += NdotL_IBL;
     IBL += BRDF_IBL;
     //TEST_VALUE = vec3(level / 100);
   }
   //TEST_VALUE /= totalWeight;
-  IBL /= totalSamples;
+
+  //could be this but its not working
+  //IBL /= totalSamples;
+  //IBL /= totalWeight;
 
 
-  vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
-  IBL += IBLDiffuse;
+  //vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
+  //IBL += IBLDiffuse;
   
 
   //apply SSAO to ambient terms
   if(toggleSSAO)
   {
-    IBL *= SSAO;
+    //IBL *= SSAO;
   }
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
 
@@ -477,8 +480,10 @@ void main()
     vec3 BRDF = (KdiffuseColor / PI ) + ((D * F * G) / (4.0f));
 
     //BRDF * light Brightness * Shadow
-    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
+    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
     //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    //finalColor = += (att * Spe * shadow);
+
 
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
     //color = LnotNormal;
@@ -501,8 +506,11 @@ void main()
   
 
   // VS outputs - position and color
-  //color = finalColor;
-  color = sRGBtoLinear(finalColor, exposure, contrast);
+  color = finalColor;
+
+
+  //should be 
+  //color = sRGBtoLinear(finalColor, exposure, contrast);
   
   //color = IBL;
   //color = IBL;

@@ -12,6 +12,7 @@ Author: Coleman Jonas coleman.jonas 280003516
 Creation date: 6/30/18
 End Header --------------------------------------------------------*/
 
+
 #version 430
 //camera position
 uniform vec3 camera;
