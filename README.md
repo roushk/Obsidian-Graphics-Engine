@@ -9,23 +9,23 @@ Specifically the engine is a C++ custom engine created with OpenGL for the graph
 There are still mistakes and issues to be fixed, such as the seams of the UV maps looking weird, but its a work in progress. 
 
 ### Final Scene
-![Finalscene](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/FinalScene.PNG?raw=true)
+![Finalscene](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/FinalScene.PNG?raw=true)
 
 ### Normals Intermediate
-![NormalsInt](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/NormalsInt.PNG?raw=true)
+![NormalsInt](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/NormalsInt.PNG?raw=true)
 
 ### SSAO Intermediate
-![SSAOInt](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/SSAOInt.PNG?raw=true)
+![SSAOInt](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/SSAOInt.PNG?raw=true)
 
 ### Single source light with shadows, and SSAO combined
-![Single source light with shadows, and SSAO combined](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/BasicLightingandMaterials.PNG?raw=true)
+![Single source light with shadows, and SSAO combined](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/BasicLightingandMaterials.PNG?raw=true)
 
 ### Metal with No Normal Mapping 
-![MetalNoNormalMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/MetalNoNormalMapping.PNG?raw=true)
+![MetalNoNormalMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/MetalNoNormalMapping.PNG?raw=true)
 
 ### Metal with Normal Mapping 
-![MetalNormalMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/MetalNormalMapping.PNG?raw=true)
+![MetalNormalMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/MetalNormalMapping.PNG?raw=true)
 
 ### Metal with Parallax Mapping
-![MetalParallaxMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/master/screenshots/MetalParallaxMapping.PNG?raw=true)
+![MetalParallaxMapping](https://github.com/roushk/Obsidian-Graphics-Engine/blob/main/screenshots/MetalParallaxMapping.PNG?raw=true)
 
