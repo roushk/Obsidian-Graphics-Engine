@@ -59,6 +59,9 @@ enum shaderSetting
 
   ssComputeBlurHorizontal,
   ssComputeBlurVertical,
+  ssSSAOBlurHorizontal,
+  ssSSAOBlurVertical,
+  ssSSAO,
   ssPhongShadingDeferredShadowMSM,
   ssBRDFDeferredMSM,
   ssLightShader,
@@ -272,6 +275,22 @@ public:
   void LoadNormalAndHeight();
   void BindNormalAndHeight();
 
+  void SSAOBlurLoadVertical();
+  void SSAOBlurLoadHorizontal();
+
+  void BindAndCreateSSAOBlurBuffers();
+  void SSAOBlurLoadDebug();
+
+  void SSAOCreateFBO();
+  void SSAOBindFBO();
+  void SSAOLoadDebug();
+  void LoadSSAOValues();
+  void LoadSSAOBlurValues();
+  void SSAOLoadBlur();
+
+
+  //void BindWidthAndHeight();
+
   //used to update the camera eye pos once when rotating the camera
   bool updateCameraEyePosOnce = false;
 
@@ -309,9 +328,14 @@ public:
   //none -> horizontal -> horizontal and vertical
   //GLuint blurShadowFBO[1];  //shadow map output FBO
   GLuint blurShadowTexture[2];  //depth map
-  GLenum blurShadowBuffers[1]{ GL_COLOR_ATTACHMENT0 };
   GLuint shadowBlurUBOHandle[1];
 
+  GLuint SSAOBlurTexture[2];  //depth map
+
+  GLuint SSAOFBO[1];  //shadow map output FBO
+  GLuint SSAOTexture[1];  //depth map
+  GLenum SSAOBuffers[1]{ GL_COLOR_ATTACHMENT0 };
+  //use same UBO as blur for the hammersley random values
 
   GLuint HammersleyUBOHandle[1];
   static const int HammersleyConst = 20;  //samples count
@@ -322,6 +346,17 @@ public:
   };
   HammersleyBlock hammersleyBlock;
 
+  /*
+  
+    Image Bind Points
+    0 = shadow depth map
+    1 = shadow horizontal blur
+    2 = shadow horizontal and vertical blur
+    3 = position map
+    4 = SSAO horizontal blur 
+    5 = SSAO horizontal and vertical blur
+
+  */
 
   static const int blurValue = 20;
   float weights[blurValue * 2 + 1];
@@ -334,8 +369,10 @@ public:
 
   //dont need color buffer only depth buffer
   //GLuint shadowRBO[1]; //shadow render buffer object
-  float shadowScale = 2.0f; //shadow resolution
+  float shadowScale = 1.0f; //shadow resolution
+  
   GLenum DrawBuffers;
+  
   GLenum DrawGBuffers[6]
   { GL_COLOR_ATTACHMENT0, 
     GL_COLOR_ATTACHMENT1, 
@@ -343,7 +380,9 @@ public:
     GL_COLOR_ATTACHMENT3, 
     GL_COLOR_ATTACHMENT4,
     GL_COLOR_ATTACHMENT5 };
+
   GLuint Gbuffer, GBufferDepthBuffer;
+  
   GLuint GBufferTexture[7];
   //material settings in GBuffer
   //USING
@@ -363,6 +402,7 @@ public:
   std::vector<LightData> lightDatas;
 
 
+
   float rotateRate = 2.0f * PI / 20.0f;
 
   int objectShader = 0;
@@ -376,6 +416,13 @@ public:
   GLuint normalMap;
   GLuint heightMap;
   
+  float SSAOcontrast = 1.0f;
+  float SSAOscale = 5.0f;
+  float SSAOrange = 0.5f;
+  float SSAOBlurScalar = 0.01f;
+
+  
+
   struct MapsCombo
   {
     MapsCombo(std::string n, std::string h, std::string d)

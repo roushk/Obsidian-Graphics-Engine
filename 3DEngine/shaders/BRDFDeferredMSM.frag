@@ -74,6 +74,7 @@ uniform sampler2D shadowMap;
 uniform sampler2D blurShadowMap;
 uniform sampler2D skydomeTexture;
 uniform sampler2D skydomeIRR;
+uniform sampler2D SSAOBlurMap;
 
 
 in VS_OUT
@@ -89,6 +90,7 @@ uniform mat4  projectionMatrix;
 
 //model matrix
 uniform mat4  modelMatrix;
+
 //model matrix
 uniform mat4  modelTransform;
 
@@ -108,6 +110,7 @@ uniform float contrast;
 
 const int totalSamples = 20;
 
+uniform bool toggleSSAO;
 
 out vec3 color;
 
@@ -241,6 +244,7 @@ void main()
   vec3 KdiffuseColor = texture(gDiffuseMap, fs_in.texCoords).xyz;
   vec3 Kspecular = texture(gSpecularMap, fs_in.texCoords).xyz;
   vec3 Kambient = texture(gAmbientMap, fs_in.texCoords).xyz; //vec3(0.1f,0.1f,0.1f); 
+  float SSAO = texture(SSAOBlurMap, fs_in.texCoords).r;
 
   float ns = 32.0f; //texture(gSpecularMap, fs_in.texCoords).a;
   //Kspecular *= 0.5f;
@@ -345,19 +349,27 @@ void main()
 
     vec3 BRDF_IBL = ((F_IBL * G_IBL) / (4.0f)) * specular * NdotL_IBL;
 
-    //totalWeight += NdotL_IBL;
+    totalWeight += NdotL_IBL;
     IBL += BRDF_IBL;
     //TEST_VALUE = vec3(level / 100);
   }
   //TEST_VALUE /= totalWeight;
-  IBL /= totalSamples;
+
+  //could be this but its not working
+  //IBL /= totalSamples;
+  //IBL /= totalWeight;
 
 
-  vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
-  IBL += IBLDiffuse;
+  //vec3 IBLDiffuse = (KdiffuseColor / PI ) * skydomeTexIRR;
+  //IBL += IBLDiffuse;
+  
+
+  //apply SSAO to ambient terms
+  if(toggleSSAO)
+  {
+    IBL *= SSAO;
+  }
   // = (KdiffuseColor / PI ) * skydomeTexIRR + totalhammersleyColor;
-
-
 
   //Frensel Term F
   //Ks + ( (w - Ks) * (1- dot(L,H))^5 )
@@ -468,8 +480,13 @@ void main()
     vec3 BRDF = (KdiffuseColor / PI ) + ((D * F * G) / (4.0f));
 
     //BRDF * light Brightness * Shadow
-    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
-    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    //finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb));
+    if(shadow <= 0)
+      shadow = 0;
+    
+    finalColor += (att * Spe * (BRDF * LA.lights[i].LightDiffuse.rgb * shadow));
+    //finalColor = += (att * Spe * shadow);
+
 
     //finalColor += (Iambient) + (Spe * (Idiffuse + Ispecular));
     //color = LnotNormal;
@@ -493,8 +510,12 @@ void main()
 
   // VS outputs - position and color
   //color = finalColor;
+
+
+  //should be 
   color = sRGBtoLinear(finalColor, exposure, contrast);
   
+  //color = IBL;
   //color = IBL;
   //color = TEST_VALUE;
   //color = skydomeTexIRR;

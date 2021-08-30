@@ -31,7 +31,7 @@ void GUI::SetStyle()
   Style.Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.0f);
   Style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
   Style.Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
-  Style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
+  //Style.Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
   Style.Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, alpha);
   Style.Colors[ImGuiCol_Border] = ImVec4(0.30f, 0.30f, 0.33f, 0.88f);
   Style.Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
@@ -55,9 +55,9 @@ void GUI::SetStyle()
   Style.Colors[ImGuiCol_Header] = ImVec4(0.20f, 0.19f, 0.22f, alpha);
   Style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
-  Style.Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
-  Style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
-  Style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
+  //Style.Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
+  //Style.Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, alpha);
+  //Style.Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   Style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, alpha);
   Style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, alpha);
@@ -78,7 +78,7 @@ void GUI::BindImGUI(SDL_Window* window, SDL_GLContext* context)
   ImGui::CreateContext();
   ImGuiIO& io = ImGui::GetIO();
   (void)io;
-  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+  io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_ViewportsEnable; // Enable Keyboard Controls
 
 
   io.IniFilename = NULL; //disable imgui.ini
@@ -108,12 +108,19 @@ void GUI::RenderFrame()
    */
 
   {
+    static bool initialInit = true;
     //test window please ignore
-    ImGui::Begin("Light Settings", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+    ImGui::Begin("Light Settings", nullptr);
     //| ImGuiWindowFlags_NoCollapse);
     ImGui::Spacing();
-    ImGui::SetWindowPos({0, 0}); //top left
-    ImGui::SetWindowSize({350, static_cast<float>(render.height)});
+    if(initialInit)
+    {
+      ImGui::SetWindowPos({0, 0}); //top left
+      ImGui::SetWindowSize({ 350, 700 });
+      initialInit = false;
+    }
+
+    
     std::vector<const char*> names = lighting.GetLightNames();
     std::vector<const char*> types = lighting.GetLightTypes();
     std::vector<const char*> models = lighting.GetLightingTypes();
@@ -184,7 +191,7 @@ void GUI::RenderFrame()
         //spot lights
         for (auto& light : lighting.lights)
         {
-          light.SetPointLight({0.1f, 0.1f, 0.1f}, {10.0f, 10.0f, 10.0f}, {2.0f, 2.0f, 2.0f});
+          light.SetPointLight({0.1f, 0.1f, 0.1f}, {1.0f, 1.0f, 1.0f}, {2.0f, 2.0f, 2.0f});
         }
 
         break;
@@ -312,6 +319,7 @@ void GUI::RenderFrame()
 
     ImGui::Checkbox("Debug Draw Mode Toggle", &debugDrawMode);
     ImGui::Checkbox("BRDF + IBL / Phong", &BRDF_IBL);
+    ImGui::Checkbox("SSAO", &SSAO);
 
     ImGui::Checkbox("Automatic Camera", &autoCameraRotation);
     if(autoCameraRotation)
@@ -344,7 +352,13 @@ void GUI::RenderFrame()
     ImGui::DragFloat("Max Depth", &render.max_depth, 0.05f, 0.0f, 200.0f);
     ImGui::DragFloat("Exposure", &render.exposure, 0.05f, 0.0f, 10000.0f);
     ImGui::DragFloat("Contrast (0 is bright)", &render.contrast, 0.02f, 0.0f, 5.0f);
-    ImGui::DragFloat("Material Alpha", &pattern::get<Render>().materialRoughness, 0.005f, 0.0f, 500.0f);
+    ImGui::DragFloat("Material Alpha", &render.materialRoughness, 0.005f, 0.0f, 500.0f);
+    ImGui::DragFloat("SSAO Contrast", &render.SSAOcontrast, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Scale", &render.SSAOscale, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Range", &render.SSAOrange, 0.001f, 0.0f, 5.0f);
+    ImGui::DragFloat("SSAO Blur Scalar", &render.SSAOBlurScalar, 0.001f, 0.0f, 5.0f);
+
+    
     ImGui::PopItemWidth();
     /*
     ImGui::BeginChild("Global Color", {390, 90});
@@ -477,10 +491,13 @@ void GUI::RenderFrame()
     ImGui::Text("3 = Specular,  4 = Pre-Blur Shadow (RGB = z)");
     ImGui::Text("5 = Post-Horizontal-Blur Shadow (RGB = z)");
     ImGui::Text("6 = Post-Both-Blur Shadow (RGB = z)");
-    ImGui::Text("7 = Tangent Map, 8 = Normal Map");
-    ImGui::Text("9 = Height Map");
+    ImGui::Text("7 = SSAO Map (RGB = z)");
+    ImGui::Text("8 = Post-Horizontal-Blur SSAO (RGB = z)");
+    ImGui::Text("9 = Post-Both-Blur SSAO (RGB = z)");
+    ImGui::Text("10 = Tangent Map");
 
-    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 9);
+
+    ImGui::SliderInt("Current GBuffer Texture", &currentCam, 0, 10);
     //ImGui::Text("FBO to Render");
     //ImGui::SliderInt("Current FBO", &currentFBO, 0, 5);
     //toggle between 3 scenarios
@@ -503,9 +520,15 @@ void GUI::RenderFrame()
   //format it
 
   //***************************************************************//
+
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  ImGui::UpdatePlatformWindows();
+  ImGui::RenderPlatformWindowsDefault();
   ImGui::EndFrame();
+
+  SDL_GL_MakeCurrent(render.gWindow, render.gContext);
+
 }
 
 void GUI::Update(float dt)

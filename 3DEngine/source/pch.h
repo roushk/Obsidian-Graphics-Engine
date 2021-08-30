@@ -68,14 +68,6 @@ namespace json = nlohmann;
 #include <FMOD/fmod.hpp>
 #include <FMOD/fmod.h>
 
-// SPDLOG
-#define ENGINE_SPDLOG
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/base_sink.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/dist_sink.h>
-#include <spdlog/details/pattern_formatter.h>
-
 // RTTR
 #define ENGINE_RTTR
 #include <rttr/registration.h>
@@ -126,6 +118,8 @@ using namespace std::chrono_literals;
 #include "Camera.h"
 #include "Light.h"
 
+//something was defining _WIN32 so need to undef it
+#undef _WIN32
 //#include <vector>
 //#include <GL/glew.h>
 //#include <glm/gtc/type_ptr.hpp>
