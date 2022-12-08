@@ -1,6 +1,6 @@
 //*****************************************************//
 // Coleman Jonas
-// 3DEngine
+// ObsidianGE
 //*****************************************************//
 
 
@@ -105,9 +105,7 @@ namespace json = nlohmann;
 #include <optional>
 #include <any>
 #include <unordered_set>
-#include <experimental/filesystem> // C++-standard header file name  
 #include <filesystem> // Microsoft-specific implementation header file name  
-namespace filesystem = std::experimental::filesystem::v1;
 using namespace std::chrono_literals;
 
 #include "singleton.h"

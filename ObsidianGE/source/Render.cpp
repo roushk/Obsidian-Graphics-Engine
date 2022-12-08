@@ -1073,7 +1073,7 @@ bool Render::InitRender()
   }
   else
   {
-    std::string programName = "3DEngine";
+    std::string programName = "ObsidianGE";
     int screenWidth = 1024;
     int screenHeight = 768;
 
@@ -1253,8 +1253,8 @@ void Render::Draw(Wireframe& object)
   
   if(cameraChanged == true)
   {
-    projectionMatrix = cameraToNDC(currentCamera);
-    viewMatrix = worldToCamera(currentCamera);
+    projectionMatrix = cameraToNDC(currentCamera);  //Perspective
+    viewMatrix = worldToCamera(currentCamera);  //Look at
     cameraChanged = false;
   }
 
@@ -1271,8 +1271,7 @@ void Render::Draw(Wireframe& object)
   //if (flipX == true)
   //  projectionMatrix = scale(projectionMatrix, vec3(-1, 1, 1));
 
-  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE,
-    glm::value_ptr(projectionMatrix));
+  glUniformMatrix4fv(glGetUniformLocation(programID, "projectionMatrix"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
   glUniformMatrix4fv(glGetUniformLocation(programID, "viewMatrix"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
   //already in world coords
   //glUniformMatrix4fv(glGetUniformLocation(programID, "modelTransform"), 1, GL_FALSE, glm::value_ptr(modelTransform));
@@ -1556,7 +1555,7 @@ void Render::BindNormalAndHeight()
 void Render::HammersleyCreateData()
 {
   
-  hammersleyBlock.N = HammersleyConst; // N=20 ... 40 or whatever …
+  hammersleyBlock.N = HammersleyConst; // N=20 ... 40 or whatever ï¿½
   int kk;
   int pos = 0;
   for (int k = 0; k < HammersleyConst; k++) 

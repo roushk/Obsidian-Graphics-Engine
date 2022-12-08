@@ -20,13 +20,14 @@ glm::mat4 cameraToWorld(const Camera& cam)
   return inverse(glm::lookAt(cam.eye(), cam.eye() + -cam.back_vector, cam.up_vector));
 }
 
-
+//Look at Camera matrix
 glm::mat4 worldToCamera(const Camera& cam)
 {
   return glm::lookAt(cam.eye(), cam.eye() + -cam.back_vector, cam.up_vector);
   //return inverse(cameraToWorld(cam));
 }
 
+//Perspective matrix
 glm::mat4 cameraToNDC(Camera& cam)
 {
   /*

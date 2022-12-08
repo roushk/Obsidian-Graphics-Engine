@@ -155,7 +155,7 @@
     <ClCompile Include="source\rttr\variant_sequential_view.cpp">
       <Filter>Libraries\rttr</Filter>
     </ClCompile>
-    <ClCompile Include="source\3DEngine.cpp">
+    <ClCompile Include="source\ObsidianGE.cpp">
       <Filter>Source Files\main</Filter>
     </ClCompile>
     <ClCompile Include="source\pch.cpp">

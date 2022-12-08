@@ -125,18 +125,21 @@ Model ObjectReader::load_model(const std::string& path)
 {
   Assimp::Importer importer;
   Model newModel;
-  const auto scene = importer.ReadFile(path.c_str(),
-    //aiProcessPreset_TargetRealtime_Quality |
-    //aiProcess_OptimizeMeshes |
-    aiProcess_GenSmoothNormals |   
-    aiProcess_CalcTangentSpace |  //cant do that cause assimp is to stupid to understand
-    //that it needs to run the gen uv coords and smooth normals BEFORE it greates the tangent space 
-    //normals....
-    //aiProcess_GenNormals |
-    //aiProcess_JoinIdenticalVertices |
-    aiProcess_GenUVCoords |
-    aiProcess_SortByPType |
-    aiProcess_PreTransformVertices);
+
+
+  importer.ReadFile(path.c_str(),
+      aiProcess_Triangulate |
+      aiProcess_JoinIdenticalVertices |
+      aiProcess_OptimizeGraph |
+      aiProcess_GenSmoothNormals |
+      aiProcess_CalcTangentSpace |
+      0);
+
+  //Reapply processing
+  const aiScene* scene = importer.ApplyPostProcessing(
+      aiProcess_ValidateDataStructure |
+      aiProcess_OptimizeGraph |
+      0);
   if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
   {
     std::cout << "couldn't load model from path: " << path << std::endl;
@@ -330,6 +333,7 @@ void ObjectReader::process_mesh(aiMesh* mesh, const aiScene* scene, Model& m)
       std::cout << "u or v is out of range!" << std::endl;
   }
 
+  //Planar
   for (auto & preTransformVert : vertices)
   {
     glm::vec4 vert = matrix * glm::vec4(preTransformVert.pos, 1.0f);
